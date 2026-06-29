@@ -3,10 +3,15 @@
 import { useMemo, useState } from "react";
 
 import { AdherenceOverview } from "../src/components/AdherenceOverview";
+
 import { CareSessionControl } from "../src/components/CareSessionControl";
+
 import { EventLog } from "../src/components/EventLog";
+
 import { InitialisationTable } from "../src/components/InitialisationTable";
+
 import { PillboxSimulator } from "../src/components/PillboxSimulator";
+
 import { Sidebar } from "../src/components/Sidebar";
 
 import {
@@ -24,6 +29,8 @@ import {
 import { initialMedicationSchedule } from "../src/lib/sampleData";
 
 import type { MedicationSchedule, OpeningEvent } from "../src/types/pillbox";
+
+import AiFeaturePanel from "../src/components/AiFeaturePanel";
 
 export default function Home() {
   const [medicationSchedule, setMedicationSchedule] =
@@ -118,6 +125,8 @@ export default function Home() {
             kpis={dashboardKpis}
             statuses={medicationStatuses}
           />
+
+          <AiFeaturePanel />
 
           <EventLog events={openingEvents} />
         </section>

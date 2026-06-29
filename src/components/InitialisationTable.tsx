@@ -1,155 +1,221 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type { MedicationSchedule } from "../types/pillbox";
 
 type InitialisationTableProps = {
   schedule: MedicationSchedule[];
-  onScheduleChange: (nextSchedule: MedicationSchedule[]) => void;
+  onScheduleChange: (schedule: MedicationSchedule[]) => void;
   onApplyRecommendedBufferTimes: () => void;
 };
+
+function getRecommendedBufferLabel(highRisk: boolean) {
+  return highRisk ? "Recommended: 30 min" : "Recommended: 60 min";
+}
 
 export function InitialisationTable({
   schedule,
   onScheduleChange,
   onApplyRecommendedBufferTimes,
 }: InitialisationTableProps) {
+  const [draftSchedule, setDraftSchedule] =
+    useState<MedicationSchedule[]>(schedule);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    setDraftSchedule(schedule);
+  }, [schedule]);
+
   function updateScheduleItem(
-    compartment: number,
-    field: keyof MedicationSchedule,
-    value: string | number | boolean
+    index: number,
+    updates: Partial<MedicationSchedule>
   ) {
-    const nextSchedule = schedule.map((item) => {
-      if (item.compartment !== compartment) {
-        return item;
-      }
+    setDraftSchedule((currentSchedule) =>
+      currentSchedule.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...updates } : item
+      )
+    );
 
-      return {
-        ...item,
-        [field]: value,
-      };
-    });
+    setHasUnsavedChanges(true);
+  }
 
-    onScheduleChange(nextSchedule);
+  function handleSaveInitialisation() {
+    onScheduleChange(draftSchedule);
+    setHasUnsavedChanges(false);
+  }
+
+  function handleApplyRecommendedBuffers() {
+    onApplyRecommendedBufferTimes();
+    setHasUnsavedChanges(false);
   }
 
   return (
-    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">
-            2. Initialisation
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Caregivers set medication schedule, high-risk flag, and buffer time.
-          </p>
+    <div className="space-y-6">
+        <div
+            className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
+                hasUnsavedChanges
+                ? "border-amber-200 bg-amber-50 text-amber-900"
+                : "border-emerald-200 bg-emerald-50 text-emerald-900"
+            }`}
+        >
+            {hasUnsavedChanges
+                ? "Unsaved changes — save before running the pillbox."
+                : "Saved — pillbox setup is up to date."}
         </div>
 
-        <button
-          onClick={onApplyRecommendedBufferTimes}
-          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-        >
-          Apply Recommended Buffer Times
-        </button>
+      <div className="grid gap-5 xl:grid-cols-2">
+        {draftSchedule.map((item, index) => (
+          <section
+            key={item.compartment}
+            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Compartment {item.compartment}
+                </p>
+
+                <h4 className="mt-2 text-xl font-bold text-slate-900">
+                  {item.medication || "Unnamed medication"}
+                </h4>
+              </div>
+
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  item.highRisk
+                    ? "bg-red-50 text-red-700"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                {item.highRisk ? "High Risk" : "Normal Risk"}
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-slate-700">
+                  Medication Name
+                </span>
+
+                <input
+                  value={item.medication}
+                  onChange={(event) =>
+                    updateScheduleItem(index, {
+                      medication: event.target.value,
+                    })
+                  }
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                  placeholder="e.g. Blood Pressure Medicine"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-slate-700">
+                  Scheduled Time
+                </span>
+
+                <input
+                  type="time"
+                  value={item.scheduledTime}
+                  onChange={(event) =>
+                    updateScheduleItem(index, {
+                      scheduledTime: event.target.value,
+                    })
+                  }
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-slate-700">
+                    Buffer Time
+                  </span>
+
+                  <span className="text-xs font-medium text-slate-500">
+                    {getRecommendedBufferLabel(item.highRisk)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={5}
+                    max={180}
+                    value={item.bufferTimeMinutes}
+                    onChange={(event) =>
+                      updateScheduleItem(index, {
+                        bufferTimeMinutes: Number(event.target.value),
+                      })
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                  />
+
+                  <span className="text-sm text-slate-500">min</span>
+                </div>
+              </label>
+
+              <div className="space-y-2">
+                <span className="text-sm font-semibold text-slate-700">
+                  High-Risk Medication
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateScheduleItem(index, {
+                      highRisk: !item.highRisk,
+                    })
+                  }
+                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    item.highRisk
+                      ? "border-red-200 bg-red-50 text-red-700"
+                      : "border-slate-200 bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  <span>{item.highRisk ? "Enabled" : "Disabled"}</span>
+                  <span
+                    className={`h-6 w-11 rounded-full p-1 transition ${
+                      item.highRisk ? "bg-red-200" : "bg-slate-200"
+                    }`}
+                  >
+                    <span
+                      className={`block h-4 w-4 rounded-full bg-white shadow-sm transition ${
+                        item.highRisk ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </span>
+                </button>
+              </div>
+            </div>
+          </section>
+        ))}
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-100 text-slate-600">
-            <tr>
-              <th className="px-4 py-3">Compartment</th>
-              <th className="px-4 py-3">Medication</th>
-              <th className="px-4 py-3">Scheduled Time</th>
-              <th className="px-4 py-3">High Risk</th>
-              <th className="px-4 py-3">Buffer Time</th>
-            </tr>
-          </thead>
+      <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
+          <button
+            type="button"
+            onClick={handleApplyRecommendedBuffers}
+            className="rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+          >
+            Apply Recommended Buffer Times
+          </button>
 
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {schedule.map((item) => (
-              <tr key={item.compartment}>
-                <td className="px-4 py-3 font-medium text-slate-700">
-                  C{item.compartment}
-                </td>
-
-                <td className="px-4 py-3">
-                  <input
-                    type="text"
-                    value={item.medication}
-                    onChange={(event) =>
-                      updateScheduleItem(
-                        item.compartment,
-                        "medication",
-                        event.target.value
-                      )
-                    }
-                    placeholder="Empty"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-400"
-                  />
-                </td>
-
-                <td className="px-4 py-3">
-                  <input
-                    type="time"
-                    value={item.scheduledTime}
-                    onChange={(event) =>
-                      updateScheduleItem(
-                        item.compartment,
-                        "scheduledTime",
-                        event.target.value
-                      )
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-400"
-                  />
-                </td>
-
-                <td className="px-4 py-3">
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={item.highRisk}
-                      onChange={(event) =>
-                        updateScheduleItem(
-                          item.compartment,
-                          "highRisk",
-                          event.target.checked
-                        )
-                      }
-                      className="h-4 w-4 rounded border-slate-300"
-                    />
-                    {item.highRisk ? "Yes" : "No"}
-                  </label>
-                </td>
-
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={180}
-                      step={5}
-                      value={item.bufferTimeMinutes}
-                      onChange={(event) =>
-                        updateScheduleItem(
-                          item.compartment,
-                          "bufferTimeMinutes",
-                          Number(event.target.value)
-                        )
-                      }
-                      className="w-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-400"
-                    />
-                    <span className="text-slate-500">min</span>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="mt-3 text-xs text-slate-500">
-        Recommended defaults: normal medication = 60 minutes; high-risk
-        medication = 30 minutes. Caregivers can still manually edit the buffer
-        time.
-      </p>
-    </section>
+          <button
+            type="button"
+            onClick={handleSaveInitialisation}
+            disabled={!hasUnsavedChanges}
+            className={`rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm transition ${
+                hasUnsavedChanges
+                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                : "cursor-default bg-emerald-50 text-emerald-700"
+            }`}
+            >
+            {hasUnsavedChanges ? "Save Initialisation" : "Saved"}
+            </button>
+        </div>
+      </section>
+    </div>
   );
 }

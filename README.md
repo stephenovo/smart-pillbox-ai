@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Smart Pillbox AI
 
-## Getting Started
+Smart Pillbox AI is an AIoT medication safety dashboard prototype for elderly people, chronic disease patients, caregivers, and family members.
 
-First, run the development server:
+This demo simulates the software and hardware-signal flow of a smart pillbox system.
+
+## Current Version
+
+This version includes:
+
+- Smart pillbox compartment simulator
+- Simulated switch-sensor opening events
+- Caregiver initialisation table
+- Editable medication schedule
+- High-risk medication flag
+- Caregiver-defined buffer time
+- Rule-based medication safety control
+- Detection of:
+  - Taken - On Time
+  - Taken - Delayed
+  - Opened Too Early
+  - Missed / Very Late
+  - Duplicate Risk
+- Adherence overview dashboard
+- Pillbox event log
+
+## Project Layers
+
+The current prototype separates the system into:
+
+1. Hardware Simulation Demo Layer  
+   Simulates pillbox opening events and switch-sensor signals.
+
+2. Medication Safety Control Layer  
+   Uses deterministic, rule-based logic to classify medication events.
+
+3. Dashboard UI Layer  
+   Displays pillbox status, caregiver initialisation, adherence overview, and event logs.
+
+The AI Adherence Intelligence Layer will be added in the next development stage.
+
+## Tech Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+
+## Run Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open:
+http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Development Status
+Version 0.1:
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Hardware simulation: completed
+Rule-based safety control: completed
+Dashboard UI: completed
+AI adherence intelligence: planned

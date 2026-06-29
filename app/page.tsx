@@ -1,65 +1,127 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+
+import { AdherenceOverview } from "../src/components/AdherenceOverview";
+import { CareSessionControl } from "../src/components/CareSessionControl";
+import { EventLog } from "../src/components/EventLog";
+import { InitialisationTable } from "../src/components/InitialisationTable";
+import { PillboxSimulator } from "../src/components/PillboxSimulator";
+import { Sidebar } from "../src/components/Sidebar";
+
+import {
+  clearOpeningEvents,
+  createOpeningEvent,
+} from "../src/lib/hardwareSimulation";
+
+import { getRecommendedBufferTime } from "../src/lib/scheduleDefaults";
+
+import {
+  calculateDashboardKpis,
+  generateRecordedMedicationStatuses,
+} from "../src/lib/safetyControl";
+
+import { initialMedicationSchedule } from "../src/lib/sampleData";
+
+import type { MedicationSchedule, OpeningEvent } from "../src/types/pillbox";
 
 export default function Home() {
+  const [medicationSchedule, setMedicationSchedule] =
+    useState<MedicationSchedule[]>(initialMedicationSchedule);
+
+  const [openingEvents, setOpeningEvents] = useState<OpeningEvent[]>([]);
+
+  const [analysisDate, setAnalysisDate] = useState("2026-06-26");
+  const [analysisTime, setAnalysisTime] = useState("08:10");
+
+  const activeMedicationSchedule = useMemo(
+    () => medicationSchedule.filter((item) => item.medication.trim() !== ""),
+    [medicationSchedule]
+  );
+
+  const currentSimulatedTime = `${analysisDate} ${analysisTime}`;
+
+  const medicationStatuses = useMemo(
+    () =>
+      generateRecordedMedicationStatuses(
+        activeMedicationSchedule,
+        openingEvents,
+        analysisDate
+      ),
+    [activeMedicationSchedule, openingEvents, analysisDate]
+  );
+
+  const dashboardKpis = useMemo(
+    () => calculateDashboardKpis(medicationStatuses),
+    [medicationStatuses]
+  );
+
+  function handleOpenCompartment(item: MedicationSchedule) {
+    const newEvent = createOpeningEvent(item, currentSimulatedTime);
+
+    setOpeningEvents((currentEvents) => [newEvent, ...currentEvents]);
+  }
+
+  function handleClearEvents() {
+    setOpeningEvents(clearOpeningEvents());
+  }
+
+  function handleApplyRecommendedBufferTimes() {
+    setMedicationSchedule((currentSchedule) =>
+      currentSchedule.map((item) => ({
+        ...item,
+        bufferTimeMinutes: getRecommendedBufferTime(item.highRisk),
+      }))
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="flex min-h-screen">
+        <Sidebar />
+
+        <section className="flex-1 p-8">
+          <header>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+              Smart Pillbox AI
+            </h1>
+
+            <p className="mt-2 text-slate-500">
+              AIoT medication safety dashboard for caregivers, families, and
+              elderly users.
+            </p>
+          </header>
+
+          <CareSessionControl
+            analysisDate={analysisDate}
+            analysisTime={analysisTime}
+            onAnalysisDateChange={setAnalysisDate}
+            onAnalysisTimeChange={setAnalysisTime}
+          />
+
+          <PillboxSimulator
+            schedule={activeMedicationSchedule}
+            events={openingEvents}
+            statuses={medicationStatuses}
+            currentSimulatedTime={currentSimulatedTime}
+            onOpenCompartment={handleOpenCompartment}
+            onClearEvents={handleClearEvents}
+          />
+
+          <InitialisationTable
+            schedule={medicationSchedule}
+            onScheduleChange={setMedicationSchedule}
+            onApplyRecommendedBufferTimes={handleApplyRecommendedBufferTimes}
+          />
+
+          <AdherenceOverview
+            kpis={dashboardKpis}
+            statuses={medicationStatuses}
+          />
+
+          <EventLog events={openingEvents} />
+        </section>
+      </div>
+    </main>
   );
 }

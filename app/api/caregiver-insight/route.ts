@@ -15,6 +15,36 @@ type DeepSeekChatCompletionResponse = {
   };
 };
 
+type AiReportSection =
+  | "caregiver_summary"
+  | "key_insight"
+  | "clinic_visit_note";
+
+function getSectionInstruction(section: AiReportSection): string {
+  if (section === "caregiver_summary") {
+    return `
+Only generate section 1: Caregiver Summary.
+Summarise the overall adherence pattern in 2-4 short sentences.
+Do not include Key Concern, Clinic-Visit Note, or Safety Reminder.
+`;
+  }
+
+  if (section === "key_insight") {
+    return `
+Only generate section 2: Key Insight.
+Highlight the most important adherence insight for the caregiver.
+Focus on missed medication events, delayed medication events, duplicate opening events, worsening trend, or high-risk concerns if present.
+Do not include Caregiver Summary, Clinic-Visit Note, or Safety Reminder.
+`;
+  }
+
+  return `
+Only generate section 3: Clinic-Visit Note.
+Write a short note that a caregiver could bring to a doctor, nurse, or clinic review.
+Do not give medical advice. Do not include Caregiver Summary, Key Concern, or Safety Reminder.
+`;
+}
+
 export async function POST(request: Request) {
   try {
     const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -42,7 +72,14 @@ export async function POST(request: Request) {
     }
 
     const report = body.report as CaregiverInsightReport;
-    const userPrompt = buildCaregiverInsightApiPrompt(report);
+    const section = (body.section ?? "caregiver_summary") as AiReportSection;
+
+    const userPrompt = `
+    ${buildCaregiverInsightApiPrompt(report)}
+
+    Requested output:
+    ${getSectionInstruction(section)}
+    `;
 
     const deepSeekResponse = await fetch(
       "https://api.deepseek.com/chat/completions",
@@ -81,17 +118,13 @@ What you can do:
 - Explain missed, delayed, or duplicate opening patterns using plain English.
 - Suggest that caregivers or healthcare professionals review high-risk concerns.
 
-Output format:
-1. Caregiver Summary
-2. Key Concern
-3. Clinic-Visit Note
-4. Safety Reminder
-
-Writing rules:
+Output rules:
+- Generate only the requested section.
 - Use plain text only.
 - Do not use markdown bold symbols such as **.
-- Keep each section short.
+- Keep the answer short and caregiver-friendly.
 - Use "medication event" instead of "dose" when describing missed or delayed records.
+- Use "duplicate opening event" instead of "duplicate dose".
 
 Keep the tone professional, concise, and suitable for a healthcare innovation demo.
 `,
@@ -129,9 +162,10 @@ Keep the tone professional, concise, and suitable for a healthcare innovation de
       "No AI caregiver summary was generated.";
 
     return NextResponse.json({
-      aiSummary,
-      model,
-      provider: "deepseek",
+        aiSummary,
+        model,
+        provider: "deepseek",
+        section,
     });
   } catch (error) {
     const message =

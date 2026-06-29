@@ -49,7 +49,7 @@ export function PillboxSimulator({
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">
-            1. Smart Pillbox Simulator
+            Smart Pillbox Simulator
           </h2>
           <p className="mt-1 text-sm text-slate-500">
             Click a compartment to simulate a switch-sensor opening event.

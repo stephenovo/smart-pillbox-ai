@@ -9,10 +9,6 @@ type InitialisationTableProps = {
   onApplyRecommendedBufferTimes: () => void;
 };
 
-function getRecommendedBufferLabel(highRisk: boolean) {
-  return highRisk ? "Recommended: 30 min" : "Recommended: 60 min";
-}
-
 export function InitialisationTable({
   schedule,
   onScheduleChange,
@@ -92,102 +88,97 @@ export function InitialisationTable({
             </div>
 
             <div className="mt-6 grid gap-5 md:grid-cols-2">
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Medication Name
-                </span>
+                <label className="space-y-2">
+                    <span className="block text-sm font-semibold text-slate-700">
+                    Medication Name
+                    </span>
 
-                <input
-                  value={item.medication}
-                  onChange={(event) =>
-                    updateScheduleItem(index, {
-                      medication: event.target.value,
-                    })
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                  placeholder="e.g. Blood Pressure Medicine"
-                />
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Scheduled Time
-                </span>
-
-                <input
-                  type="time"
-                  value={item.scheduledTime}
-                  onChange={(event) =>
-                    updateScheduleItem(index, {
-                      scheduledTime: event.target.value,
-                    })
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                />
-              </label>
-
-              <label className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-slate-700">
-                    Buffer Time
-                  </span>
-
-                  <span className="text-xs font-medium text-slate-500">
-                    {getRecommendedBufferLabel(item.highRisk)}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min={5}
-                    max={180}
-                    value={item.bufferTimeMinutes}
+                    <input
+                    value={item.medication}
                     onChange={(event) =>
-                      updateScheduleItem(index, {
-                        bufferTimeMinutes: Number(event.target.value),
-                      })
+                        updateScheduleItem(index, {
+                        medication: event.target.value,
+                        })
                     }
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                  />
-
-                  <span className="text-sm text-slate-500">min</span>
-                </div>
-              </label>
-
-              <div className="space-y-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  High-Risk Medication
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateScheduleItem(index, {
-                      highRisk: !item.highRisk,
-                    })
-                  }
-                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                    item.highRisk
-                      ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-slate-200 bg-slate-50 text-slate-700"
-                  }`}
-                >
-                  <span>{item.highRisk ? "Enabled" : "Disabled"}</span>
-                  <span
-                    className={`h-6 w-11 rounded-full p-1 transition ${
-                      item.highRisk ? "bg-red-200" : "bg-slate-200"
-                    }`}
-                  >
-                    <span
-                      className={`block h-4 w-4 rounded-full bg-white shadow-sm transition ${
-                        item.highRisk ? "translate-x-5" : "translate-x-0"
-                      }`}
+                    placeholder="e.g. Blood Pressure Medicine"
                     />
-                  </span>
-                </button>
-              </div>
-            </div>
+                </label>
+
+                <label className="space-y-2">
+                    <span className="block text-sm font-semibold text-slate-700">
+                    Scheduled Time
+                    </span>
+
+                    <input
+                    type="time"
+                    value={item.scheduledTime}
+                    onChange={(event) =>
+                        updateScheduleItem(index, {
+                        scheduledTime: event.target.value,
+                        })
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                    />
+                </label>
+
+                <label className="space-y-2">
+                    <span className="block text-sm font-semibold text-slate-700">
+                    Buffer Time
+                    </span>
+
+                    <div className="flex items-center gap-3">
+                    <input
+                        type="number"
+                        min={5}
+                        max={180}
+                        value={item.bufferTimeMinutes}
+                        onChange={(event) =>
+                        updateScheduleItem(index, {
+                            bufferTimeMinutes: Number(event.target.value),
+                        })
+                        }
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                    />
+
+                    <span className="text-sm text-slate-500">min</span>
+                    </div>
+                </label>
+
+                <div className="space-y-2">
+                    <span className="block text-sm font-semibold text-slate-700">
+                    High-Risk Medication
+                    </span>
+
+                    <button
+                    type="button"
+                    onClick={() =>
+                        updateScheduleItem(index, {
+                        highRisk: !item.highRisk,
+                        })
+                    }
+                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                        item.highRisk
+                        ? "border-red-200 bg-red-50 text-red-700"
+                        : "border-slate-200 bg-slate-50 text-slate-700"
+                    }`}
+                    >
+                    <span>{item.highRisk ? "Enabled" : "Disabled"}</span>
+
+                    <span
+                        className={`h-6 w-11 rounded-full p-1 transition ${
+                        item.highRisk ? "bg-red-200" : "bg-slate-200"
+                        }`}
+                    >
+                        <span
+                        className={`block h-4 w-4 rounded-full bg-white shadow-sm transition ${
+                            item.highRisk ? "translate-x-5" : "translate-x-0"
+                        }`}
+                        />
+                    </span>
+                    </button>
+                </div>
+                </div>
           </section>
         ))}
       </div>

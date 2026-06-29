@@ -12,4 +12,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 }

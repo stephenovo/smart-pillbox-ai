@@ -2,10 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { AdherenceOverview } from "../src/components/AdherenceOverview";
-import AiFeaturePanel from "../src/components/AiFeaturePanel";
 import { CareSessionControl } from "../src/components/CareSessionControl";
-import { EventLog } from "../src/components/EventLog";
 import InitialisationSetupPanel from "../src/components/InitialisationSetupPanel";
 import MainSectionTabs, {
   type MainSectionTab,
@@ -28,6 +25,8 @@ import {
 import { initialMedicationSchedule } from "../src/lib/sampleData";
 
 import type { MedicationSchedule, OpeningEvent } from "../src/types/pillbox";
+
+import DashboardPanel from "../src/components/DashboardPanel";
 
 export default function Home() {
   const [activeTab, setActiveTab] =
@@ -124,19 +123,19 @@ export default function Home() {
     setActiveTab("dashboard");
   }
 
-  return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="flex min-h-screen">
-        <Sidebar />
+      return (
+        <main className="min-h-screen bg-slate-50 text-slate-900">
+          <div className="flex min-h-screen">
+            <Sidebar />
 
-        <section className="flex-1 p-8">
+            <section className="flex-1 p-8">
           <div className="space-y-6">
             <header>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+              <h1 className="text-4xl font-semibold tracking-tight text-slate-950 lg:text-5xl">
                 Smart Pillbox AI
               </h1>
 
-              <p className="mt-2 text-slate-500">
+              <p className="mt-3 text-lg font-normal text-slate-500">
                 AIoT medication safety dashboard for caregivers, families, and
                 elderly users.
               </p>
@@ -173,7 +172,7 @@ export default function Home() {
                   onClearEvents={handleClearEvents}
                 />
 
-                <section className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+                <section className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
@@ -185,40 +184,36 @@ export default function Home() {
                       </h2>
 
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                        This button is only for the IFF2026 demo. It imports prepared
-                        opening-event records so the Dashboard can immediately show
-                        adherence status, duplicate opening risk, and AI caregiver insights.
+                        This button is only for the IFF2026 demo. It imports
+                        prepared opening-event records so the Dashboard can
+                        immediately show adherence status, duplicate opening risk,
+                        and AI caregiver insights.
                       </p>
                     </div>
 
                     <button
                       onClick={handleImportDemoDatabase}
-                      className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+                      className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                     >
                       Import Demo Database
                     </button>
                   </div>
 
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                    <strong>Demo note:</strong> This is not part of the final user-facing
-                    product. It is a demo shortcut for loading prepared pillbox opening
-                    records into the Dashboard.
+                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                    <strong>Demo note:</strong> This is not part of the final
+                    user-facing product. It is a demo shortcut for loading
+                    prepared pillbox opening records into the Dashboard.
                   </div>
                 </section>
               </div>
             )}
 
             {activeTab === "dashboard" && (
-              <div className="space-y-6">
-                <AdherenceOverview
-                  kpis={dashboardKpis}
-                  statuses={medicationStatuses}
-                />
-
-                <AiFeaturePanel />
-
-                <EventLog events={openingEvents} />
-              </div>
+              <DashboardPanel
+                kpis={dashboardKpis}
+                statuses={medicationStatuses}
+                events={openingEvents}
+              />
             )}
           </div>
         </section>

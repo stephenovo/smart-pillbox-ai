@@ -1,0 +1,246 @@
+export type HistoricalAdherenceStatus =
+  | "taken_on_time"
+  | "taken_delayed"
+  | "missed"
+  | "duplicate_opening";
+
+export type HistoricalAdherenceRecord = {
+  id: string;
+  patientId: string;
+  date: string;
+  compartmentId: number;
+  medicationName: string;
+  scheduledTime: string;
+  actualOpenTime: string | null;
+  delayMinutes: number | null;
+  ruleBasedStatus: HistoricalAdherenceStatus;
+  highRisk: boolean;
+};
+
+export const sampleHistoricalAdherenceRecords: HistoricalAdherenceRecord[] = [
+  // Compartment 1: usually fast morning medication
+  {
+    id: "hist-001",
+    patientId: "patient-001",
+    date: "2026-06-01",
+    compartmentId: 1,
+    medicationName: "Morning Blood Pressure Medicine",
+    scheduledTime: "08:00",
+    actualOpenTime: "08:06",
+    delayMinutes: 6,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-002",
+    patientId: "patient-001",
+    date: "2026-06-02",
+    compartmentId: 1,
+    medicationName: "Morning Blood Pressure Medicine",
+    scheduledTime: "08:00",
+    actualOpenTime: "08:09",
+    delayMinutes: 9,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-003",
+    patientId: "patient-001",
+    date: "2026-06-03",
+    compartmentId: 1,
+    medicationName: "Morning Blood Pressure Medicine",
+    scheduledTime: "08:00",
+    actualOpenTime: "08:07",
+    delayMinutes: 7,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-004",
+    patientId: "patient-001",
+    date: "2026-06-04",
+    compartmentId: 1,
+    medicationName: "Morning Blood Pressure Medicine",
+    scheduledTime: "08:00",
+    actualOpenTime: "08:35",
+    delayMinutes: 35,
+    ruleBasedStatus: "taken_delayed",
+    highRisk: false,
+  },
+
+  // Compartment 2: high-risk medication, usually very fast response
+  {
+    id: "hist-005",
+    patientId: "patient-001",
+    date: "2026-06-01",
+    compartmentId: 2,
+    medicationName: "High-Risk Heart Medicine",
+    scheduledTime: "09:00",
+    actualOpenTime: "09:04",
+    delayMinutes: 4,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: true,
+  },
+  {
+    id: "hist-006",
+    patientId: "patient-001",
+    date: "2026-06-02",
+    compartmentId: 2,
+    medicationName: "High-Risk Heart Medicine",
+    scheduledTime: "09:00",
+    actualOpenTime: "09:05",
+    delayMinutes: 5,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: true,
+  },
+  {
+    id: "hist-007",
+    patientId: "patient-001",
+    date: "2026-06-03",
+    compartmentId: 2,
+    medicationName: "High-Risk Heart Medicine",
+    scheduledTime: "09:00",
+    actualOpenTime: "09:08",
+    delayMinutes: 8,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: true,
+  },
+  {
+    id: "hist-008",
+    patientId: "patient-001",
+    date: "2026-06-04",
+    compartmentId: 2,
+    medicationName: "High-Risk Heart Medicine",
+    scheduledTime: "09:00",
+    actualOpenTime: "09:22",
+    delayMinutes: 22,
+    ruleBasedStatus: "taken_delayed",
+    highRisk: true,
+  },
+
+  // Compartment 3: evening medication, usually slower but consistent
+  {
+    id: "hist-009",
+    patientId: "patient-001",
+    date: "2026-06-01",
+    compartmentId: 3,
+    medicationName: "Evening Diabetes Medicine",
+    scheduledTime: "19:00",
+    actualOpenTime: "19:28",
+    delayMinutes: 28,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-010",
+    patientId: "patient-001",
+    date: "2026-06-02",
+    compartmentId: 3,
+    medicationName: "Evening Diabetes Medicine",
+    scheduledTime: "19:00",
+    actualOpenTime: "19:32",
+    delayMinutes: 32,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-011",
+    patientId: "patient-001",
+    date: "2026-06-03",
+    compartmentId: 3,
+    medicationName: "Evening Diabetes Medicine",
+    scheduledTime: "19:00",
+    actualOpenTime: "19:35",
+    delayMinutes: 35,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-012",
+    patientId: "patient-001",
+    date: "2026-06-04",
+    compartmentId: 3,
+    medicationName: "Evening Diabetes Medicine",
+    scheduledTime: "19:00",
+    actualOpenTime: "19:38",
+    delayMinutes: 38,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+
+  // Compartment 4: inconsistent medication behaviour
+  {
+    id: "hist-013",
+    patientId: "patient-001",
+    date: "2026-06-01",
+    compartmentId: 4,
+    medicationName: "Lunch Supplement",
+    scheduledTime: "13:00",
+    actualOpenTime: "13:05",
+    delayMinutes: 5,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+  {
+    id: "hist-014",
+    patientId: "patient-001",
+    date: "2026-06-02",
+    compartmentId: 4,
+    medicationName: "Lunch Supplement",
+    scheduledTime: "13:00",
+    actualOpenTime: "13:46",
+    delayMinutes: 46,
+    ruleBasedStatus: "taken_delayed",
+    highRisk: false,
+  },
+  {
+    id: "hist-015",
+    patientId: "patient-001",
+    date: "2026-06-03",
+    compartmentId: 4,
+    medicationName: "Lunch Supplement",
+    scheduledTime: "13:00",
+    actualOpenTime: null,
+    delayMinutes: null,
+    ruleBasedStatus: "missed",
+    highRisk: false,
+  },
+  {
+    id: "hist-016",
+    patientId: "patient-001",
+    date: "2026-06-04",
+    compartmentId: 4,
+    medicationName: "Lunch Supplement",
+    scheduledTime: "13:00",
+    actualOpenTime: "13:18",
+    delayMinutes: 18,
+    ruleBasedStatus: "taken_on_time",
+    highRisk: false,
+  },
+
+  // Duplicate opening examples for caregiver insight generation
+  {
+    id: "hist-017",
+    patientId: "patient-001",
+    date: "2026-06-05",
+    compartmentId: 1,
+    medicationName: "Morning Blood Pressure Medicine",
+    scheduledTime: "08:00",
+    actualOpenTime: "08:11",
+    delayMinutes: 11,
+    ruleBasedStatus: "duplicate_opening",
+    highRisk: false,
+  },
+  {
+    id: "hist-018",
+    patientId: "patient-001",
+    date: "2026-06-05",
+    compartmentId: 2,
+    medicationName: "High-Risk Heart Medicine",
+    scheduledTime: "09:00",
+    actualOpenTime: null,
+    delayMinutes: null,
+    ruleBasedStatus: "missed",
+    highRisk: true,
+  },
+];

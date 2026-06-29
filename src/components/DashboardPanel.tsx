@@ -13,30 +13,54 @@ type DashboardPanelProps = {
 
 type DotStatus = "normal" | "late" | "miss";
 
-const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const weekDays = [
+  { label: "Mon", number: 1 },
+  { label: "Tue", number: 2 },
+  { label: "Wed", number: 3 },
+  { label: "Thu", number: 4 },
+  { label: "Fri", number: 5 },
+  { label: "Sat", number: 6 },
+  { label: "Sun", number: 7 },
+];
 
 const weeklyMedicationMatrix: {
   timeSlot: string;
+  description: string;
   dots: DotStatus[];
 }[] = [
   {
     timeSlot: "Morning",
+    description: "AM medication routine",
     dots: ["normal", "normal", "late", "normal", "normal", "normal", "normal"],
   },
   {
     timeSlot: "Noon",
+    description: "Midday medication routine",
     dots: ["normal", "late", "miss", "normal", "normal", "late", "normal"],
   },
   {
     timeSlot: "Evening",
+    description: "PM medication routine",
     dots: ["normal", "normal", "normal", "late", "normal", "normal", "miss"],
   },
 ];
 
 function getDotClass(status: DotStatus): string {
-  if (status === "normal") return "bg-emerald-500 shadow-emerald-100";
-  if (status === "late") return "bg-amber-400 shadow-amber-100";
-  return "bg-red-500 shadow-red-100";
+  if (status === "normal") {
+    return "bg-emerald-500 shadow-[0_0_0_10px_rgba(16,185,129,0.10)]";
+  }
+
+  if (status === "late") {
+    return "bg-amber-400 shadow-[0_0_0_10px_rgba(251,191,36,0.12)]";
+  }
+
+  return "bg-red-500 shadow-[0_0_0_10px_rgba(239,68,68,0.12)]";
+}
+
+function getStatusLabel(status: DotStatus): string {
+  if (status === "normal") return "Normal";
+  if (status === "late") return "Late";
+  return "Miss";
 }
 
 function valueToSearchText(value: unknown): string {
@@ -91,8 +115,8 @@ function getEmergencyAlert(statuses: DashboardPanelProps["statuses"]) {
 
 function WeeklyStatusMatrix() {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 px-6 py-5">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
             Weekly Status
@@ -104,64 +128,79 @@ function WeeklyStatusMatrix() {
         </div>
 
         <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2">
             <span className="h-3 w-3 rounded-full bg-emerald-500" />
             Normal
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2">
             <span className="h-3 w-3 rounded-full bg-amber-400" />
             Late
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2">
             <span className="h-3 w-3 rounded-full bg-red-500" />
             Miss
           </div>
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto">
-        <div className="min-w-[640px] rounded-3xl bg-slate-50 p-5">
-          <div className="grid grid-cols-[120px_repeat(7,1fr)] items-center gap-4">
-            <div />
+      <div className="p-6">
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px] rounded-[28px] bg-slate-50 p-5">
+            <div className="grid grid-cols-[150px_repeat(7,1fr)] gap-3">
+              <div />
 
-            {weekDays.map((day, index) => (
-              <div
-                key={day}
-                className="text-center text-sm font-semibold text-slate-500"
-              >
-                {day}
-                <span className="ml-1 text-xs text-slate-400">
-                  {index + 1}
-                </span>
-              </div>
-            ))}
-
-            {weeklyMedicationMatrix.map((row) => (
-              <>
+              {weekDays.map((day) => (
                 <div
-                  key={`${row.timeSlot}-label`}
-                  className="text-sm font-semibold text-slate-700"
+                  key={day.label}
+                  className="rounded-2xl bg-white px-3 py-3 text-center shadow-sm"
                 >
-                  {row.timeSlot}
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {day.label}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-slate-900">
+                    {day.number}
+                  </p>
                 </div>
+              ))}
 
-                {row.dots.map((dot, index) => (
-                  <div
-                    key={`${row.timeSlot}-${weekDays[index]}`}
-                    className="flex justify-center"
-                  >
-                    <span
-                      className={`h-5 w-5 rounded-full shadow-[0_0_0_8px] ${getDotClass(
+              {weeklyMedicationMatrix.map((row) => (
+                <div
+                  key={row.timeSlot}
+                  className="contents"
+                >
+                  <div className="flex min-h-20 flex-col justify-center rounded-2xl bg-white px-4 py-3 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {row.timeSlot}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {row.description}
+                    </p>
+                  </div>
+
+                  {row.dots.map((dot, index) => (
+                    <div
+                      key={`${row.timeSlot}-${weekDays[index].label}`}
+                      className="flex min-h-20 items-center justify-center rounded-2xl bg-white shadow-sm"
+                      title={`${row.timeSlot} ${weekDays[index].label}: ${getStatusLabel(
                         dot
                       )}`}
-                    />
-                  </div>
-                ))}
-              </>
-            ))}
+                    >
+                      <span
+                        className={`h-5 w-5 rounded-full ${getDotClass(dot)}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+          Each dot represents one medication routine status. Green means normal,
+          yellow means late, and red means missed.
         </div>
       </div>
     </section>
@@ -208,25 +247,15 @@ export default function DashboardPanel({
       <WeeklyStatusMatrix />
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Caregiver Dashboard
-          </p>
-
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-            Adherence Overview
-          </h2>
-        </div>
-
         <div className="space-y-6">
-          <AdherenceOverview kpis={kpis} statuses={statuses} />
+            <AdherenceOverview kpis={kpis} statuses={statuses} />
 
-          <EventLog events={events} />
+            <EventLog events={events} />
         </div>
-      </section>
+        </section>
 
       <AiReportPanel />
-      
+
     </div>
   );
 }

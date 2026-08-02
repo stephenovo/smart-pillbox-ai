@@ -27,6 +27,12 @@ Then open:
 http://localhost:3000
 ```
 
+Mobile caregiver view:
+
+```txt
+http://localhost:3000/mobile
+```
+
 ---
 
 ## How to Use the Web Demo
@@ -156,6 +162,53 @@ http://localhost:3000/ai-learning-test
 Demonstrates how the AI model updates when new adherence records are added.
 
 This page is useful for showing that the AI is self-learning rather than fixed rule-only logic.
+
+---
+
+## Hardware MVP Prep
+
+The project now includes starter materials for the ESP32-S3 pillbox hardware demo.
+
+```txt
+docs/hardware/README.md
+docs/hardware/MVP_CHECKLIST.md
+docs/HARDWARE_MVP_SETUP.md
+hardware/esp32-s3/smart_pillbox_demo/smart_pillbox_demo.ino
+```
+
+Prepared web endpoints:
+
+```txt
+GET    /api/hardware/plan
+POST   /api/hardware/plan
+GET    /api/hardware/events
+POST   /api/hardware/events
+DELETE /api/hardware/events
+GET    /api/hardware/state
+POST   /api/hardware/state
+```
+
+The main web app polls uploaded hardware opening events and merges them into the Pillbox Event Log.
+
+---
+
+## Mobile View
+
+The project includes a phone-first caregiver view:
+
+```txt
+http://localhost:3000/mobile
+```
+
+It includes:
+
+* Today overview
+* slot control
+* hardware event polling
+* mobile event timeline
+* AI caregiver insight summary
+
+The web manifest starts at `/mobile`, so the page can be tested as a lightweight mobile web app.
 
 ---
 

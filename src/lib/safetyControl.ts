@@ -25,7 +25,12 @@ export function classifyMedicationStatus(
   analysisDate: string
 ): DailyMedicationStatus | null {
   const matchingEvents = events
-    .filter((event) => event.compartment === item.compartment)
+    .filter(
+      (event) =>
+        event.compartment === item.compartment &&
+        event.eventType === "lid_open" &&
+        event.eventTime.slice(0, 10) === analysisDate
+    )
     .sort(
       (a, b) =>
         parseEventDateTime(a.eventTime).getTime() -

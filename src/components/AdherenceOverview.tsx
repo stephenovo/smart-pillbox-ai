@@ -15,14 +15,14 @@ export function AdherenceOverview({ kpis, statuses }: AdherenceOverviewProps) {
   const hasDelay = statuses.some((item) => item.status === "Taken - Delayed");
 
   return (
-    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-bold text-slate-900">
         Adherence Overview
       </h2>
 
       <p className="mt-1 text-sm text-slate-500">
-        This section shows rule-based medication safety status based on pillbox
-        opening records.
+        Rule-based medication safety status based on received pillbox opening
+        records.
       </p>
 
       {statuses.length > 0 && (
@@ -43,11 +43,11 @@ export function AdherenceOverview({ kpis, statuses }: AdherenceOverviewProps) {
         </div>
       )}
 
-      <div className="mt-5 grid grid-cols-6 gap-4">
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {kpis.map((item) => (
           <div
             key={item.label}
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+            className="rounded-lg border border-slate-200 bg-slate-50 p-4"
           >
             <p className="text-sm text-slate-500">{item.label}</p>
             <p className="mt-2 text-2xl font-bold text-slate-900">
@@ -58,12 +58,12 @@ export function AdherenceOverview({ kpis, statuses }: AdherenceOverviewProps) {
       </div>
 
       {statuses.length === 0 ? (
-        <div className="mt-5 rounded-2xl bg-slate-100 p-4 text-sm text-slate-600">
+        <div className="mt-5 rounded-lg bg-slate-100 p-4 text-sm text-slate-600">
           No opening records yet. The adherence dashboard will update after a
-          pillbox opening event is recorded.
+          pillbox opening event is received.
         </div>
       ) : (
-        <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+        <div className="mt-5 overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-100 text-slate-600">
               <tr>

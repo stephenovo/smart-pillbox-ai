@@ -4,12 +4,18 @@ export function createOpeningEvent(
   item: MedicationSchedule,
   eventTime: string
 ): OpeningEvent {
+  const receivedAt = new Date(eventTime.replace(" ", "T") + ":00").toISOString();
+
   return {
     id: `${Date.now()}-${item.compartment}`,
     eventTime,
+    receivedAt,
     compartment: item.compartment,
     medication: item.medication,
-    eventType: "OPEN",
+    eventType: "lid_open",
+    source: "simulation",
+    deviceId: "SOFTWARE-SIMULATOR",
+    activeSlotAtEvent: item.compartment,
   };
 }
 

@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+*.dmg
+*.dmg.sha256
 
 # debug
 npm-debug.log*
@@ -33,6 +35,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 .env*.local
+
+# local ESP32 credentials
+hardware/**/config.h
+
+# local hardware demo data
+/.data/
 
 # vercel
 .vercel

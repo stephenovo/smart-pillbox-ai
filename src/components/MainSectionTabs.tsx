@@ -1,5 +1,7 @@
 "use client";
 
+import { Activity, LayoutGrid, Pill } from "lucide-react";
+
 export type MainSectionTab = "initialisation" | "pillbox" | "dashboard";
 
 type MainSectionTabsProps = {
@@ -10,22 +12,22 @@ type MainSectionTabsProps = {
 const tabs: {
   id: MainSectionTab;
   label: string;
-  subtitle: string;
+  icon: typeof LayoutGrid;
 }[] = [
   {
+    id: "dashboard",
+    label: "Care feed",
+    icon: LayoutGrid,
+  },
+  {
     id: "initialisation",
-    label: "Initialisation",
-    subtitle: "Set medication schedule and safety limits",
+    label: "Meds",
+    icon: Pill,
   },
   {
     id: "pillbox",
-    label: "Pillbox",
-    subtitle: "Run hardware demo and opening simulation",
-  },
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    subtitle: "Review adherence status and AI insights",
+    label: "Activity",
+    icon: Activity,
   },
 ];
 
@@ -34,33 +36,34 @@ export default function MainSectionTabs({
   onTabChange,
 }: MainSectionTabsProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-      <div className="grid gap-2 md:grid-cols-3">
+    <nav
+      aria-label="Mobile navigation"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden"
+    >
+      <div className="mx-auto grid max-w-md grid-cols-3">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
 
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`rounded-xl px-4 py-4 text-left transition ${
-                isActive
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition ${
+                isActive ? "text-neutral-950" : "text-neutral-400"
               }`}
             >
-              <p className="text-sm font-bold">{tab.label}</p>
-              <p
-                className={`mt-1 text-xs leading-5 ${
-                  isActive ? "text-emerald-50" : "text-slate-500"
-                }`}
-              >
-                {tab.subtitle}
-              </p>
+              <Icon
+                aria-hidden="true"
+                size={21}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+              <span>{tab.label}</span>
             </button>
           );
         })}
       </div>
-    </section>
+    </nav>
   );
 }

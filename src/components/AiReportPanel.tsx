@@ -105,20 +105,20 @@ export default function AiReportPanel() {
   }
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-lg border border-stone-200 bg-white p-5 sm:p-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <p className="text-xs font-semibold uppercase text-[#e34747]">
             AI Analysis
           </p>
 
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-            AI Intelligent Data Report
+          <h2 className="mt-1 text-xl font-bold text-neutral-950">
+            Weekly care insights
           </h2>
         </div>
 
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-          DeepSeek-powered summary
+        <div className="rounded-full bg-[#effaf7] px-3 py-1.5 text-xs font-bold text-teal-700">
+          AI assisted
         </div>
       </div>
 
@@ -131,7 +131,7 @@ export default function AiReportPanel() {
             return (
               <div
                 key={section.id}
-                className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+                className="rounded-lg border border-stone-200 bg-[#fafafa] p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
@@ -148,14 +148,14 @@ export default function AiReportPanel() {
                     type="button"
                     onClick={() => generateSection(section.id)}
                     disabled={isLoading}
-                    className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                    className="rounded-md bg-neutral-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {isLoading ? "Generating..." : "Generate"}
                   </button>
                 </div>
 
                 {generatedText && (
-                  <div className="mt-4 rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm">
+                  <div className="mt-4 border-t border-stone-200 pt-4 text-sm leading-6 text-neutral-700">
                     {generatedText}
                   </div>
                 )}
@@ -170,7 +170,7 @@ export default function AiReportPanel() {
           )}
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <div className="rounded-lg border border-stone-200 bg-[#fafafa] p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-slate-950">
@@ -191,7 +191,7 @@ export default function AiReportPanel() {
             {report.medicationInsights.map((insight) => (
               <div
                 key={insight.compartmentId}
-                className="rounded-2xl bg-white p-4 shadow-sm"
+                className="border-b border-stone-200 py-4 last:border-0"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>

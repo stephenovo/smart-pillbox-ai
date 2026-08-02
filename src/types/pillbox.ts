@@ -6,12 +6,22 @@ export type MedicationSchedule = {
   bufferTimeMinutes: number;
 };
 
+export type PillboxEventSource = "hardware" | "simulation";
+
+export type PillboxOpeningEventType = "lid_open" | "wrong_slot_open";
+
 export type OpeningEvent = {
   id: string;
   eventTime: string;
+  receivedAt: string;
   compartment: number;
   medication: string;
-  eventType: "OPEN";
+  eventType: PillboxOpeningEventType;
+  source: PillboxEventSource;
+  deviceId: string;
+  activeSlotAtEvent?: number | null;
+  deviceTimestamp?: string;
+  firmwareVersion?: string;
 };
 
 export type MedicationStatus =

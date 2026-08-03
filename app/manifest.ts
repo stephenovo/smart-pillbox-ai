@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Smart Pillbox AI",
-    short_name: "Pillbox AI",
-    description: "Mobile caregiver view for Smart Pillbox AI.",
+    name: "Smart Pillbox",
+    short_name: "Pillbox",
+    description: "Mobile caregiver view for Smart Pillbox.",
     start_url: "/mobile",
     display: "standalone",
     background_color: "#020617",

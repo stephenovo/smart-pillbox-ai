@@ -77,10 +77,10 @@ export function InitialisationTable({
             }`}
         >
             {saveStatus === "error"
-                ? "Save failed - check that the local web server is running."
+                ? "Save failed - please try again."
                 : hasUnsavedChanges
-                  ? "Unsaved changes - save before running the pillbox."
-                  : "Saved - pillbox setup is up to date."}
+                  ? "Unsaved changes - save to update Margaret's pillbox."
+                  : "Saved - Margaret's pillbox is up to date."}
         </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
@@ -231,7 +231,7 @@ export function InitialisationTable({
             {saveStatus === "saving"
               ? "Saving..."
               : hasUnsavedChanges
-                ? "Save Initialisation"
+                ? "Save medication plan"
                 : "Saved"}
             </button>
         </div>

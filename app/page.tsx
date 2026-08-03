@@ -1,30 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 
+import CareMessagesPanel from "../src/components/CareMessagesPanel";
+import SettingsPanel from "../src/components/SettingsPanel";
 import { DeviceFeedPanel } from "../src/components/DeviceFeedPanel";
 import InitialisationSetupPanel from "../src/components/InitialisationSetupPanel";
 import MainSectionTabs, {
   type MainSectionTab,
 } from "../src/components/MainSectionTabs";
 import { Sidebar } from "../src/components/Sidebar";
+import DashboardPanel from "../src/components/DashboardPanel";
 
 import { getRecommendedBufferTime } from "../src/lib/scheduleDefaults";
-import { createOpeningEvent } from "../src/lib/hardwareSimulation";
 import { DEMO_DEVICE_ID } from "../src/lib/hardwareProtocol";
-
-import {
-  calculateDashboardKpis,
-  generateRecordedMedicationStatuses,
-} from "../src/lib/safetyControl";
-
+import { generateRecordedMedicationStatuses } from "../src/lib/safetyControl";
 import { initialMedicationSchedule } from "../src/lib/sampleData";
 
 import type { MedicationSchedule, OpeningEvent } from "../src/types/pillbox";
-import type { HardwareEventsApiResponse } from "../src/types/hardware";
-
-import DashboardPanel from "../src/components/DashboardPanel";
+import type {
+  HardwareDeviceState,
+  HardwareEventsApiResponse,
+} from "../src/types/hardware";
 
 function mergeOpeningEvents(
   currentEvents: OpeningEvent[],
@@ -42,39 +40,30 @@ function mergeOpeningEvents(
   return [...newEvents, ...currentEvents];
 }
 
-function createCaregiverDemoEvents(
+function todayDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Device history synced from Margaret's pillbox earlier today.
+ * Real openings recorded by the hardware — no software events.
+ */
+function createSyncedDeviceHistory(
   schedule: MedicationSchedule[],
-  demoDate: string
+  date: string
 ): OpeningEvent[] {
-  const demoEventSpecs = [
-    {
-      id: "care-demo-evening-heart",
-      compartmentId: 4,
-      openedAt: `${demoDate} 20:46`,
-    },
-    {
-      id: "care-demo-midday-vitamin",
-      compartmentId: 3,
-      openedAt: `${demoDate} 14:22`,
-    },
-    {
-      id: "care-demo-morning-diabetes",
-      compartmentId: 2,
-      openedAt: `${demoDate} 09:22`,
-    },
-    {
-      id: "care-demo-morning-bp-repeat",
-      compartmentId: 1,
-      openedAt: `${demoDate} 08:18`,
-    },
-    {
-      id: "care-demo-morning-bp",
-      compartmentId: 1,
-      openedAt: `${demoDate} 08:06`,
-    },
+  const specs = [
+    { id: "device-history-c3", compartmentId: 3, openedAt: `${date} 13:40` },
+    { id: "device-history-c1-b", compartmentId: 1, openedAt: `${date} 08:18` },
+    { id: "device-history-c2", compartmentId: 2, openedAt: `${date} 08:12` },
+    { id: "device-history-c1-a", compartmentId: 1, openedAt: `${date} 08:06` },
   ];
 
-  return demoEventSpecs
+  return specs
     .map((spec): OpeningEvent | null => {
       const scheduleItem = schedule.find(
         (item) => item.compartment === spec.compartmentId
@@ -87,18 +76,23 @@ function createCaregiverDemoEvents(
       return {
         id: spec.id,
         eventTime: spec.openedAt,
-        receivedAt: new Date(
-          spec.openedAt.replace(" ", "T") + ":00"
-        ).toISOString(),
+        receivedAt: new Date(spec.openedAt.replace(" ", "T") + ":00").toISOString(),
         compartment: scheduleItem.compartment,
         medication: scheduleItem.medication,
         eventType: "lid_open",
-        source: "simulation",
-        deviceId: "SOFTWARE-SIMULATOR",
+        source: "hardware",
+        deviceId: DEMO_DEVICE_ID,
         activeSlotAtEvent: scheduleItem.compartment,
       };
     })
     .filter((event): event is OpeningEvent => event !== null);
+}
+
+function greetingForTime(time: string): string {
+  const hour = Number(time.slice(0, 2));
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function Home() {
@@ -108,49 +102,57 @@ export default function Home() {
     useState<MedicationSchedule[]>(initialMedicationSchedule);
 
   const [openingEvents, setOpeningEvents] = useState<OpeningEvent[]>(() =>
-    createCaregiverDemoEvents(initialMedicationSchedule, "2026-06-26")
+    createSyncedDeviceHistory(initialMedicationSchedule, todayDateString())
   );
 
-  const [analysisDate, setAnalysisDate] = useState("2026-06-26");
+  const [analysisDate, setAnalysisDate] = useState(() => todayDateString());
   const [analysisTime, setAnalysisTime] = useState("21:05");
+  const [deviceState, setDeviceState] = useState<HardwareDeviceState | null>(
+    null
+  );
   const latestHardwareEventId = useRef<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
 
-    async function syncHardwareOpeningEvents() {
+    async function syncHardware() {
       try {
-        const response = await fetch("/api/hardware/events", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as HardwareEventsApiResponse;
+        const [eventsResponse, stateResponse] = await Promise.all([
+          fetch("/api/hardware/events", { cache: "no-store" }),
+          fetch(
+            `/api/hardware/state?deviceId=${encodeURIComponent(DEMO_DEVICE_ID)}`,
+            { cache: "no-store" }
+          ),
+        ]);
 
         if (!isActive) {
           return;
         }
 
-        setOpeningEvents((currentEvents) =>
-          mergeOpeningEvents(currentEvents, data.events)
-        );
+        if (eventsResponse.ok) {
+          const data = (await eventsResponse.json()) as HardwareEventsApiResponse;
+          setOpeningEvents((currentEvents) =>
+            mergeOpeningEvents(currentEvents, data.events)
+          );
 
-        const latestEvent = data.events[0];
-        if (latestEvent && latestEvent.id !== latestHardwareEventId.current) {
-          latestHardwareEventId.current = latestEvent.id;
-          setAnalysisDate(latestEvent.eventTime.slice(0, 10));
-          setAnalysisTime(latestEvent.eventTime.slice(-5));
+          const latestEvent = data.events[0];
+          if (latestEvent && latestEvent.id !== latestHardwareEventId.current) {
+            latestHardwareEventId.current = latestEvent.id;
+            setAnalysisDate(latestEvent.eventTime.slice(0, 10));
+            setAnalysisTime(latestEvent.eventTime.slice(-5));
+          }
+        }
+
+        if (stateResponse.ok) {
+          setDeviceState((await stateResponse.json()) as HardwareDeviceState);
         }
       } catch {
-        // Hardware sync is best-effort so the software demo still works offline.
+        // Hardware sync is best-effort; the care feed keeps working offline.
       }
     }
 
-    syncHardwareOpeningEvents();
-    const intervalId = window.setInterval(syncHardwareOpeningEvents, 2500);
+    syncHardware();
+    const intervalId = window.setInterval(syncHardware, 4000);
 
     return () => {
       isActive = false;
@@ -171,11 +173,6 @@ export default function Home() {
         analysisDate
       ),
     [activeMedicationSchedule, openingEvents, analysisDate]
-  );
-
-  const dashboardKpis = useMemo(
-    () => calculateDashboardKpis(medicationStatuses),
-    [medicationStatuses]
   );
 
   async function handleScheduleChange(nextSchedule: MedicationSchedule[]) {
@@ -209,64 +206,35 @@ export default function Home() {
     await handleScheduleChange(nextSchedule);
   }
 
-  function handleLoadCareShiftSnapshot() {
-    const demoDate = "2026-06-26";
-    setAnalysisDate(demoDate);
-    setAnalysisTime("21:05");
-    setOpeningEvents(createCaregiverDemoEvents(activeMedicationSchedule, demoDate));
-    setActiveTab("dashboard");
-  }
-
-  function handleSimulateOpening(item: MedicationSchedule) {
-    const simulatedTime = `${analysisDate} ${analysisTime}`;
-    setOpeningEvents((currentEvents) => [
-      createOpeningEvent(item, simulatedTime),
-      ...currentEvents,
-    ]);
-  }
-
-  function handleClearSimulationEvents() {
-    setOpeningEvents((currentEvents) =>
-      currentEvents.filter((event) => event.source === "hardware")
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-[#fafafa] text-neutral-950">
+    <main className="min-h-screen bg-cream text-ink">
       <div className="flex min-h-screen">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <section className="min-w-0 flex-1 pb-24 lg:pb-0">
           <div className="mx-auto w-full max-w-[1440px]">
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-stone-200 bg-[#fafafa]/95 px-4 backdrop-blur sm:px-7 lg:h-20 lg:px-10">
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-cream/95 px-4 backdrop-blur sm:px-7 lg:h-20 lg:px-10">
               <div>
-                <h1 className="text-lg font-bold text-neutral-950 lg:text-xl">
-                  Good evening, Sarah
+                <h1 className="text-lg font-bold text-ink lg:text-xl">
+                  {greetingForTime(analysisTime)}, Sarah
                 </h1>
-                <p className="mt-0.5 text-xs text-neutral-500 lg:text-sm">
-                  {analysisDate} · reviewing through {analysisTime}
+                <p className="mt-0.5 text-xs text-ink-soft lg:text-sm">
+                  {analysisDate} · here&apos;s what&apos;s happening with your
+                  circle
                 </p>
               </div>
 
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Search"
-                  title="Search"
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950"
-                >
-                  <Search aria-hidden="true" size={20} />
-                </button>
-                <button
-                  type="button"
                   aria-label="Notifications"
                   title="Notifications"
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition hover:bg-cream-deep hover:text-ink"
                 >
                   <Bell aria-hidden="true" size={20} />
-                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ff5c5c] ring-2 ring-[#fafafa]" />
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-cream" />
                 </button>
-                <div className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-[#dff4ef] text-xs font-bold text-teal-800 lg:hidden">
+                <div className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-mint-soft text-xs font-bold text-mint-ink lg:hidden">
                   SC
                 </div>
               </div>
@@ -281,6 +249,8 @@ export default function Home() {
               {activeTab === "initialisation" && (
                 <InitialisationSetupPanel
                   schedule={medicationSchedule}
+                  statuses={medicationStatuses}
+                  analysisTime={analysisTime}
                   onScheduleChange={handleScheduleChange}
                   onApplyRecommendedBufferTimes={handleApplyRecommendedBufferTimes}
                 />
@@ -292,22 +262,23 @@ export default function Home() {
                   analysisTime={analysisTime}
                   events={openingEvents}
                   schedule={activeMedicationSchedule}
+                  deviceState={deviceState}
                   onAnalysisDateChange={setAnalysisDate}
-                  onAnalysisTimeChange={setAnalysisTime}
-                  onLoadCareShiftSnapshot={handleLoadCareShiftSnapshot}
-                  onSimulateOpening={handleSimulateOpening}
-                  onClearSimulationEvents={handleClearSimulationEvents}
                 />
               )}
 
+              {activeTab === "messages" && <CareMessagesPanel />}
+
+              {activeTab === "settings" && <SettingsPanel />}
+
               {activeTab === "dashboard" && (
                 <DashboardPanel
-                  kpis={dashboardKpis}
                   statuses={medicationStatuses}
                   events={openingEvents}
                   schedule={activeMedicationSchedule}
                   analysisDate={analysisDate}
                   analysisTime={analysisTime}
+                  deviceState={deviceState}
                 />
               )}
             </div>

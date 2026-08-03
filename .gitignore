@@ -48,3 +48,14 @@ hardware/**/config.h
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Xcode
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcarchive
+*.ipa
+
+# Local agent working files
+/.workbuddy/
+/CODEX_CAREGIVER_APP_HANDOFF.md

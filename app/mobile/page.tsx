@@ -1,18 +1,32 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, ChartNoAxesColumn, LayoutGrid, Phone, Plus } from "lucide-react";
+import {
+  Bell,
+  Check,
+  CircleAlert,
+  Clock3,
+  LayoutGrid,
+  MessageCircle,
+  Phone,
+  Pill,
+  Plus,
+  Sparkles,
+  StickyNote,
+} from "lucide-react";
 
 import { generateCaregiverInsightReport } from "../../src/lib/aiCaregiverInsights";
 import {
-  calculateDashboardKpis,
-  generateRecordedMedicationStatuses,
-} from "../../src/lib/safetyControl";
+  careCircle,
+  wellbeingAppearance,
+  type CarePatient,
+} from "../../src/lib/careCircle";
+import { DEMO_DEVICE_ID } from "../../src/lib/hardwareProtocol";
+import { generateRecordedMedicationStatuses } from "../../src/lib/safetyControl";
 import { initialMedicationSchedule } from "../../src/lib/sampleData";
 import { sampleHistoricalAdherenceRecords } from "../../src/lib/sampleHistory";
 import type { HardwareEventsApiResponse } from "../../src/types/hardware";
 import type {
-  DailyMedicationStatus,
   MedicationSchedule,
   OpeningEvent,
 } from "../../src/types/pillbox";
@@ -21,8 +35,8 @@ type MobileTab = "today" | "slots" | "insights";
 
 const tabs: { id: MobileTab; label: string; icon: typeof LayoutGrid }[] = [
   { id: "today", label: "Today", icon: LayoutGrid },
-  { id: "slots", label: "Meds", icon: Activity },
-  { id: "insights", label: "Insights", icon: ChartNoAxesColumn },
+  { id: "slots", label: "Meds", icon: Pill },
+  { id: "insights", label: "Notes", icon: Sparkles },
 ];
 
 function mergeOpeningEvents(
@@ -41,66 +55,24 @@ function mergeOpeningEvents(
   return [...newEvents, ...currentEvents];
 }
 
-function getStatusTone(status: string): string {
-  if (
-    status === "Missed / Very Late" ||
-    status === "Opened Too Early" ||
-    status === "Duplicate Risk"
-  ) {
-    return "border-red-200 bg-red-50 text-red-800";
-  }
-
-  if (status === "Taken - Delayed") {
-    return "border-amber-200 bg-amber-50 text-amber-800";
-  }
-
-  if (status === "Taken - On Time") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-800";
-  }
-
-  return "border-slate-200 bg-white text-slate-700";
+function todayDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function getStatusDot(status: string): string {
-  if (
-    status === "Missed / Very Late" ||
-    status === "Opened Too Early" ||
-    status === "Duplicate Risk"
-  ) {
-    return "bg-red-500";
-  }
-
-  if (status === "Taken - Delayed") {
-    return "bg-amber-400";
-  }
-
-  if (status === "Taken - On Time") {
-    return "bg-emerald-500";
-  }
-
-  return "bg-slate-300";
-}
-
-function getMedicationStatus(
-  item: MedicationSchedule,
-  statuses: DailyMedicationStatus[],
-  events: OpeningEvent[]
-): string {
-  const currentStatus = statuses.find(
-    (status) => status.compartment === item.compartment
-  );
-  const hasOpening = events.some((event) => event.compartment === item.compartment);
-
-  return currentStatus?.status ?? (hasOpening ? "Opening recorded" : "Ready");
-}
-
-function createMobileCaregiverEvents(schedule: MedicationSchedule[]): OpeningEvent[] {
-  const demoDate = "2026-06-26";
+/** Device history synced from Margaret's pillbox earlier today. */
+function createSyncedDeviceHistory(
+  schedule: MedicationSchedule[],
+  date: string
+): OpeningEvent[] {
   const specs = [
-    { id: "mobile-demo-heart", compartmentId: 4, openedAt: `${demoDate} 20:46` },
-    { id: "mobile-demo-diabetes", compartmentId: 2, openedAt: `${demoDate} 09:22` },
-    { id: "mobile-demo-bp-repeat", compartmentId: 1, openedAt: `${demoDate} 08:18` },
-    { id: "mobile-demo-bp", compartmentId: 1, openedAt: `${demoDate} 08:06` },
+    { id: "device-history-c3", compartmentId: 3, openedAt: `${date} 13:40` },
+    { id: "device-history-c1-b", compartmentId: 1, openedAt: `${date} 08:18` },
+    { id: "device-history-c2", compartmentId: 2, openedAt: `${date} 08:12` },
+    { id: "device-history-c1-a", compartmentId: 1, openedAt: `${date} 08:06` },
   ];
 
   return specs
@@ -122,23 +94,99 @@ function createMobileCaregiverEvents(schedule: MedicationSchedule[]): OpeningEve
         compartment: item.compartment,
         medication: item.medication,
         eventType: "lid_open",
-        source: "simulation",
-        deviceId: "SOFTWARE-SIMULATOR",
+        source: "hardware",
+        deviceId: DEMO_DEVICE_ID,
         activeSlotAtEvent: item.compartment,
       };
     })
     .filter((event): event is OpeningEvent => event !== null);
 }
 
+function friendlyStatus(status: string): { label: string; chip: string } {
+  if (status === "Taken - On Time")
+    return { label: "Taken on time", chip: "bg-mint-soft text-mint-ink" };
+  if (status === "Taken - Delayed")
+    return { label: "Taken late", chip: "bg-honey-soft text-honey-ink" };
+  if (status === "Duplicate Risk")
+    return { label: "Opened twice", chip: "bg-coral-soft text-coral-ink" };
+  if (status === "Opened Too Early")
+    return { label: "Opened early", chip: "bg-coral-soft text-coral-ink" };
+  if (status === "Missed / Very Late")
+    return { label: "Missed", chip: "bg-coral-soft text-coral-ink" };
+  return { label: "Still unopened", chip: "bg-cream-deep text-ink-soft" };
+}
+
+function StoriesRow({
+  selectedId,
+  onSelect,
+}: {
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <section aria-label="Your care circle" className="overflow-x-auto">
+      <div className="flex min-w-max items-start gap-4 px-5 pb-1 pt-4">
+        {careCircle.map((person) => {
+          const appearance = wellbeingAppearance(person.wellbeing);
+          const isSelected = person.id === selectedId;
+
+          return (
+            <button
+              key={person.id}
+              type="button"
+              onClick={() => onSelect(person.id)}
+              className="flex w-[62px] flex-col items-center gap-1.5"
+            >
+              <span
+                className={`relative flex h-14 w-14 items-center justify-center rounded-full border-[2.5px] bg-white p-[2px] ${
+                  isSelected ? appearance.ring : "border-line"
+                }`}
+              >
+                <span
+                  className={`flex h-full w-full items-center justify-center rounded-full text-xs font-bold ${person.avatarTone}`}
+                >
+                  {person.initials}
+                </span>
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${appearance.dot}`}
+                />
+              </span>
+              <span
+                className={`w-full truncate text-center text-[11px] ${
+                  isSelected ? "font-bold text-ink" : "font-medium text-ink-soft"
+                }`}
+              >
+                {person.firstName}
+              </span>
+            </button>
+          );
+        })}
+
+        <button
+          type="button"
+          className="flex w-[62px] flex-col items-center gap-1.5"
+        >
+          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-ink-faint bg-white text-ink-soft">
+            <Plus aria-hidden="true" size={18} />
+          </span>
+          <span className="text-[11px] font-medium text-ink-soft">Add</span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export default function MobilePage() {
   const [activeTab, setActiveTab] = useState<MobileTab>("today");
+  const [selectedPatientId, setSelectedPatientId] = useState("margaret");
+  const [reviewed, setReviewed] = useState(false);
   const [medicationSchedule] = useState<MedicationSchedule[]>(
     initialMedicationSchedule
   );
   const [openingEvents, setOpeningEvents] = useState<OpeningEvent[]>(() =>
-    createMobileCaregiverEvents(initialMedicationSchedule)
+    createSyncedDeviceHistory(initialMedicationSchedule, todayDateString())
   );
-  const [analysisDate, setAnalysisDate] = useState("2026-06-26");
+  const [analysisDate, setAnalysisDate] = useState(() => todayDateString());
   const latestHardwareEventId = useRef<string | null>(null);
 
   const activeMedicationSchedule = useMemo(
@@ -175,12 +223,12 @@ export default function MobilePage() {
           setAnalysisDate(latestEvent.eventTime.slice(0, 10));
         }
       } catch {
-        // The mobile demo still works when hardware is offline.
+        // The care feed keeps working when hardware is offline.
       }
     }
 
     syncHardwareOpeningEvents();
-    const intervalId = window.setInterval(syncHardwareOpeningEvents, 2500);
+    const intervalId = window.setInterval(syncHardwareOpeningEvents, 4000);
 
     return () => {
       isActive = false;
@@ -198,11 +246,6 @@ export default function MobilePage() {
     [activeMedicationSchedule, openingEvents, analysisDate]
   );
 
-  const dashboardKpis = useMemo(
-    () => calculateDashboardKpis(medicationStatuses),
-    [medicationStatuses]
-  );
-
   const report = useMemo(
     () =>
       generateCaregiverInsightReport(
@@ -212,203 +255,234 @@ export default function MobilePage() {
     []
   );
 
-  const nextMedication = activeMedicationSchedule[0];
-  const riskCount = medicationStatuses.filter(
+  const selectedPatient: CarePatient =
+    careCircle.find((person) => person.id === selectedPatientId) ??
+    careCircle[0];
+  const isLivePatient = selectedPatient.id === "margaret";
+  const appearance = wellbeingAppearance(selectedPatient.wellbeing);
+
+  const attentionStatuses = medicationStatuses.filter(
     (item) =>
       item.status === "Missed / Very Late" ||
       item.status === "Opened Too Early" ||
       item.status === "Duplicate Risk"
+  );
+
+  const takenCount = medicationStatuses.filter(
+    (item) =>
+      item.status === "Taken - On Time" ||
+      item.status === "Taken - Delayed" ||
+      item.status === "Duplicate Risk"
   ).length;
 
+  const sortedStatuses = [...medicationStatuses].sort((a, b) =>
+    a.scheduledTime.localeCompare(b.scheduledTime)
+  );
+
   return (
-    <main className="min-h-dvh bg-stone-100 text-neutral-950">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-[#fafafa] shadow-xl">
-        <header className="border-b border-stone-200 bg-white px-5 pb-5 pt-5">
+    <main className="min-h-dvh bg-cream-deep text-ink">
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-cream shadow-lift">
+        <header className="border-b border-line bg-white px-5 pb-4 pt-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ffe1df] text-sm font-bold text-rose-800 ring-2 ring-[#ff5c5c] ring-offset-2 ring-offset-white">
-                ML
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-mint-soft text-xs font-bold text-mint-ink">
+                SC
               </div>
               <div>
-                <p className="text-xs font-semibold text-neutral-400">Today&apos;s care</p>
-                <h1 className="mt-0.5 text-xl font-bold text-neutral-950">Margaret Lin</h1>
+                <h1 className="text-lg font-bold text-ink">
+                  Good evening, Sarah
+                </h1>
+                <p className="text-xs text-ink-soft">
+                  {attentionStatuses.length > 0
+                    ? `${attentionStatuses.length} thing${attentionStatuses.length === 1 ? "" : "s"} to check on today`
+                    : "Everyone is doing well today"}
+                </p>
               </div>
             </div>
 
-            <div className="rounded-full bg-[#effaf7] px-3 py-1 text-xs font-bold text-teal-700">
-              Online
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-3 gap-3">
-            {dashboardKpis.slice(0, 3).map((item) => (
-              <div
-                key={item.label}
-                className="border-l border-stone-200 pl-3 first:border-0 first:pl-0"
-              >
-                <p className="text-[11px] text-neutral-400">{item.label}</p>
-                <p className="mt-1 text-xl font-bold text-neutral-950">{item.value}</p>
-              </div>
-            ))}
+            <button
+              type="button"
+              aria-label="Notifications"
+              title="Notifications"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-soft"
+            >
+              <Bell aria-hidden="true" size={20} />
+              {attentionStatuses.length > 0 && (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-white" />
+              )}
+            </button>
           </div>
         </header>
 
-        <section className="flex-1 bg-[#fafafa] px-4 pb-24 pt-4">
+        <div className="border-b border-line bg-white">
+          <StoriesRow
+            selectedId={selectedPatientId}
+            onSelect={setSelectedPatientId}
+          />
+        </div>
+
+        <section className="flex-1 px-4 pb-24 pt-4">
           {activeTab === "today" && (
             <div className="space-y-4">
-              <section className="rounded-lg border border-stone-200 bg-white p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-[#e34747]">
-                      Care Status
-                    </p>
-                  <h2 className="mt-2 text-xl font-bold text-slate-950">
-                      {riskCount > 0
-                        ? "Caregiver review needed"
-                        : nextMedication?.medication ?? "No medication"}
+              <article className="overflow-hidden rounded-xl border border-line bg-white shadow-card">
+                <div className="flex items-center gap-3 px-4 pt-4">
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-white p-[2px] ${appearance.ring}`}
+                  >
+                    <span
+                      className={`flex h-full w-full items-center justify-center rounded-full text-xs font-bold ${selectedPatient.avatarTone}`}
+                    >
+                      {selectedPatient.initials}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate text-base font-bold text-ink">
+                      {selectedPatient.name}
                     </h2>
-                    <p className="mt-1 text-sm font-medium text-slate-500">
-                      Margaret Lin · {analysisDate}
+                    <p className="truncate text-xs text-ink-soft">
+                      {selectedPatient.age} · {selectedPatient.livingSituation}
                     </p>
                   </div>
-
                   <span
-                    className={
-                      nextMedication?.highRisk
-                        ? "rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700"
-                        : "rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700"
-                    }
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${appearance.badge}`}
                   >
-                    {riskCount > 0 ? `${riskCount} Alerts` : "Stable"}
+                    {reviewed ? "Reviewed" : appearance.label}
                   </span>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                    Today&apos;s doses
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-ink">
+                    {isLivePatient
+                      ? `${takenCount} of ${medicationStatuses.length}`
+                      : `${selectedPatient.snapshot.dosesTaken} of ${selectedPatient.snapshot.dosesTotal}`}{" "}
+                    <span className="text-sm font-semibold text-ink-soft">
+                      taken
+                    </span>
+                  </p>
+
+                  {isLivePatient && attentionStatuses.length > 0 && !reviewed && (
+                    <div className="mt-3 rounded-lg border border-coral-line bg-coral-soft px-3.5 py-3">
+                      <p className="text-sm font-semibold text-coral-ink">
+                        {attentionStatuses[0].medication} —{" "}
+                        {friendlyStatus(attentionStatuses[0].status).label.toLowerCase()}
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-coral-ink/80">
+                        Due at {attentionStatuses[0].scheduledTime}. A quick
+                        call might help.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-4 gap-2 border-t border-line-soft px-4 py-3">
+                  <a
+                    href={`tel:${selectedPatient.phone}`}
+                    className="flex flex-col items-center gap-1 rounded-lg py-1.5 text-ink"
+                  >
+                    <Phone aria-hidden="true" size={19} />
+                    <span className="text-[10px] font-semibold">Call</span>
+                  </a>
+                  <a
+                    href={`sms:${selectedPatient.phone}`}
+                    className="flex flex-col items-center gap-1 rounded-lg py-1.5 text-ink"
+                  >
+                    <MessageCircle aria-hidden="true" size={19} />
+                    <span className="text-[10px] font-semibold">Message</span>
+                  </a>
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-2 rounded-md border border-stone-200 px-4 py-3 text-sm font-semibold text-neutral-700"
+                    className="flex flex-col items-center gap-1 rounded-lg py-1.5 text-ink"
                   >
-                    <Phone aria-hidden="true" size={16} /> Call patient
+                    <StickyNote aria-hidden="true" size={19} />
+                    <span className="text-[10px] font-semibold">Note</span>
                   </button>
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-2 rounded-md bg-neutral-950 px-4 py-3 text-sm font-semibold text-white"
+                    onClick={() => setReviewed((current) => !current)}
+                    className={`flex flex-col items-center gap-1 rounded-lg py-1.5 ${
+                      reviewed ? "text-mint-ink" : "text-ink"
+                    }`}
                   >
-                    <Plus aria-hidden="true" size={16} /> Add note
+                    <Check aria-hidden="true" size={19} />
+                    <span className="text-[10px] font-semibold">
+                      {reviewed ? "Reviewed" : "Review"}
+                    </span>
                   </button>
                 </div>
-              </section>
+              </article>
 
-              {riskCount > 0 && (
-                <section className="rounded-lg border border-[#ffc8c3] bg-[#fff1f0] p-5 text-red-900">
-                  <p className="text-xs font-semibold uppercase text-[#e34747]">
-                    Caregiver Alert
-                  </p>
-                  <h2 className="mt-2 text-lg font-bold">
-                    Attention recommended
-                  </h2>
-                  <p className="mt-2 text-sm leading-6">
-                    {riskCount} medication routine needs review from recent
-                    opening records.
-                  </p>
-                </section>
-              )}
+              <div className="space-y-3">
+                <h2 className="px-1 text-sm font-bold text-ink">Care feed</h2>
 
-              <section className="rounded-lg border border-stone-200 bg-white p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-lg font-bold text-slate-950">
-                    Event Timeline
-                  </h2>
-                </div>
-
-                {openingEvents.length === 0 ? (
-                  <div className="mt-4 rounded-md bg-stone-100 p-4 text-sm text-neutral-500">
-                    No opening records yet.
-                  </div>
-                ) : (
-                  <div className="mt-4 space-y-3">
-                    {openingEvents.slice(0, 5).map((event) => (
-                      <div
-                        key={event.id}
-                        className="flex items-center justify-between gap-3 border-b border-stone-100 px-1 py-3 last:border-0"
-                      >
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            Slot {event.compartment} opened
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {event.medication} · {event.source}
-                          </p>
-                        </div>
-                        <p className="text-right text-xs font-semibold text-slate-500">
-                          {event.eventTime}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            </div>
-          )}
-
-          {activeTab === "slots" && (
-            <div className="space-y-4">
-              <section className="rounded-lg border border-stone-200 bg-white p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-[#e34747]">
-                      Pillbox
-                    </p>
-                    <h2 className="mt-2 text-xl font-bold text-slate-950">
-                      Medication plan
-                    </h2>
-                  </div>
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                    {openingEvents.length} opens
-                  </span>
-                </div>
-              </section>
-
-              <div className="grid grid-cols-2 gap-3">
-                {activeMedicationSchedule.map((item) => {
-                  const status = getMedicationStatus(
-                    item,
-                    medicationStatuses,
-                    openingEvents
-                  );
+                {sortedStatuses.map((status) => {
+                  const friendly = friendlyStatus(status.status);
+                  const isAlert =
+                    status.status === "Missed / Very Late" ||
+                    status.status === "Duplicate Risk" ||
+                    status.status === "Opened Too Early";
 
                   return (
                     <article
-                      key={item.compartment}
-                    className={`min-h-48 rounded-lg border p-4 ${getStatusTone(
-                        status
-                      )}`}
+                      key={status.compartment}
+                      className={`rounded-xl border bg-white p-4 shadow-card ${
+                        isAlert && !reviewed ? "border-coral-line" : "border-line"
+                      }`}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide opacity-60">
-                            Slot
-                          </p>
-                          <h3 className="mt-1 text-3xl font-bold">
-                            {item.compartment}
-                          </h3>
-                        </div>
+                      <div className="flex items-start gap-3">
                         <span
-                          className={`mt-1 h-3 w-3 rounded-full ${getStatusDot(
-                            status
-                          )}`}
-                        />
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${friendly.chip}`}
+                        >
+                          {status.status === "Taken - On Time" ? (
+                            <Check aria-hidden="true" size={16} />
+                          ) : isAlert ? (
+                            <CircleAlert aria-hidden="true" size={16} />
+                          ) : (
+                            <Clock3 aria-hidden="true" size={16} />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h3 className="truncate text-sm font-bold text-ink">
+                              {status.medication}
+                            </h3>
+                            <time className="shrink-0 text-[11px] font-semibold text-ink-faint">
+                              {status.firstOpenTime
+                                ? status.firstOpenTime.slice(-5)
+                                : status.scheduledTime}
+                            </time>
+                          </div>
+                          <p className="mt-1 text-xs leading-5 text-ink-soft">
+                            Due {status.scheduledTime} · Compartment{" "}
+                            {status.compartment}
+                          </p>
+                          <span
+                            className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[10px] font-bold ${friendly.chip}`}
+                          >
+                            {friendly.label}
+                          </span>
+                        </div>
                       </div>
 
-                      <p className="mt-4 min-h-12 text-sm font-bold leading-5">
-                        {item.medication}
-                      </p>
-                      <p className="mt-2 text-xs font-semibold opacity-70">
-                        {item.scheduledTime} · {item.bufferTimeMinutes} min
-                      </p>
-                      <p className="mt-3 truncate text-xs font-semibold opacity-80">
-                        {status}
-                      </p>
+                      {isAlert && !reviewed && (
+                        <div className="mt-3 flex items-center gap-2 border-t border-line-soft pt-3">
+                          <a
+                            href={`tel:${selectedPatient.phone}`}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-white"
+                          >
+                            <Phone aria-hidden="true" size={13} /> Call
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setReviewed(true)}
+                            className="flex-1 rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink"
+                          >
+                            Mark reviewed
+                          </button>
+                        </div>
+                      )}
                     </article>
                   );
                 })}
@@ -416,75 +490,62 @@ export default function MobilePage() {
             </div>
           )}
 
+          {activeTab === "slots" && (
+            <div className="space-y-3">
+              <h2 className="px-1 text-sm font-bold text-ink">
+                Margaret&apos;s medication plan
+              </h2>
+              {sortedStatuses.map((status) => {
+                const friendly = friendlyStatus(status.status);
+                return (
+                  <article
+                    key={status.compartment}
+                    className="flex items-center gap-3 rounded-xl border border-line bg-white p-4 shadow-card"
+                  >
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${friendly.chip}`}
+                    >
+                      {status.compartment}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-bold text-ink">
+                        {status.medication}
+                      </h3>
+                      <p className="mt-0.5 text-xs text-ink-soft">
+                        Every day at {status.scheduledTime}
+                        {status.highRisk ? " · High risk" : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${friendly.chip}`}
+                    >
+                      {friendly.label}
+                    </span>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
           {activeTab === "insights" && (
             <div className="space-y-4">
-              <section className="rounded-lg border border-stone-200 bg-white p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-[#e34747]">
-                      AI Insight
-                    </p>
-                    <h2 className="mt-2 text-xl font-bold text-slate-950">
-                      {report.overallConcernLevel} concern
-                    </h2>
-                  </div>
-                  <span className="rounded-full bg-neutral-950 px-3 py-1 text-xs font-bold text-white">
-                    AI
-                  </span>
+              <section className="rounded-xl border border-line bg-white p-5 shadow-card">
+                <div className="flex items-center gap-2">
+                  <Sparkles aria-hidden="true" size={16} className="text-coral" />
+                  <h2 className="text-sm font-bold text-ink">
+                    This week with Margaret
+                  </h2>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-600">
+                <p className="mt-3 text-sm leading-6 text-ink-soft">
                   {report.caregiverSummary}
                 </p>
               </section>
 
-              <section className="rounded-lg border border-stone-200 bg-white p-5">
-                <h2 className="text-lg font-bold text-slate-950">
-                  Medication Risk
+              <section className="rounded-xl border border-line bg-white p-5 shadow-card">
+                <h2 className="text-sm font-bold text-ink">
+                  For the next clinic visit
                 </h2>
-                <div className="mt-4 space-y-3">
-                  {report.medicationInsights.map((insight) => (
-                    <div
-                      key={insight.compartmentId}
-                      className="rounded-md bg-stone-50 p-4"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Slot {insight.compartmentId}
-                          </p>
-                          <p className="mt-1 text-sm font-bold text-slate-950">
-                            {insight.medicationName}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold capitalize text-slate-700">
-                          {insight.concernLevel}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                        <div
-                          className={
-                            insight.concernScore >= 7
-                              ? "h-full bg-red-500"
-                              : insight.concernScore >= 3
-                              ? "h-full bg-amber-400"
-                              : "h-full bg-emerald-500"
-                          }
-                          style={{
-                            width: `${Math.min(100, insight.concernScore * 10)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="rounded-lg border border-stone-200 bg-white p-5">
-                <h2 className="text-lg font-bold text-slate-950">
-                  Clinic Note
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
+                <p className="mt-3 text-sm leading-6 text-ink-soft">
                   {report.clinicVisitSummary}
                 </p>
               </section>
@@ -492,7 +553,7 @@ export default function MobilePage() {
           )}
         </section>
 
-        <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md border-t border-stone-200 bg-white/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
+        <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md border-t border-line bg-white/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
           <div className="grid grid-cols-3 gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -503,10 +564,14 @@ export default function MobilePage() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${
-                    activeTab === tab.id ? "text-neutral-950" : "text-neutral-400"
+                    activeTab === tab.id ? "text-ink" : "text-ink-faint"
                   }`}
                 >
-                  <Icon aria-hidden="true" size={21} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                  <Icon
+                    aria-hidden="true"
+                    size={21}
+                    strokeWidth={activeTab === tab.id ? 2.5 : 2}
+                  />
                   {tab.label}
                 </button>
               );

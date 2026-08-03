@@ -1,13 +1,42 @@
 @import "tailwindcss";
 
-:root {
-  --background: #fafafa;
-  --foreground: #171717;
-  --muted: #737373;
-  --line: #e7e5e4;
-  --coral: #ff5c5c;
-  --coral-soft: #fff1f0;
-  --mint: #14b8a6;
+@theme {
+  /* Warm Airbnb-style neutrals */
+  --color-cream: #faf7f2;
+  --color-cream-deep: #f4efe7;
+  --color-ink: #22201c;
+  --color-ink-soft: #6e675c;
+  --color-ink-faint: #a39c90;
+  --color-line: #ece5da;
+  --color-line-soft: #f2ede4;
+
+  /* Coral — alerts, never clinical red */
+  --color-coral: #ff5a5f;
+  --color-coral-deep: #c13515;
+  --color-coral-ink: #b04a3c;
+  --color-coral-soft: #fff0ee;
+  --color-coral-line: #ffd4cf;
+
+  /* Mint — everything is okay */
+  --color-mint: #00a699;
+  --color-mint-ink: #00685f;
+  --color-mint-soft: #e7f6f2;
+  --color-mint-line: #c4e9e0;
+
+  /* Warm amber — pending / keep an eye on */
+  --color-honey: #e8a13d;
+  --color-honey-ink: #8a5a12;
+  --color-honey-soft: #fdf3e2;
+  --color-honey-line: #f3ddb4;
+
+  /* Sky — informational */
+  --color-sky-soft: #e9f3fb;
+  --color-sky-ink: #2f6291;
+
+  --shadow-card: 0 1px 2px rgb(34 32 28 / 0.05);
+  --shadow-lift: 0 6px 20px -6px rgb(34 32 28 / 0.12);
+
+  --radius-card: 0.5rem;
 }
 
 * {
@@ -15,24 +44,20 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "SF Pro Text",
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-figtree), -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: 0;
   margin: 0;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -43,5 +68,11 @@ a {
 
 ::selection {
   background: #ffd9d6;
-  color: #171717;
+  color: #22201c;
+}
+
+/* Slim, quiet scrollbars for feed columns */
+.feed-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d8d0c3 transparent;
 }

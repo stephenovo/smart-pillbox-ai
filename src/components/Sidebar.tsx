@@ -7,7 +7,7 @@ import {
   MessageCircle,
   Pill,
   Settings,
-  Users,
+  Smartphone,
 } from "lucide-react";
 import type { MainSectionTab } from "./MainSectionTabs";
 
@@ -24,22 +24,24 @@ const navigation: {
   { id: "dashboard", label: "Care feed", icon: LayoutGrid },
   { id: "initialisation", label: "Medication plan", icon: Pill },
   { id: "pillbox", label: "Device activity", icon: Activity },
+  { id: "messages", label: "Care messages", icon: MessageCircle },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-stone-200 bg-white px-5 py-7 lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-white px-5 py-7 lg:flex">
       <div className="flex items-center gap-3 px-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-950 text-white">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-white">
           <HeartPulse aria-hidden="true" size={20} strokeWidth={2.2} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-neutral-950">careloop</h1>
-          <p className="text-xs text-neutral-500">Medication care</p>
+          <h1 className="text-xl font-bold text-ink">Smart Pillbox</h1>
+          <p className="text-xs text-ink-soft">Medication care</p>
         </div>
       </div>
 
-      <nav aria-label="Primary" className="mt-10 space-y-2">
+      <nav aria-label="Primary" className="mt-10 space-y-1.5">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -51,8 +53,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               onClick={() => onTabChange(item.id)}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition ${
                 isActive
-                  ? "bg-neutral-950 text-white"
-                  : "text-neutral-600 hover:bg-stone-100 hover:text-neutral-950"
+                  ? "bg-ink text-white"
+                  : "text-ink-soft hover:bg-cream-deep hover:text-ink"
               }`}
             >
               <Icon aria-hidden="true" size={19} />
@@ -62,45 +64,29 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         })}
       </nav>
 
-      <div className="mt-8 border-t border-stone-200 pt-6">
-        <p className="px-3 text-xs font-semibold uppercase text-neutral-400">
-          Your circle
+      <div className="mt-8 border-t border-line pt-6">
+        <p className="px-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+          On the go
         </p>
         <a
           href="/mobile"
-          className="mt-3 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950"
+          className="mt-3 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-ink-soft transition hover:bg-cream-deep hover:text-ink"
         >
-          <Users aria-hidden="true" size={19} />
+          <Smartphone aria-hidden="true" size={19} />
           Family mobile view
         </a>
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950"
-        >
-          <MessageCircle aria-hidden="true" size={19} />
-          Care messages
-        </button>
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950"
-        >
-          <Settings aria-hidden="true" size={19} />
-          Settings
-        </button>
       </div>
 
-      <div className="mt-auto flex items-center gap-3 border-t border-stone-200 px-2 pt-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dff4ef] text-sm font-bold text-teal-800">
+      <div className="mt-auto flex items-center gap-3 border-t border-line px-2 pt-5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-mint-soft text-sm font-bold text-mint-ink">
           SC
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-neutral-950">
-            Sarah Chen
-          </p>
-          <p className="truncate text-xs text-neutral-500">Family caregiver</p>
+          <p className="truncate text-sm font-semibold text-ink">Sarah Chen</p>
+          <p className="truncate text-xs text-ink-soft">Family caregiver</p>
         </div>
         <span
-          className="h-2.5 w-2.5 rounded-full bg-teal-500"
+          className="h-2.5 w-2.5 rounded-full bg-mint"
           title="Online"
         />
       </div>

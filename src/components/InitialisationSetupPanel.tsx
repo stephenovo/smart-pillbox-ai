@@ -1,11 +1,114 @@
 "use client";
 
 import { useEffect, useState, type ComponentProps } from "react";
+import { Check, CircleAlert, Clock3 } from "lucide-react";
 import { InitialisationTable } from "./InitialisationTable";
+import type { DailyMedicationStatus } from "../types/pillbox";
 
 type InitialisationSetupPanelProps = ComponentProps<
   typeof InitialisationTable
->;
+> & {
+  statuses: DailyMedicationStatus[];
+  analysisTime: string;
+};
+
+function friendlyStatusLabel(status: string): string {
+  if (status === "Taken - On Time") return "Taken on time";
+  if (status === "Taken - Delayed") return "Taken late";
+  if (status === "Duplicate Risk") return "Opened twice";
+  if (status === "Missed / Very Late") return "Missed";
+  if (status === "Opened Too Early") return "Opened early";
+  return "Still unopened";
+}
+
+function statusChipClass(status: string): string {
+  if (status === "Taken - On Time") return "bg-mint-soft text-mint-ink";
+  if (status === "Taken - Delayed") return "bg-honey-soft text-honey-ink";
+  if (status === "No opening record") return "bg-cream-deep text-ink-soft";
+  return "bg-coral-soft text-coral-ink";
+}
+
+function TodayDoseList({
+  statuses,
+  analysisTime,
+}: {
+  statuses: DailyMedicationStatus[];
+  analysisTime: string;
+}) {
+  const sorted = [...statuses].sort((a, b) =>
+    a.scheduledTime.localeCompare(b.scheduledTime)
+  );
+  const takenCount = sorted.filter(
+    (status) =>
+      status.status === "Taken - On Time" ||
+      status.status === "Taken - Delayed" ||
+      status.status === "Duplicate Risk"
+  ).length;
+
+  return (
+    <section className="rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            Today
+          </p>
+          <h3 className="mt-1 text-xl font-bold text-ink">
+            {takenCount} of {sorted.length} doses taken
+          </h3>
+        </div>
+        <span className="text-xs font-semibold text-ink-faint">
+          Updated {analysisTime}
+        </span>
+      </div>
+
+      <div className="mt-5 divide-y divide-line-soft border-y border-line-soft">
+        {sorted.map((status) => {
+          const Icon =
+            status.status === "Taken - On Time"
+              ? Check
+              : status.status === "No opening record"
+                ? Clock3
+                : status.status === "Taken - Delayed"
+                  ? Clock3
+                  : CircleAlert;
+
+          return (
+            <div
+              key={status.compartment}
+              className="flex items-center gap-3 py-3.5"
+            >
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${statusChipClass(
+                  status.status
+                )}`}
+              >
+                <Icon aria-hidden="true" size={16} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-ink">
+                  {status.medication}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-soft">
+                  {status.scheduledTime} · Compartment {status.compartment}
+                  {status.firstOpenTime
+                    ? ` · opened ${status.firstOpenTime.slice(-5)}`
+                    : ""}
+                </p>
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusChipClass(
+                  status.status
+                )}`}
+              >
+                {friendlyStatusLabel(status.status)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 const onboardingSteps = [
   {
@@ -190,6 +293,11 @@ export default function InitialisationSetupPanel(
           </div>
         </div>
       </section>
+
+      <TodayDoseList
+        statuses={props.statuses}
+        analysisTime={props.analysisTime}
+      />
 
       <section className="rounded-lg border border-stone-200 bg-white p-5 sm:p-6">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">

@@ -1,9 +1,23 @@
 # Smart Pillbox AI Web
 
-This repository contains the web dashboard prototype for **Smart Pillbox AI**.
+This repository contains the caregiver clients and hardware demo for **Smart Pillbox AI**.
 
 The web app is built with **Next.js, React, TypeScript, and Tailwind CSS**.
-It includes medication initialisation, pillbox opening simulation, dashboard monitoring, rule-based medication safety control, self-learning reminder escalation, and DeepSeek-powered caregiver insight reports.
+It includes medication initialisation, caregiver monitoring, a separate pillbox hardware simulator, rule-based medication safety control, self-learning reminder escalation, and DeepSeek-powered caregiver insight reports.
+
+## Product Surfaces
+
+The caregiver products and the hardware simulator are separate experiences:
+
+| Surface | Entry point | Role |
+| --- | --- | --- |
+| Caregiver desktop web | `http://localhost:3000` | Desktop monitoring and care management |
+| Caregiver mobile web | `http://localhost:3000/mobile` | Phone-sized caregiver experience |
+| Caregiver iOS app | `ios/Careloop` | Native caregiver app |
+| Pillbox hardware simulator | `http://localhost:3000/hardware-simulator` | Simulates the physical device, lid openings, reminders, and event uploads |
+
+The three caregiver clients consume device data. The hardware simulator produces
+that data through the same `/api/hardware/*` endpoints used by the ESP32 demo.
 
 ---
 
@@ -33,14 +47,21 @@ Mobile caregiver view:
 http://localhost:3000/mobile
 ```
 
+Pillbox hardware simulator:
+
+```txt
+http://localhost:3000/hardware-simulator
+```
+
 ---
 
 ## How to Use the Web Demo
 
-The main web app is divided into three tabs:
+The main caregiver web app is divided into monitoring and care-management tabs,
+including:
 
 ```txt
-Initialisation → Pillbox → Dashboard
+Care feed → Medication plan → Device activity → Care messages → Settings
 ```
 
 ---
@@ -74,24 +95,18 @@ Saved
 
 ---
 
-### 2. Pillbox
+### 2. Device Activity
 
-This page is used for local demo simulation.
+This page is part of the caregiver experience. It monitors the physical or
+simulated pillbox and can send a reminder to the device. It does not simulate
+opening a lid.
 
 It can:
 
-* simulate opening a pillbox compartment
-* create timestamped opening events
-* clear opening events
-* import prepared demo data
-
-For presentation use, click:
-
-```txt
-Import Demo Database
-```
-
-This loads prepared opening-event records and automatically switches to the Dashboard tab.
+* display timestamped opening events
+* show connection and reminder state
+* send or stop a compartment reminder
+* review activity by date
 
 ---
 
@@ -188,7 +203,9 @@ GET    /api/hardware/state
 POST   /api/hardware/state
 ```
 
-The main web app polls uploaded hardware opening events and merges them into the Pillbox Event Log.
+The caregiver clients poll uploaded hardware opening events. The independent
+hardware simulator at `/hardware-simulator` sends those events through the same
+API as the ESP32 firmware.
 
 ---
 

@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Activity,
+  BellRing,
   CalendarDays,
-  Play,
+  Check,
   Radio,
-  RotateCcw,
   Square,
-  Trash2,
   Wifi,
 } from "lucide-react";
 import { DEMO_DEVICE_ID } from "../lib/hardwareProtocol";
@@ -20,67 +19,29 @@ type DeviceFeedPanelProps = {
   analysisTime: string;
   events: OpeningEvent[];
   schedule: MedicationSchedule[];
+  deviceState: HardwareDeviceState | null;
   onAnalysisDateChange: (value: string) => void;
-  onAnalysisTimeChange: (value: string) => void;
-  onLoadCareShiftSnapshot: () => void;
-  onSimulateOpening: (item: MedicationSchedule) => void;
-  onClearSimulationEvents: () => void;
 };
 
-function getConnectionLabel(state: HardwareDeviceState | null): string {
-  if (!state) return "Checking";
-  if (state.connectionStatus === "connected") return "Connected";
-  if (state.connectionStatus === "offline") return "Offline";
-  return "Never connected";
-}
-
-function getEventTitle(event: OpeningEvent): string {
-  return event.eventType === "wrong_slot_open"
-    ? `Wrong Slot ${event.compartment} opened`
-    : `Slot ${event.compartment} opened`;
+function friendlyEventTitle(event: OpeningEvent): string {
+  if (event.eventType === "wrong_slot_open") {
+    return `Compartment ${event.compartment} opened during another reminder`;
+  }
+  return `Compartment ${event.compartment} opened`;
 }
 
 export function DeviceFeedPanel({
   analysisDate,
-  analysisTime,
   events,
   schedule,
+  deviceState,
   onAnalysisDateChange,
-  onAnalysisTimeChange,
-  onLoadCareShiftSnapshot,
-  onSimulateOpening,
-  onClearSimulationEvents,
 }: DeviceFeedPanelProps) {
-  const [selectedSlot, setSelectedSlot] = useState(schedule[0]?.compartment ?? 1);
-  const [deviceState, setDeviceState] = useState<HardwareDeviceState | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState(
+    schedule[0]?.compartment ?? 1
+  );
   const [controlPending, setControlPending] = useState(false);
   const [controlError, setControlError] = useState("");
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function syncDeviceState() {
-      try {
-        const response = await fetch(
-          `/api/hardware/state?deviceId=${encodeURIComponent(DEMO_DEVICE_ID)}`,
-          { cache: "no-store" }
-        );
-        if (!response.ok) return;
-
-        const nextState = (await response.json()) as HardwareDeviceState;
-        if (isActive) setDeviceState(nextState);
-      } catch {
-        // The software simulation remains available when the device API is offline.
-      }
-    }
-
-    syncDeviceState();
-    const intervalId = window.setInterval(syncDeviceState, 2000);
-    return () => {
-      isActive = false;
-      window.clearInterval(intervalId);
-    };
-  }, []);
 
   async function setReminder(status: "idle" | "reminding") {
     setControlPending(true);
@@ -98,101 +59,122 @@ export function DeviceFeedPanel({
       });
 
       if (!response.ok) {
-        throw new Error("Reminder command was rejected.");
+        throw new Error("The pillbox didn't respond. Please try again.");
       }
-
-      setDeviceState((await response.json()) as HardwareDeviceState);
     } catch (error) {
       setControlError(
-        error instanceof Error ? error.message : "Reminder command failed."
+        error instanceof Error ? error.message : "The reminder request failed."
       );
     } finally {
       setControlPending(false);
     }
   }
 
-  const hardwareEvents = events.filter((event) => event.source === "hardware");
-  const simulationEvents = events.filter((event) => event.source === "simulation");
-  const latestHardwareEvent = hardwareEvents[0];
-  const isConnected = deviceState?.connectionStatus === "connected";
+  const isSynced = deviceState?.connectionStatus === "connected";
+  const latestEvent = events[0];
+  const todayEvents = events.filter((event) =>
+    event.eventTime.startsWith(analysisDate)
+  );
 
   return (
     <div className="space-y-7">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase text-teal-700">Live connection</p>
-          <h1 className="mt-1 text-2xl font-bold text-neutral-950 sm:text-3xl">
-            Pillbox activity
+          <p className="text-xs font-semibold uppercase tracking-wide text-mint-ink">
+            Margaret&apos;s pillbox
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-ink sm:text-3xl">
+            Device activity
           </h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            Every opening the pillbox has reported, as it happened.
+          </p>
         </div>
         <div
           className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
-            isConnected
-              ? "bg-[#effaf7] text-teal-700"
-              : "bg-stone-100 text-neutral-600"
+            isSynced
+              ? "bg-mint-soft text-mint-ink"
+              : "bg-cream-deep text-ink-soft"
           }`}
         >
           <span
             className={`h-2 w-2 rounded-full ${
-              isConnected ? "bg-teal-500" : "bg-neutral-400"
+              isSynced ? "bg-mint" : "bg-ink-faint"
             }`}
           />
-          {getConnectionLabel(deviceState)}
+          {isSynced ? "Syncing normally" : "Waiting for device"}
         </div>
       </div>
 
-      <section className="grid overflow-hidden rounded-lg border border-stone-200 bg-white sm:grid-cols-3 sm:divide-x sm:divide-stone-100">
-        <div className="flex items-center gap-4 border-b border-stone-100 p-5 sm:border-b-0">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#effaf7] text-teal-700">
+      <section className="grid overflow-hidden rounded-lg border border-line bg-white shadow-card sm:grid-cols-3 sm:divide-x sm:divide-line-soft">
+        <div className="flex items-center gap-4 border-b border-line-soft p-5 sm:border-b-0">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-mint-soft text-mint-ink">
             <Wifi aria-hidden="true" size={20} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-neutral-500">Device ID</p>
-            <p className="mt-1 truncate font-bold text-neutral-950">
-              {deviceState?.deviceId ?? DEMO_DEVICE_ID}
+            <p className="text-xs text-ink-soft">Last sync</p>
+            <p className="mt-1 truncate font-bold text-ink">
+              {deviceState?.lastSeenAt
+                ? `Today ${deviceState.lastSeenAt.slice(11, 16)}`
+                : "Not yet today"}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 border-b border-stone-100 p-5 sm:border-b-0">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff1f0] text-[#e34747]">
+        <div className="flex items-center gap-4 border-b border-line-soft p-5 sm:border-b-0">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-coral-soft text-coral-ink">
             <Activity aria-hidden="true" size={20} />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Hardware openings</p>
-            <p className="mt-1 font-bold text-neutral-950">
-              {hardwareEvents.length} events
+            <p className="text-xs text-ink-soft">Openings today</p>
+            <p className="mt-1 font-bold text-ink">
+              {todayEvents.length}{" "}
+              {todayEvents.length === 1 ? "opening" : "openings"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-4 p-5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-100 text-neutral-600">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-cream-deep text-ink-soft">
             <Radio aria-hidden="true" size={20} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-neutral-500">Latest hardware event</p>
-            <p className="mt-1 truncate font-bold text-neutral-950">
-              {latestHardwareEvent?.eventTime ?? "No event received"}
+            <p className="text-xs text-ink-soft">Most recent</p>
+            <p className="mt-1 truncate font-bold text-ink">
+              {latestEvent
+                ? `${friendlyEventTitle(latestEvent)} · ${latestEvent.eventTime.slice(-5)}`
+                : "No openings yet"}
             </p>
           </div>
         </div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.75fr)]">
-        <section className="overflow-hidden rounded-lg border border-stone-200 bg-white">
-          <header className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+        <section className="overflow-hidden rounded-lg border border-line bg-white shadow-card">
+          <header className="flex items-center justify-between border-b border-line-soft px-5 py-4">
             <div>
-              <p className="text-xs font-semibold uppercase text-neutral-400">Audit trail</p>
-              <h2 className="mt-1 text-lg font-bold text-neutral-950">Event history</h2>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                {analysisDate}
+              </p>
+              <h2 className="mt-1 text-lg font-bold text-ink">
+                What the pillbox reported
+              </h2>
             </div>
-            <span className="text-xs font-semibold text-neutral-400">Newest first</span>
+            <span className="text-xs font-semibold text-ink-faint">
+              Newest first
+            </span>
           </header>
 
           {events.length === 0 ? (
-            <div className="p-8 text-center text-sm text-neutral-500">
-              No pillbox records have been received for this review window.
+            <div className="p-8 text-center">
+              <p className="text-sm font-semibold text-ink">
+                No openings recorded for this day
+              </p>
+              <p className="mt-1 text-sm text-ink-soft">
+                When Margaret opens her pillbox, it will show up here within a
+                few seconds.
+              </p>
             </div>
           ) : (
-            <div className="divide-y divide-stone-100">
+            <div className="divide-y divide-line-soft">
               {events.map((event) => {
                 const isWrongSlot = event.eventType === "wrong_slot_open";
                 return (
@@ -203,32 +185,23 @@ export function DeviceFeedPanel({
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
                         isWrongSlot
-                          ? "bg-[#fff1f0] text-[#d93f3f]"
-                          : "bg-[#effaf7] text-teal-700"
+                          ? "bg-coral-soft text-coral-ink"
+                          : "bg-mint-soft text-mint-ink"
                       }`}
                     >
                       {event.compartment}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-neutral-950">
-                        {getEventTitle(event)}
+                      <h3 className="truncate text-sm font-bold text-ink">
+                        {friendlyEventTitle(event)}
                       </h3>
-                      <p className="mt-1 truncate text-xs text-neutral-500">
-                        {event.medication} · {event.deviceId}
+                      <p className="mt-1 truncate text-xs text-ink-soft">
+                        {event.medication}
                       </p>
-                      <span
-                        className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          event.source === "hardware"
-                            ? "bg-teal-50 text-teal-700"
-                            : "bg-stone-100 text-neutral-600"
-                        }`}
-                      >
-                        {event.source}
-                      </span>
                     </div>
-                    <time className="text-right text-xs font-semibold text-neutral-500">
+                    <time className="text-right text-xs font-semibold text-ink-soft">
                       {event.eventTime.slice(0, 10)}
-                      <span className="mt-1 block text-neutral-950">
+                      <span className="mt-1 block text-ink">
                         {event.eventTime.slice(-5)}
                       </span>
                     </time>
@@ -240,27 +213,38 @@ export function DeviceFeedPanel({
         </section>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-stone-200 bg-white p-5">
+          <section className="rounded-lg border border-line bg-white p-5 shadow-card">
             <div className="flex items-center gap-2">
-              <Radio aria-hidden="true" size={18} className="text-[#e34747]" />
-              <h2 className="font-bold text-neutral-950">Hardware reminder</h2>
+              <BellRing aria-hidden="true" size={18} className="text-coral" />
+              <h2 className="font-bold text-ink">Ring a reminder</h2>
             </div>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">
+              Make Margaret&apos;s pillbox light up and chime for a chosen
+              compartment — handy while you&apos;re on the phone with her.
+            </p>
 
             <label className="mt-5 block">
-              <span className="text-xs font-semibold text-neutral-500">Active Slot</span>
+              <span className="text-xs font-semibold text-ink-soft">
+                Compartment
+              </span>
               <select
                 value={selectedSlot}
                 onChange={(event) => setSelectedSlot(Number(event.target.value))}
-                className="mt-2 w-full rounded-md border border-stone-200 bg-[#fafafa] px-3 py-2.5 text-sm font-semibold text-neutral-950 outline-none focus:border-neutral-500"
+                className="mt-2 w-full rounded-lg border border-line bg-cream px-3 py-2.5 text-sm font-semibold text-ink outline-none focus:border-ink-soft"
               >
-                {Array.from({ length: 8 }, (_, index) => index + 1).map((slotId) => {
-                  const item = schedule.find((entry) => entry.compartment === slotId);
-                  return (
-                    <option key={slotId} value={slotId}>
-                      Slot {slotId}{item?.medication ? ` - ${item.medication}` : ""}
-                    </option>
-                  );
-                })}
+                {Array.from({ length: 8 }, (_, index) => index + 1).map(
+                  (slotId) => {
+                    const item = schedule.find(
+                      (entry) => entry.compartment === slotId
+                    );
+                    return (
+                      <option key={slotId} value={slotId}>
+                        Compartment {slotId}
+                        {item?.medication ? ` — ${item.medication}` : ""}
+                      </option>
+                    );
+                  }
+                )}
               </select>
             </label>
 
@@ -269,120 +253,64 @@ export function DeviceFeedPanel({
                 type="button"
                 onClick={() => setReminder("reminding")}
                 disabled={controlPending}
-                className="flex items-center justify-center gap-2 rounded-md bg-neutral-950 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-lg bg-ink px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
               >
-                <Play aria-hidden="true" size={15} /> Start
+                <BellRing aria-hidden="true" size={15} /> Ring now
               </button>
               <button
                 type="button"
                 onClick={() => setReminder("idle")}
                 disabled={controlPending}
-                className="flex items-center justify-center gap-2 rounded-md border border-stone-200 px-3 py-2.5 text-sm font-semibold text-neutral-700 transition hover:bg-stone-50 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-cream disabled:opacity-50"
               >
                 <Square aria-hidden="true" size={14} /> Stop
               </button>
             </div>
 
-            <dl className="mt-5 divide-y divide-stone-100 border-y border-stone-100 text-sm">
-              <div className="flex justify-between gap-3 py-3">
-                <dt className="text-neutral-500">State</dt>
-                <dd className="font-semibold text-neutral-950">
-                  {deviceState?.status === "reminding"
-                    ? `Reminding Slot ${deviceState.activeSlot}`
-                    : "Idle"}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3 py-3">
-                <dt className="text-neutral-500">Trigger</dt>
-                <dd className="font-semibold capitalize text-neutral-950">
-                  {deviceState?.trigger ?? "None"}
-                </dd>
-              </div>
-            </dl>
+            {deviceState?.status === "reminding" && (
+              <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-mint-ink">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-mint" />
+                Ringing for compartment {deviceState.activeSlot} right now
+              </p>
+            )}
 
             {controlError && (
-              <p className="mt-3 text-xs font-semibold text-[#d93f3f]">
+              <p className="mt-3 text-xs font-semibold text-coral-ink">
                 {controlError}
               </p>
             )}
           </section>
 
-          <section className="rounded-lg border border-stone-200 bg-white p-5">
+          <section className="rounded-lg border border-line bg-white p-5 shadow-card">
             <div className="flex items-center gap-2">
-              <CalendarDays aria-hidden="true" size={18} className="text-[#e34747]" />
-              <h2 className="font-bold text-neutral-950">Review window</h2>
+              <CalendarDays aria-hidden="true" size={18} className="text-honey-ink" />
+              <h2 className="font-bold text-ink">Look back at a day</h2>
             </div>
-            <div className="mt-5 space-y-4">
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-500">Date</span>
-                <input
-                  type="date"
-                  value={analysisDate}
-                  onChange={(event) => onAnalysisDateChange(event.target.value)}
-                  className="mt-2 w-full rounded-md border border-stone-200 bg-[#fafafa] px-3 py-2.5 text-sm font-semibold text-neutral-950 outline-none focus:border-neutral-500"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-500">Time</span>
-                <input
-                  type="time"
-                  value={analysisTime}
-                  onChange={(event) => onAnalysisTimeChange(event.target.value)}
-                  className="mt-2 w-full rounded-md border border-stone-200 bg-[#fafafa] px-3 py-2.5 text-sm font-semibold text-neutral-950 outline-none focus:border-neutral-500"
-                />
-              </label>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">
+              Review an earlier day&apos;s openings and dose statuses.
+            </p>
+            <label className="mt-4 block">
+              <span className="text-xs font-semibold text-ink-soft">Date</span>
+              <input
+                type="date"
+                value={analysisDate}
+                onChange={(event) => onAnalysisDateChange(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-line bg-cream px-3 py-2.5 text-sm font-semibold text-ink outline-none focus:border-ink-soft"
+              />
+            </label>
+          </section>
+
+          <section className="rounded-lg border border-mint-line bg-mint-soft p-5 shadow-card">
+            <div className="flex items-start gap-2.5">
+              <Check aria-hidden="true" size={17} className="mt-0.5 shrink-0 text-mint-ink" />
+              <p className="text-sm leading-6 text-ink">
+                Everything you see here came straight from Margaret&apos;s
+                pillbox — the same feed her family sees on their phones.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={onLoadCareShiftSnapshot}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-neutral-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
-            >
-              <RotateCcw aria-hidden="true" size={16} /> Load sample shift
-            </button>
           </section>
         </aside>
       </div>
-
-      <section className="border-t border-stone-200 pt-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase text-neutral-400">
-              Software fallback
-            </p>
-            <h2 className="mt-1 text-lg font-bold text-neutral-950">
-              Opening simulation
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClearSimulationEvents}
-            disabled={simulationEvents.length === 0}
-            className="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-xs font-semibold text-neutral-600 disabled:opacity-40"
-          >
-            <Trash2 aria-hidden="true" size={14} /> Clear simulated events
-          </button>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {schedule.map((item) => (
-            <button
-              key={item.compartment}
-              type="button"
-              onClick={() => onSimulateOpening(item)}
-              className="flex min-h-20 items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-4 py-3 text-left transition hover:border-neutral-400"
-            >
-              <span className="min-w-0">
-                <span className="block text-xs font-semibold text-neutral-400">
-                  Slot {item.compartment}
-                </span>
-                <span className="mt-1 block truncate text-sm font-bold text-neutral-900">
-                  {item.medication}
-                </span>
-              </span>
-              <Play aria-hidden="true" size={16} className="shrink-0 text-teal-700" />
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

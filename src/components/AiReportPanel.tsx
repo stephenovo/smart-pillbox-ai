@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { sampleHistoricalAdherenceRecords } from "../lib/sampleHistory";
 import { generateCaregiverInsightReport } from "../lib/aiCaregiverInsights";
 
@@ -24,32 +25,32 @@ const reportSections: {
 }[] = [
   {
     id: "caregiver_summary",
-    title: "Overall Summary",
-    description: "A short summary of the patient’s weekly adherence pattern.",
+    title: "This week at a glance",
+    description: "A short, plain-language recap of Margaret's week.",
   },
   {
     id: "key_insight",
-    title: "Insight",
-    description: "The most important behaviour pattern caregivers should notice.",
+    title: "Something to keep an eye on",
+    description: "The one pattern most worth your attention right now.",
   },
   {
     id: "clinic_visit_note",
-    title: "Clinic-Visit Note",
-    description: "A concise note for caregiver or clinic review.",
+    title: "For the next clinic visit",
+    description: "A tidy note you can bring to Dr. Wong's appointment.",
   },
 ];
 
 function getConcernDotClass(level: string) {
-  if (level === "high") return "bg-red-500";
-  if (level === "medium") return "bg-amber-400";
-  return "bg-emerald-500";
+  if (level === "high") return "bg-coral";
+  if (level === "medium") return "bg-honey";
+  return "bg-mint";
 }
 
 function getHeatCellClass(score: number) {
-  if (score >= 7) return "bg-red-500";
-  if (score >= 4) return "bg-amber-400";
-  if (score >= 1) return "bg-emerald-300";
-  return "bg-slate-200";
+  if (score >= 7) return "bg-coral";
+  if (score >= 4) return "bg-honey";
+  if (score >= 1) return "bg-mint";
+  return "bg-line";
 }
 
 export default function AiReportPanel() {
@@ -88,16 +89,16 @@ export default function AiReportPanel() {
       const data = (await response.json()) as AiReportApiResponse;
 
       if (!response.ok || data.error) {
-        throw new Error(data.error ?? "AI report generation failed.");
+        throw new Error(data.error ?? "The care note couldn't be written.");
       }
 
       setGeneratedReports((currentReports) => ({
         ...currentReports,
-        [section]: data.aiSummary ?? "No AI report was generated.",
+        [section]: data.aiSummary ?? "No note was generated.",
       }));
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Unknown AI API error.";
+        error instanceof Error ? error.message : "Something went wrong.";
       setErrorMessage(message);
     } finally {
       setLoadingSection(null);
@@ -105,20 +106,24 @@ export default function AiReportPanel() {
   }
 
   return (
-    <section className="rounded-lg border border-stone-200 bg-white p-5 sm:p-6">
+    <section className="rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase text-[#e34747]">
-            AI Analysis
+          <p className="text-xs font-semibold uppercase tracking-wide text-coral-ink">
+            Smart Pillbox insight
           </p>
 
-          <h2 className="mt-1 text-xl font-bold text-neutral-950">
-            Weekly care insights
+          <h2 className="mt-1 text-xl font-bold text-ink">
+            This week with Margaret
           </h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Gentle notes written from her pillbox activity — no charts required.
+          </p>
         </div>
 
-        <div className="rounded-full bg-[#effaf7] px-3 py-1.5 text-xs font-bold text-teal-700">
-          AI assisted
+        <div className="flex items-center gap-1.5 rounded-full bg-mint-soft px-3 py-1.5 text-xs font-bold text-mint-ink">
+          <Sparkles aria-hidden="true" size={13} />
+          Written for you
         </div>
       </div>
 
@@ -131,15 +136,15 @@ export default function AiReportPanel() {
             return (
               <div
                 key={section.id}
-                className="rounded-lg border border-stone-200 bg-[#fafafa] p-5"
+                className="rounded-lg border border-line bg-cream p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-950">
+                    <h3 className="text-base font-bold text-ink">
                       {section.title}
                     </h3>
 
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                    <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-soft">
                       {section.description}
                     </p>
                   </div>
@@ -148,14 +153,19 @@ export default function AiReportPanel() {
                     type="button"
                     onClick={() => generateSection(section.id)}
                     disabled={isLoading}
-                    className="rounded-md bg-neutral-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {isLoading ? "Generating..." : "Generate"}
+                    <Sparkles aria-hidden="true" size={14} />
+                    {isLoading
+                      ? "Writing…"
+                      : generatedText
+                        ? "Write again"
+                        : "Write this for me"}
                   </button>
                 </div>
 
                 {generatedText && (
-                  <div className="mt-4 border-t border-stone-200 pt-4 text-sm leading-6 text-neutral-700">
+                  <div className="mt-4 border-t border-line pt-4 text-sm leading-7 text-ink">
                     {generatedText}
                   </div>
                 )}
@@ -164,25 +174,26 @@ export default function AiReportPanel() {
           })}
 
           {errorMessage && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <div className="rounded-lg border border-coral-line bg-coral-soft p-4 text-sm text-coral-ink">
               {errorMessage}
             </div>
           )}
         </div>
 
-        <div className="rounded-lg border border-stone-200 bg-[#fafafa] p-5">
+        <div className="rounded-lg border border-line bg-cream p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-slate-950">
-                Adherence Risk Heatmap
+              <h3 className="text-base font-bold text-ink">
+                Routines that need a little support
               </h3>
 
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                Visual summary of concern level by medication routine.
+              <p className="mt-1 text-sm leading-6 text-ink-soft">
+                Each bar is one medication routine — the fuller the bar, the
+                more often it&apos;s been tricky lately.
               </p>
             </div>
 
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold capitalize text-ink-soft">
               {report.overallConcernLevel}
             </span>
           </div>
@@ -191,15 +202,15 @@ export default function AiReportPanel() {
             {report.medicationInsights.map((insight) => (
               <div
                 key={insight.compartmentId}
-                className="border-b border-stone-200 py-4 last:border-0"
+                className="border-b border-line py-4 last:border-0"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
                       Compartment {insight.compartmentId}
                     </p>
 
-                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                    <p className="mt-1 text-sm font-semibold text-ink">
                       {insight.medicationName}
                     </p>
                   </div>
@@ -215,37 +226,43 @@ export default function AiReportPanel() {
                   {Array.from({ length: 10 }).map((_, index) => (
                     <span
                       key={index}
-                      className={`h-4 rounded-full ${
+                      className={`h-2 rounded-full ${
                         index < Math.min(10, insight.concernScore)
                           ? getHeatCellClass(insight.concernScore)
-                          : "bg-slate-200"
+                          : "bg-line"
                       }`}
                     />
                   ))}
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                  <span>Concern score: {insight.concernScore}</span>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-soft">
+                  <span>
+                    {insight.concernLevel === "high"
+                      ? "Needs attention most days"
+                      : insight.concernLevel === "medium"
+                        ? "Slips now and then"
+                        : "Mostly steady"}
+                  </span>
                   <span className="capitalize">{insight.concernLevel}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3 text-xs text-slate-600">
+          <div className="mt-5 flex flex-wrap gap-3 text-xs text-ink-soft">
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-emerald-500" />
-              Low
+              <span className="h-3 w-3 rounded-full bg-mint" />
+              Steady
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-amber-400" />
-              Medium
+              <span className="h-3 w-3 rounded-full bg-honey" />
+              Now and then
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-red-500" />
-              High
+              <span className="h-3 w-3 rounded-full bg-coral" />
+              Needs attention
             </div>
           </div>
         </div>

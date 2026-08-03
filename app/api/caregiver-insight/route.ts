@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import {
   buildCaregiverInsightApiPrompt,
+  generateCaregiverInsightReport,
   type CaregiverInsightReport,
 } from "../../../src/lib/aiCaregiverInsights";
+import { sampleHistoricalAdherenceRecords } from "../../../src/lib/sampleHistory";
 
 type DeepSeekChatCompletionResponse = {
   choices?: Array<{
@@ -19,6 +21,33 @@ type AiReportSection =
   | "caregiver_summary"
   | "key_insight"
   | "clinic_visit_note";
+
+function createInsightReport(patientId: string): CaregiverInsightReport {
+  return generateCaregiverInsightReport(
+    patientId === "margaret" ? sampleHistoricalAdherenceRecords : [],
+    patientId
+  );
+}
+
+function safePatientName(value: unknown): string {
+  if (typeof value !== "string") return "Margaret";
+  const name = value.replace(/[^\p{L}\p{M}' -]/gu, "").trim().slice(0, 60);
+  return name || "the person you care for";
+}
+
+function isAiReportSection(value: unknown): value is AiReportSection {
+  return (
+    value === "caregiver_summary" ||
+    value === "key_insight" ||
+    value === "clinic_visit_note"
+  );
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const patientId = searchParams.get("patientId")?.trim() || "margaret";
+  return NextResponse.json({ report: createInsightReport(patientId) });
+}
 
 function getSectionInstruction(section: AiReportSection): string {
   if (section === "caregiver_summary") {
@@ -60,19 +89,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-
-    if (!body.report) {
-      return NextResponse.json(
-        {
-          error: "Missing caregiver insight report.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const report = body.report as CaregiverInsightReport;
-    const section = (body.section ?? "caregiver_summary") as AiReportSection;
+    const body = (await request.json()) as {
+      report?: CaregiverInsightReport;
+      section?: unknown;
+      patientName?: unknown;
+    };
+    const report = body.report ?? createInsightReport("margaret");
+    const section = isAiReportSection(body.section)
+      ? body.section
+      : "caregiver_summary";
+    const patientName = safePatientName(body.patientName);
 
     const userPrompt = `
     ${buildCaregiverInsightApiPrompt(report)}
@@ -95,10 +121,10 @@ export async function POST(request: Request) {
             {
               role: "system",
               content: `
-You are the AI Caregiver Insight module inside Smart Pillbox AI.
+You are Smart Pillbox, a warm care companion for family caregivers.
 
 Your role:
-Generate a clear, caregiver-friendly medication adherence summary based only on the structured adherence report.
+Write a short, natural-language care note about ${patientName}, based only on the structured adherence report — the way a thoughtful nurse would write to a family member.
 
 Hard safety boundaries:
 - Do not decide medication schedule.
@@ -108,8 +134,6 @@ Hard safety boundaries:
 - Do not claim that a medication is clinically safe or unsafe.
 - Do not override caregiver-defined or healthcare-professional-defined settings.
 - Do not independently classify a dose as missed, duplicate, safe, or unsafe.
-- Do not use the phrase "missed dose". Use "missed medication event" instead.
-- Do not use the phrase "duplicate dose". Use "duplicate opening event" instead.
 - The structured report comes from the rule-based Medication Safety Control Layer. You only summarise its results.
 
 What you can do:
@@ -122,11 +146,11 @@ Output rules:
 - Generate only the requested section.
 - Use plain text only.
 - Do not use markdown bold symbols such as **.
-- Keep the answer short and caregiver-friendly.
-- Use "medication event" instead of "dose" when describing missed or delayed records.
-- Use "duplicate opening event" instead of "duplicate dose".
+- Keep it short — 2 to 4 sentences.
+- Write like a warm personal note, not a technical report: say "${patientName}" instead of "the patient", "opened the compartment" instead of "medication event".
+- Reassure first, then point out what needs attention. Never alarmist.
 
-Keep the tone professional, concise, and suitable for a healthcare innovation demo.
+Keep the tone warm, calm, and human — like a note from someone who knows the family.
 `,
             },
             {
@@ -162,10 +186,11 @@ Keep the tone professional, concise, and suitable for a healthcare innovation de
       "No AI caregiver summary was generated.";
 
     return NextResponse.json({
-        aiSummary,
-        model,
-        provider: "deepseek",
-        section,
+      aiSummary,
+      model,
+      provider: "deepseek",
+      section,
+      report,
     });
   } catch (error) {
     const message =

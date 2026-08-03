@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#ff5a5f"/>
+  <path
+    d="M512 240 C445 305 250 390 250 525 C250 655 340 740 402 740 C452 740 487 708 512 680 C537 708 572 740 622 740 C684 740 774 655 774 525 C774 390 579 305 512 240 Z"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="62"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M334 510 H425 L470 425 L532 610 L580 500 H690"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="38"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="803" cy="793" r="49" fill="#00a699" stroke="#ffffff" stroke-width="18"/>
+</svg>

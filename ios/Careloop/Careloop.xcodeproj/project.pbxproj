@@ -1,0 +1,418 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F10000000000000000000001 /* CareloopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* CareloopApp.swift */; };
+		F10000000000000000000002 /* CareModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000002 /* CareModels.swift */; };
+		F10000000000000000000003 /* CareAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003 /* CareAPIClient.swift */; };
+		F10000000000000000000004 /* CareStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000004 /* CareStore.swift */; };
+		F10000000000000000000005 /* CareTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000005 /* CareTheme.swift */; };
+		F10000000000000000000006 /* CareComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000006 /* CareComponents.swift */; };
+		F10000000000000000000007 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000007 /* RootTabView.swift */; };
+		F10000000000000000000008 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000008 /* TodayView.swift */; };
+		F10000000000000000000009 /* MedicationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000009 /* MedicationsView.swift */; };
+		F1000000000000000000000A /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000A /* NotesView.swift */; };
+		F1000000000000000000000B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000B /* SettingsView.swift */; };
+		F1000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000C /* Assets.xcassets */; };
+		F1000000000000000000000D /* PillboxSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000F /* PillboxSetupView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F20000000000000000000001 /* CareloopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareloopApp.swift; sourceTree = "<group>"; };
+		F20000000000000000000002 /* CareModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareModels.swift; sourceTree = "<group>"; };
+		F20000000000000000000003 /* CareAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareAPIClient.swift; sourceTree = "<group>"; };
+		F20000000000000000000004 /* CareStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000005 /* CareTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareTheme.swift; sourceTree = "<group>"; };
+		F20000000000000000000006 /* CareComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareComponents.swift; sourceTree = "<group>"; };
+		F20000000000000000000007 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		F20000000000000000000008 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		F20000000000000000000009 /* MedicationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationsView.swift; sourceTree = "<group>"; };
+		F2000000000000000000000A /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
+		F2000000000000000000000B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F2000000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F2000000000000000000000D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F2000000000000000000000E /* Careloop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Careloop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2000000000000000000000F /* PillboxSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillboxSetupView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F60000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F30000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				F30000000000000000000003 /* Careloop */,
+				F30000000000000000000002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F30000000000000000000002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F2000000000000000000000E /* Careloop.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000003 /* Careloop */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000001 /* CareloopApp.swift */,
+				F30000000000000000000004 /* Models */,
+				F30000000000000000000005 /* Services */,
+				F30000000000000000000006 /* Store */,
+				F30000000000000000000007 /* Design */,
+				F30000000000000000000008 /* Views */,
+				F3000000000000000000000A /* Resources */,
+				F2000000000000000000000D /* Info.plist */,
+			);
+			path = Careloop;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000002 /* CareModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000003 /* CareAPIClient.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000006 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000004 /* CareStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000007 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000005 /* CareTheme.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000008 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000007 /* RootTabView.swift */,
+				F20000000000000000000008 /* TodayView.swift */,
+				F20000000000000000000009 /* MedicationsView.swift */,
+				F2000000000000000000000A /* NotesView.swift */,
+				F2000000000000000000000B /* SettingsView.swift */,
+				F2000000000000000000000F /* PillboxSetupView.swift */,
+				F30000000000000000000009 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000009 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000006 /* CareComponents.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		F3000000000000000000000A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F2000000000000000000000C /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F40000000000000000000001 /* Careloop */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F80000000000000000000002 /* Build configuration list for PBXNativeTarget "Careloop" */;
+			buildPhases = (
+				F60000000000000000000001 /* Sources */,
+				F60000000000000000000002 /* Frameworks */,
+				F60000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Careloop;
+			productName = Careloop;
+			productReference = F2000000000000000000000E /* Careloop.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F50000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					F40000000000000000000001 = {
+						CreatedOnToolsVersion = 16.0;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F80000000000000000000001 /* Build configuration list for PBXProject "Careloop" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F30000000000000000000001;
+			productRefGroup = F30000000000000000000002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F40000000000000000000001 /* Careloop */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F60000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1000000000000000000000C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F60000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F10000000000000000000001 /* CareloopApp.swift in Sources */,
+				F10000000000000000000002 /* CareModels.swift in Sources */,
+				F10000000000000000000003 /* CareAPIClient.swift in Sources */,
+				F10000000000000000000004 /* CareStore.swift in Sources */,
+				F10000000000000000000005 /* CareTheme.swift in Sources */,
+				F10000000000000000000006 /* CareComponents.swift in Sources */,
+				F10000000000000000000007 /* RootTabView.swift in Sources */,
+				F10000000000000000000008 /* TodayView.swift in Sources */,
+				F10000000000000000000009 /* MedicationsView.swift in Sources */,
+				F1000000000000000000000A /* NotesView.swift in Sources */,
+				F1000000000000000000000B /* SettingsView.swift in Sources */,
+				F1000000000000000000000D /* PillboxSetupView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F70000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F70000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F70000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = ZBDUUCCJLP;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Careloop/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shunxizhang.careloop.demo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F70000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = ZBDUUCCJLP;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Careloop/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shunxizhang.careloop.demo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F80000000000000000000001 /* Build configuration list for PBXProject "Careloop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F70000000000000000000001 /* Debug */,
+				F70000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F80000000000000000000002 /* Build configuration list for PBXNativeTarget "Careloop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F70000000000000000000003 /* Debug */,
+				F70000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F50000000000000000000001 /* Project object */;
+}

@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-figtree",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Careloop | Medication care",
+  title: "Smart Pillbox | Medication care",
   description: "Medication monitoring and follow-up for family caregivers",
 };
 
@@ -13,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={figtree.variable}>{children}</body>
     </html>
   );
 }

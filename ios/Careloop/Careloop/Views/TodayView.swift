@@ -31,7 +31,7 @@ struct TodayView: View {
             }
             .navigationTitle("Smart Pillbox")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.white, for: .navigationBar)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .sheet(isPresented: $showingNoteComposer) {
                 NoteComposerView(initialPatientID: store.selectedPatientID)

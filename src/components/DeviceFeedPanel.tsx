@@ -106,7 +106,7 @@ export function DeviceFeedPanel({
         </div>
       </div>
 
-      <section className="grid overflow-hidden rounded-lg border border-line bg-white shadow-card sm:grid-cols-3 sm:divide-x sm:divide-line-soft">
+      <section className="grid overflow-hidden rounded-lg border border-line bg-surface shadow-card sm:grid-cols-3 sm:divide-x sm:divide-line-soft">
         <div className="flex items-center gap-4 border-b border-line-soft p-5 sm:border-b-0">
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-mint-soft text-mint-ink">
             <Wifi aria-hidden="true" size={20} />
@@ -148,7 +148,7 @@ export function DeviceFeedPanel({
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.75fr)]">
-        <section className="overflow-hidden rounded-lg border border-line bg-white shadow-card">
+        <section className="overflow-hidden rounded-lg border border-line bg-surface shadow-card">
           <header className="flex items-center justify-between border-b border-line-soft px-5 py-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
@@ -213,7 +213,7 @@ export function DeviceFeedPanel({
         </section>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-line bg-white p-5 shadow-card">
+          <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
             <div className="flex items-center gap-2">
               <BellRing aria-hidden="true" size={18} className="text-coral" />
               <h2 className="font-bold text-ink">Ring a reminder</h2>
@@ -253,7 +253,7 @@ export function DeviceFeedPanel({
                 type="button"
                 onClick={() => setReminder("reminding")}
                 disabled={controlPending}
-                className="flex items-center justify-center gap-2 rounded-lg bg-ink px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-lg bg-action px-3 py-2.5 text-sm font-semibold text-on-action transition hover:bg-action-hover disabled:opacity-50"
               >
                 <BellRing aria-hidden="true" size={15} /> Ring now
               </button>
@@ -281,7 +281,7 @@ export function DeviceFeedPanel({
             )}
           </section>
 
-          <section className="rounded-lg border border-line bg-white p-5 shadow-card">
+          <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
             <div className="flex items-center gap-2">
               <CalendarDays aria-hidden="true" size={18} className="text-honey-ink" />
               <h2 className="font-bold text-ink">Look back at a day</h2>

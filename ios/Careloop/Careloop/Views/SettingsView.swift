@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage("careloop.alerts.lateDose") private var lateDoseAlerts = true
     @AppStorage("careloop.alerts.offline") private var offlineAlerts = true
     @AppStorage("careloop.alerts.weekly") private var weeklySummary = true
+    @AppStorage("careloop.appearance.darkMode") private var darkMode = false
 
     @State private var draftServerURL = ""
     @State private var draftDeviceID = ""
@@ -35,6 +36,17 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 5)
                 }
+
+                Section {
+                    Toggle(isOn: $darkMode) {
+                        Label("Dark mode", systemImage: "moon.fill")
+                    }
+                } header: {
+                    Text("Appearance")
+                } footer: {
+                    Text("Use a lower-glare appearance throughout Smart Pillbox.")
+                }
+                .tint(.careMint)
 
                 Section("Notifications") {
                     Toggle("Missed dose alerts", isOn: $missedDoseAlerts)

@@ -28,7 +28,7 @@ struct CareAvatar: View {
             Circle()
                 .fill(wellbeing.tint)
                 .frame(width: size * 0.22, height: size * 0.22)
-                .overlay { Circle().stroke(.white, lineWidth: 2) }
+                .overlay { Circle().stroke(Color.careSurface, lineWidth: 2) }
                 .offset(x: 1, y: 1)
         }
         .frame(width: size, height: size)
@@ -115,7 +115,7 @@ struct PatientCarousel: View {
                     VStack(spacing: 7) {
                         ZStack(alignment: .bottomTrailing) {
                             Circle()
-                                .fill(Color.white)
+                                .fill(Color.careSurface)
                                 .overlay {
                                     Circle()
                                         .stroke(
@@ -135,7 +135,7 @@ struct PatientCarousel: View {
                                 .frame(width: 19, height: 19)
                                 .background(Color.careCoral)
                                 .clipShape(Circle())
-                                .overlay { Circle().stroke(Color.white, lineWidth: 2) }
+                                .overlay { Circle().stroke(Color.careSurface, lineWidth: 2) }
                         }
                         .frame(width: 54, height: 54)
 
@@ -347,7 +347,7 @@ struct ConnectPillboxView: View {
             .background(Color.careCream)
             .navigationTitle("Add pillbox")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.white, for: .navigationBar)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -432,7 +432,7 @@ struct ConnectPillboxView: View {
                     .foregroundStyle(selectedMethod == method ? Color.careCoral : Color.careInkFaint)
             }
             .padding(14)
-            .background(Color.white)
+            .background(Color.careSurface)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -558,10 +558,10 @@ struct ConnectPillboxView: View {
         Button(action: action) {
             Label(title, systemImage: symbol)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.careOnAction)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(Color.careInk)
+                .background(Color.careAction)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)

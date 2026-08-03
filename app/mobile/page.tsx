@@ -138,7 +138,7 @@ function StoriesRow({
               className="flex w-[62px] flex-col items-center gap-1.5"
             >
               <span
-                className={`relative flex h-14 w-14 items-center justify-center rounded-full border-[2.5px] bg-white p-[2px] ${
+                className={`relative flex h-14 w-14 items-center justify-center rounded-full border-[2.5px] bg-surface p-[2px] ${
                   isSelected ? appearance.ring : "border-line"
                 }`}
               >
@@ -148,7 +148,7 @@ function StoriesRow({
                   {person.initials}
                 </span>
                 <span
-                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${appearance.dot}`}
+                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-surface ${appearance.dot}`}
                 />
               </span>
               <span
@@ -166,7 +166,7 @@ function StoriesRow({
           type="button"
           className="flex w-[62px] flex-col items-center gap-1.5"
         >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-ink-faint bg-white text-ink-soft">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-ink-faint bg-surface text-ink-soft">
             <Plus aria-hidden="true" size={18} />
           </span>
           <span className="text-[11px] font-medium text-ink-soft">Add</span>
@@ -282,7 +282,7 @@ export default function MobilePage() {
   return (
     <main className="min-h-dvh bg-cream-deep text-ink">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-cream shadow-lift">
-        <header className="border-b border-line bg-white px-5 pb-4 pt-5">
+        <header className="border-b border-line bg-surface px-5 pb-4 pt-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-mint-soft text-xs font-bold text-mint-ink">
@@ -308,13 +308,13 @@ export default function MobilePage() {
             >
               <Bell aria-hidden="true" size={20} />
               {attentionStatuses.length > 0 && (
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-white" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-surface" />
               )}
             </button>
           </div>
         </header>
 
-        <div className="border-b border-line bg-white">
+        <div className="border-b border-line bg-surface">
           <StoriesRow
             selectedId={selectedPatientId}
             onSelect={setSelectedPatientId}
@@ -324,10 +324,10 @@ export default function MobilePage() {
         <section className="flex-1 px-4 pb-24 pt-4">
           {activeTab === "today" && (
             <div className="space-y-4">
-              <article className="overflow-hidden rounded-xl border border-line bg-white shadow-card">
+              <article className="overflow-hidden rounded-xl border border-line bg-surface shadow-card">
                 <div className="flex items-center gap-3 px-4 pt-4">
                   <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-white p-[2px] ${appearance.ring}`}
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-surface p-[2px] ${appearance.ring}`}
                   >
                     <span
                       className={`flex h-full w-full items-center justify-center rounded-full text-xs font-bold ${selectedPatient.avatarTone}`}
@@ -427,7 +427,7 @@ export default function MobilePage() {
                   return (
                     <article
                       key={status.compartment}
-                      className={`rounded-xl border bg-white p-4 shadow-card ${
+                      className={`rounded-xl border bg-surface p-4 shadow-card ${
                         isAlert && !reviewed ? "border-coral-line" : "border-line"
                       }`}
                     >
@@ -470,7 +470,7 @@ export default function MobilePage() {
                         <div className="mt-3 flex items-center gap-2 border-t border-line-soft pt-3">
                           <a
                             href={`tel:${selectedPatient.phone}`}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-white"
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-action px-3 py-2 text-xs font-semibold text-on-action"
                           >
                             <Phone aria-hidden="true" size={13} /> Call
                           </a>
@@ -500,7 +500,7 @@ export default function MobilePage() {
                 return (
                   <article
                     key={status.compartment}
-                    className="flex items-center gap-3 rounded-xl border border-line bg-white p-4 shadow-card"
+                    className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4 shadow-card"
                   >
                     <span
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${friendly.chip}`}
@@ -529,7 +529,7 @@ export default function MobilePage() {
 
           {activeTab === "insights" && (
             <div className="space-y-4">
-              <section className="rounded-xl border border-line bg-white p-5 shadow-card">
+              <section className="rounded-xl border border-line bg-surface p-5 shadow-card">
                 <div className="flex items-center gap-2">
                   <Sparkles aria-hidden="true" size={16} className="text-coral" />
                   <h2 className="text-sm font-bold text-ink">
@@ -541,7 +541,7 @@ export default function MobilePage() {
                 </p>
               </section>
 
-              <section className="rounded-xl border border-line bg-white p-5 shadow-card">
+              <section className="rounded-xl border border-line bg-surface p-5 shadow-card">
                 <h2 className="text-sm font-bold text-ink">
                   For the next clinic visit
                 </h2>
@@ -553,7 +553,7 @@ export default function MobilePage() {
           )}
         </section>
 
-        <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md border-t border-line bg-white/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
+        <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md border-t border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
           <div className="grid grid-cols-3 gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;

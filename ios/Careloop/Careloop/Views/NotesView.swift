@@ -25,7 +25,7 @@ struct NotesView: View {
             .background(Color.careCream)
             .navigationTitle("Insights")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.white, for: .navigationBar)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -129,10 +129,10 @@ struct NotesView: View {
                     systemImage: "sparkles"
                 )
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.careOnAction)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(Color.careInk)
+                .background(Color.careAction)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .buttonStyle(.plain)

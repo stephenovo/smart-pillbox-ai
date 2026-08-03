@@ -9,6 +9,12 @@
   --color-ink-faint: #a39c90;
   --color-line: #ece5da;
   --color-line-soft: #f2ede4;
+  --color-surface: #ffffff;
+  --color-action: #22201c;
+  --color-action-hover: #262626;
+  --color-on-action: #ffffff;
+  --color-toggle-knob: #ffffff;
+  --color-scrim: rgb(34 32 28 / 0.4);
 
   /* Coral — alerts, never clinical red */
   --color-coral: #ff5a5f;
@@ -37,6 +43,51 @@
   --shadow-lift: 0 6px 20px -6px rgb(34 32 28 / 0.12);
 
   --radius-card: 0.5rem;
+}
+
+html {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-cream: #171918;
+  --color-cream-deep: #202321;
+  --color-surface: #252825;
+  --color-ink: #f2efe9;
+  --color-ink-soft: #bcb6ac;
+  --color-ink-faint: #8e887e;
+  --color-line: #3c403c;
+  --color-line-soft: #303430;
+
+  --color-coral: #ff777c;
+  --color-coral-deep: #ff998f;
+  --color-coral-ink: #ffa297;
+  --color-coral-soft: #3c2424;
+  --color-coral-line: #653b39;
+
+  --color-mint: #48cdb9;
+  --color-mint-ink: #79dfd0;
+  --color-mint-soft: #1e3732;
+  --color-mint-line: #365e56;
+
+  --color-honey: #f1b75d;
+  --color-honey-ink: #f3c779;
+  --color-honey-soft: #392f1f;
+  --color-honey-line: #66502c;
+
+  --color-sky-soft: #1e3344;
+  --color-sky-ink: #8bc0e6;
+
+  --color-action: #f2efe9;
+  --color-action-hover: #d7d2ca;
+  --color-on-action: #171918;
+  --color-toggle-knob: #ffffff;
+  --color-scrim: rgb(0 0 0 / 0.58);
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.28);
+  --shadow-lift: 0 10px 28px -8px rgb(0 0 0 / 0.48);
 }
 
 * {
@@ -71,8 +122,13 @@ a {
   color: #22201c;
 }
 
+html[data-theme="dark"] ::selection {
+  background: #70403d;
+  color: #fff7f3;
+}
+
 /* Slim, quiet scrollbars for feed columns */
 .feed-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #d8d0c3 transparent;
+  scrollbar-color: var(--color-line) transparent;
 }

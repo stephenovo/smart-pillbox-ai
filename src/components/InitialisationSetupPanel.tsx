@@ -46,7 +46,7 @@ function TodayDoseList({
   ).length;
 
   return (
-    <section className="rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
+    <section className="rounded-lg border border-line bg-surface p-5 shadow-card sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
@@ -170,16 +170,16 @@ export default function InitialisationSetupPanel(
   return (
     <div className="space-y-6">
       {showOnboarding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4 backdrop-blur-sm">
-          <section className="w-full max-w-xl overflow-hidden rounded-lg bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+          <section className="w-full max-w-xl overflow-hidden rounded-lg bg-surface shadow-2xl">
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-[#e34747]">
+                  <p className="text-xs font-semibold uppercase text-coral-ink">
                     Quick Start
                   </p>
 
-                  <h2 className="mt-1 text-2xl font-bold text-neutral-950">
+                  <h2 className="mt-1 text-2xl font-bold text-ink">
                     Set up Margaret&apos;s pillbox
                   </h2>
                 </div>
@@ -187,36 +187,36 @@ export default function InitialisationSetupPanel(
                 <button
                   type="button"
                   onClick={closeTutorial}
-                  className="rounded-md px-3 py-2 text-sm font-semibold text-neutral-500 hover:bg-stone-100 hover:text-neutral-950"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-cream-deep hover:text-ink"
                 >
                   Skip Tutorial
                 </button>
               </div>
 
-              <div className="mt-6 rounded-lg border border-stone-200 bg-[#fafafa] p-6">
+              <div className="mt-6 rounded-lg border border-line bg-cream p-6">
                 <div className="flex items-center gap-2">
                   {onboardingSteps.map((step, index) => (
                     <div
                       key={step.title}
                       className={`h-2 flex-1 rounded-full ${
                         index <= currentStepIndex
-                          ? "bg-[#ff5c5c]"
-                          : "bg-stone-200"
+                          ? "bg-coral"
+                          : "bg-line"
                       }`}
                     />
                   ))}
                 </div>
 
                 <div className="mt-6">
-                  <p className="text-sm font-semibold text-[#e34747]">
+                  <p className="text-sm font-semibold text-coral-ink">
                     Step {currentStepIndex + 1} of {onboardingSteps.length}
                   </p>
 
-                  <h3 className="mt-2 text-xl font-bold text-slate-950">
+                  <h3 className="mt-2 text-xl font-bold text-ink">
                     {currentStep.title}
                   </h3>
 
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 text-sm leading-6 text-ink-soft">
                     {currentStep.description}
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export default function InitialisationSetupPanel(
                     setCurrentStepIndex((current) => Math.max(0, current - 1))
                   }
                   disabled={isFirstStep}
-                  className="rounded-md border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-md border border-line bg-surface px-5 py-3 text-sm font-semibold text-ink-soft disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Back
                 </button>
@@ -244,7 +244,7 @@ export default function InitialisationSetupPanel(
 
                     setCurrentStepIndex((current) => current + 1);
                   }}
-                  className="rounded-md bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-800"
+                  className="rounded-md bg-action px-5 py-3 text-sm font-semibold text-on-action hover:bg-action-hover"
                 >
                   {isLastStep ? "Start Setup" : "Next"}
                 </button>
@@ -254,15 +254,15 @@ export default function InitialisationSetupPanel(
         </div>
       )}
 
-      <section className="overflow-hidden rounded-lg border border-stone-200 bg-white">
+      <section className="overflow-hidden rounded-lg border border-line bg-surface">
         <div className="p-6 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div>
-              <p className="text-xs font-semibold uppercase text-[#e34747]">
+              <p className="text-xs font-semibold uppercase text-coral-ink">
                 Medication plan
               </p>
 
-              <h2 className="mt-1 text-2xl font-bold text-neutral-950 sm:text-3xl">
+              <h2 className="mt-1 text-2xl font-bold text-ink sm:text-3xl">
                 Margaret&apos;s daily routine
               </h2>
             </div>
@@ -270,23 +270,23 @@ export default function InitialisationSetupPanel(
             <button
               type="button"
               onClick={openTutorial}
-              className="rounded-md border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-stone-50"
+              className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink-soft hover:bg-cream-deep"
             >
               View Tutorial
             </button>
           </div>
 
           <div className="mt-7 grid gap-4 md:grid-cols-3">
-            <div className="border-l-2 border-[#ff5c5c] pl-4">
-              <p className="text-sm font-medium text-slate-500">
+            <div className="border-l-2 border-coral pl-4">
+              <p className="text-sm font-medium text-ink-soft">
                 Active medications
               </p>
 
-              <p className="mt-2 text-3xl font-bold text-slate-950">
+              <p className="mt-2 text-3xl font-bold text-ink">
                 {configuredMedicationCount}
               </p>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-ink-soft">
                 out of {props.schedule.length} compartments
               </p>
             </div>
@@ -299,19 +299,19 @@ export default function InitialisationSetupPanel(
         analysisTime={props.analysisTime}
       />
 
-      <section className="rounded-lg border border-stone-200 bg-white p-5 sm:p-6">
+      <section className="rounded-lg border border-line bg-surface p-5 sm:p-6">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase text-neutral-400">
+            <p className="text-xs font-semibold uppercase text-ink-faint">
               Pillbox layout
             </p>
 
-            <h3 className="mt-1 text-xl font-bold text-neutral-950">
+            <h3 className="mt-1 text-xl font-bold text-ink">
               Compartment schedule
             </h3>
           </div>
 
-          <div className="rounded-full bg-[#effaf7] px-3 py-1.5 text-xs font-bold text-teal-700">
+          <div className="rounded-full bg-mint-soft px-3 py-1.5 text-xs font-bold text-mint-ink">
             8-compartment device
           </div>
         </div>

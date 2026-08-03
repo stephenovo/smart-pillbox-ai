@@ -24,7 +24,7 @@ struct MedicationsView: View {
             }
             .navigationTitle("Medication plan")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.white, for: .navigationBar)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .fullScreenCover(isPresented: $showingConnectPillbox) {
                 ConnectPillboxView()

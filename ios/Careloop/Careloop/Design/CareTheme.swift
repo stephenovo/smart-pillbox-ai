@@ -1,39 +1,119 @@
 import SwiftUI
+import UIKit
 
 extension Color {
-    static let careCream = Color(red: 0.980, green: 0.969, blue: 0.949)
-    static let careCreamDeep = Color(red: 0.957, green: 0.937, blue: 0.906)
-    static let careInk = Color(red: 0.133, green: 0.125, blue: 0.110)
-    static let careInkSoft = Color(red: 0.431, green: 0.404, blue: 0.361)
-    static let careInkFaint = Color(red: 0.639, green: 0.612, blue: 0.565)
-    static let careLine = Color(red: 0.925, green: 0.898, blue: 0.855)
+    private static func careAdaptive(
+        light: (CGFloat, CGFloat, CGFloat),
+        dark: (CGFloat, CGFloat, CGFloat)
+    ) -> Color {
+        Color(uiColor: UIColor { traits in
+            let components = traits.userInterfaceStyle == .dark ? dark : light
+            return UIColor(
+                red: components.0,
+                green: components.1,
+                blue: components.2,
+                alpha: 1
+            )
+        })
+    }
 
-    static let careCoral = Color(red: 1.000, green: 0.353, blue: 0.373)
-    static let careCoralInk = Color(red: 0.690, green: 0.290, blue: 0.235)
-    static let careCoralSoft = Color(red: 1.000, green: 0.941, blue: 0.933)
+    static let careCream = careAdaptive(
+        light: (0.980, 0.969, 0.949),
+        dark: (0.090, 0.098, 0.094)
+    )
+    static let careCreamDeep = careAdaptive(
+        light: (0.957, 0.937, 0.906),
+        dark: (0.125, 0.137, 0.129)
+    )
+    static let careSurface = careAdaptive(
+        light: (1.000, 1.000, 1.000),
+        dark: (0.145, 0.157, 0.149)
+    )
+    static let careInk = careAdaptive(
+        light: (0.133, 0.125, 0.110),
+        dark: (0.949, 0.937, 0.914)
+    )
+    static let careInkSoft = careAdaptive(
+        light: (0.431, 0.404, 0.361),
+        dark: (0.737, 0.714, 0.671)
+    )
+    static let careInkFaint = careAdaptive(
+        light: (0.639, 0.612, 0.565),
+        dark: (0.557, 0.533, 0.494)
+    )
+    static let careLine = careAdaptive(
+        light: (0.925, 0.898, 0.855),
+        dark: (0.235, 0.251, 0.235)
+    )
 
-    static let careMint = Color(red: 0.000, green: 0.651, blue: 0.600)
-    static let careMintInk = Color(red: 0.000, green: 0.408, blue: 0.373)
-    static let careMintSoft = Color(red: 0.906, green: 0.965, blue: 0.949)
+    static let careCoral = careAdaptive(
+        light: (1.000, 0.353, 0.373),
+        dark: (1.000, 0.467, 0.486)
+    )
+    static let careCoralInk = careAdaptive(
+        light: (0.690, 0.290, 0.235),
+        dark: (1.000, 0.635, 0.592)
+    )
+    static let careCoralSoft = careAdaptive(
+        light: (1.000, 0.941, 0.933),
+        dark: (0.235, 0.137, 0.137)
+    )
 
-    static let careHoney = Color(red: 0.910, green: 0.631, blue: 0.239)
-    static let careHoneyInk = Color(red: 0.541, green: 0.353, blue: 0.071)
-    static let careHoneySoft = Color(red: 0.992, green: 0.953, blue: 0.886)
+    static let careMint = careAdaptive(
+        light: (0.000, 0.651, 0.600),
+        dark: (0.282, 0.804, 0.725)
+    )
+    static let careMintInk = careAdaptive(
+        light: (0.000, 0.408, 0.373),
+        dark: (0.475, 0.875, 0.816)
+    )
+    static let careMintSoft = careAdaptive(
+        light: (0.906, 0.965, 0.949),
+        dark: (0.118, 0.216, 0.196)
+    )
 
-    static let careSkySoft = Color(red: 0.914, green: 0.953, blue: 0.984)
-    static let careSkyInk = Color(red: 0.184, green: 0.384, blue: 0.569)
+    static let careHoney = careAdaptive(
+        light: (0.910, 0.631, 0.239),
+        dark: (0.945, 0.718, 0.365)
+    )
+    static let careHoneyInk = careAdaptive(
+        light: (0.541, 0.353, 0.071),
+        dark: (0.953, 0.780, 0.475)
+    )
+    static let careHoneySoft = careAdaptive(
+        light: (0.992, 0.953, 0.886),
+        dark: (0.224, 0.184, 0.118)
+    )
+
+    static let careSkySoft = careAdaptive(
+        light: (0.914, 0.953, 0.984),
+        dark: (0.118, 0.200, 0.267)
+    )
+    static let careSkyInk = careAdaptive(
+        light: (0.184, 0.384, 0.569),
+        dark: (0.545, 0.753, 0.902)
+    )
+
+    static let careAction = careAdaptive(
+        light: (0.133, 0.125, 0.110),
+        dark: (0.949, 0.937, 0.914)
+    )
+    static let careOnAction = careAdaptive(
+        light: (1.000, 1.000, 1.000),
+        dark: (0.090, 0.098, 0.094)
+    )
 }
 
 struct CareCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(Color.white)
+            .background(Color.careSurface)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(Color.careLine, lineWidth: 1)
             }
-            .shadow(color: Color.careInk.opacity(0.05), radius: 2, y: 1)
+            .shadow(color: Color.black.opacity(0.08), radius: 2, y: 1)
     }
 }
 

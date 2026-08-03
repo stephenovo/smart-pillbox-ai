@@ -255,7 +255,7 @@ function PatientStories({
               className="group flex w-[72px] flex-col items-center gap-2"
             >
               <span
-                className={`relative flex h-16 w-16 items-center justify-center rounded-full border-[2.5px] bg-white p-[3px] transition group-hover:scale-[1.04] ${
+                className={`relative flex h-16 w-16 items-center justify-center rounded-full border-[2.5px] bg-surface p-[3px] transition group-hover:scale-[1.04] ${
                   isSelected ? appearance.ring : "border-line"
                 }`}
               >
@@ -265,7 +265,7 @@ function PatientStories({
                   {person.initials}
                 </span>
                 <span
-                  className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white ${appearance.dot}`}
+                  className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-surface ${appearance.dot}`}
                 />
               </span>
               <span
@@ -283,7 +283,7 @@ function PatientStories({
           type="button"
           className="group flex w-[72px] flex-col items-center gap-2"
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-ink-faint bg-white text-ink-soft transition group-hover:border-ink group-hover:text-ink">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-ink-faint bg-surface text-ink-soft transition group-hover:border-ink group-hover:text-ink">
             <Plus aria-hidden="true" size={20} />
           </span>
           <span className="text-xs font-medium text-ink-soft">Add person</span>
@@ -328,10 +328,10 @@ function PatientStatusCard({
     : [];
 
   return (
-    <article className="overflow-hidden rounded-lg border border-line bg-white shadow-card">
+    <article className="overflow-hidden rounded-lg border border-line bg-surface shadow-card">
       <header className="flex items-center gap-3 px-5 pt-5">
         <div
-          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[2.5px] bg-white p-[2px] ${appearance.ring}`}
+          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[2.5px] bg-surface p-[2px] ${appearance.ring}`}
         >
           <span
             className={`flex h-full w-full items-center justify-center rounded-full text-sm font-bold ${patient.avatarTone}`}
@@ -401,7 +401,7 @@ function PatientStatusCard({
       <div className="flex flex-wrap items-center gap-2 border-t border-line-soft px-5 py-4">
         <a
           href={`tel:${patient.phone}`}
-          className="flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          className="flex items-center gap-2 rounded-lg bg-action px-4 py-2.5 text-sm font-semibold text-on-action transition hover:bg-action-hover"
         >
           <Phone aria-hidden="true" size={16} /> Call
         </a>
@@ -446,7 +446,7 @@ function CareFeed({
 }) {
   if (items.length === 0) {
     return (
-      <section className="rounded-lg border border-line bg-white p-8 text-center shadow-card">
+      <section className="rounded-lg border border-line bg-surface p-8 text-center shadow-card">
         <ShieldCheck className="mx-auto text-mint" size={28} />
         <h2 className="mt-3 text-base font-bold text-ink">
           Nothing needs your attention
@@ -482,7 +482,7 @@ function CareFeed({
         return (
           <article
             key={item.id}
-            className={`rounded-lg border bg-white p-5 shadow-card transition ${
+            className={`rounded-lg border bg-surface p-5 shadow-card transition ${
               needsAction
                 ? "border-coral-line"
                 : isReviewed
@@ -521,7 +521,7 @@ function CareFeed({
               <div className="mt-4 flex items-center gap-2 border-t border-line-soft pt-4">
                 <a
                   href={`tel:${patient.phone}`}
-                  className="flex items-center gap-2 rounded-lg bg-ink px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-neutral-800"
+                  className="flex items-center gap-2 rounded-lg bg-action px-3.5 py-2 text-xs font-semibold text-on-action transition hover:bg-action-hover"
                 >
                   <Phone aria-hidden="true" size={14} /> Call {patient.firstName}
                 </a>
@@ -564,7 +564,7 @@ function SummaryRail({
 
   return (
     <aside className="space-y-5 xl:sticky xl:top-28 xl:self-start">
-      <section className="rounded-lg border border-line bg-white p-5 shadow-card">
+      <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
         <div className="flex items-center gap-3">
           <div
             className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold ${patient.avatarTone}`}
@@ -617,7 +617,7 @@ function SummaryRail({
         </div>
       </section>
 
-      <section className="rounded-lg border border-line bg-white p-5 shadow-card">
+      <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-ink">Device sync</h2>
           <span
@@ -665,7 +665,7 @@ function SummaryRail({
         </dl>
       </section>
 
-      <section className="rounded-lg border border-line bg-white p-5 shadow-card">
+      <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-ink">7-day rhythm</h2>
           <span className="text-sm font-bold text-mint-ink">
@@ -698,7 +698,7 @@ function SummaryRail({
         </p>
       </section>
 
-      <section className="rounded-lg border border-line bg-white p-5 shadow-card">
+      <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
         <div className="flex items-center gap-2">
           <Radio aria-hidden="true" className="text-mint" size={17} />
           <h2 className="font-bold text-ink">Latest activity</h2>
@@ -753,12 +753,12 @@ function NoteDialog({
   const [note, setNote] = useState("");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-scrim p-0 sm:items-center sm:p-4">
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="care-note-title"
-        className="w-full max-w-lg rounded-t-2xl bg-white p-5 shadow-lift sm:rounded-lg sm:p-6"
+        className="w-full max-w-lg rounded-t-2xl bg-surface p-5 shadow-lift sm:rounded-lg sm:p-6"
       >
         <header className="flex items-center justify-between">
           <div>
@@ -801,7 +801,7 @@ function NoteDialog({
             type="button"
             disabled={!note.trim()}
             onClick={() => onSave(note.trim())}
-            className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-action px-4 py-2.5 text-sm font-semibold text-on-action transition hover:bg-action-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save note
           </button>
@@ -932,7 +932,7 @@ export default function DashboardPanel({
 
   return (
     <div className="space-y-7">
-      <section className="rounded-lg border border-line bg-white px-5 py-4 shadow-card">
+      <section className="rounded-lg border border-line bg-surface px-5 py-4 shadow-card">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2.5">
             <span

@@ -106,7 +106,7 @@ export default function AiReportPanel() {
   }
 
   return (
-    <section className="rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
+    <section className="rounded-lg border border-line bg-surface p-5 shadow-card sm:p-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-coral-ink">
@@ -153,7 +153,7 @@ export default function AiReportPanel() {
                     type="button"
                     onClick={() => generateSection(section.id)}
                     disabled={isLoading}
-                    className="flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex items-center gap-2 rounded-lg bg-action px-4 py-2 text-sm font-semibold text-on-action transition hover:bg-action-hover disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Sparkles aria-hidden="true" size={14} />
                     {isLoading
@@ -193,7 +193,7 @@ export default function AiReportPanel() {
               </p>
             </div>
 
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold capitalize text-ink-soft">
+            <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold capitalize text-ink-soft">
               {report.overallConcernLevel}
             </span>
           </div>

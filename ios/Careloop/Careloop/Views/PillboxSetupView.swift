@@ -60,7 +60,7 @@ struct PillboxSetupView: View {
             .background(Color.careCream)
             .navigationTitle("Pillbox setup")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.white, for: .navigationBar)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -274,17 +274,17 @@ struct PillboxSetupView: View {
                 HStack(spacing: 8) {
                     if isSaving {
                         ProgressView()
-                            .tint(.white)
+                            .tint(.careOnAction)
                     } else {
                         Image(systemName: "checkmark")
                     }
                     Text(isSaving ? "Saving setup…" : "Save pillbox setup")
                 }
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.careOnAction)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(Color.careInk)
+                .background(Color.careAction)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .buttonStyle(.plain)

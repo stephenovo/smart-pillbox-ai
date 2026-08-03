@@ -30,7 +30,7 @@ const navigation: {
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-white px-5 py-7 lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-surface px-5 py-7 lg:flex">
       <div className="flex items-center gap-3 px-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-white">
           <HeartPulse aria-hidden="true" size={20} strokeWidth={2.2} />
@@ -53,7 +53,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               onClick={() => onTabChange(item.id)}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition ${
                 isActive
-                  ? "bg-ink text-white"
+                  ? "bg-action text-on-action"
                   : "text-ink-soft hover:bg-cream-deep hover:text-ink"
               }`}
             >

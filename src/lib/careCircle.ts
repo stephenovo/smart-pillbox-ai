@@ -47,7 +47,7 @@ export const careCircle: CarePatient[] = [
     city: "Hong Kong",
     relation: "Mum",
     livingSituation: "Lives independently",
-    avatarTone: "bg-[#ffe1df] text-rose-800",
+    avatarTone: "bg-coral-soft text-coral-ink",
     phone: "+85255550118",
     emergencyContacts: [
       {

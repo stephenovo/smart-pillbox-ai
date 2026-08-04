@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 
+import AppModeSwitcher from "../src/components/AppModeSwitcher";
 import CareMessagesPanel from "../src/components/CareMessagesPanel";
 import SettingsPanel from "../src/components/SettingsPanel";
 import { DeviceFeedPanel } from "../src/components/DeviceFeedPanel";
@@ -12,13 +13,32 @@ import MainSectionTabs, {
 } from "../src/components/MainSectionTabs";
 import { Sidebar } from "../src/components/Sidebar";
 import DashboardPanel from "../src/components/DashboardPanel";
+import {
+  MyCareMedicinesPanel,
+  MyCarePillboxPanel,
+  MyCareTodayPanel,
+} from "../src/components/MyCarePanels";
 
 import { getRecommendedBufferTime } from "../src/lib/scheduleDefaults";
 import { DEMO_DEVICE_ID } from "../src/lib/hardwareProtocol";
 import { generateRecordedMedicationStatuses } from "../src/lib/safetyControl";
 import { initialMedicationSchedule } from "../src/lib/sampleData";
+import {
+  DEFAULT_USER_PROFILE,
+  profileFirstName,
+  profileInitials,
+} from "../src/lib/userProfile";
+import {
+  APP_MODE_STORAGE_KEY,
+  isAppMode,
+  type AppMode,
+} from "../src/lib/appMode";
 
 import type { MedicationSchedule, OpeningEvent } from "../src/types/pillbox";
+import type {
+  UserProfile,
+  UserProfileApiResponse,
+} from "../src/types/profile";
 import type {
   HardwareDeviceState,
   HardwareEventsApiResponse,
@@ -97,6 +117,10 @@ function greetingForTime(time: string): string {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<MainSectionTab>("dashboard");
+  const [appMode, setAppMode] = useState<AppMode>("circle-care");
+  const [userProfile, setUserProfile] = useState<UserProfile>(
+    DEFAULT_USER_PROFILE
+  );
 
   const [medicationSchedule, setMedicationSchedule] =
     useState<MedicationSchedule[]>(initialMedicationSchedule);
@@ -111,6 +135,47 @@ export default function Home() {
     null
   );
   const latestHardwareEventId = useRef<string | null>(null);
+
+  useEffect(() => {
+    const storedMode = window.localStorage.getItem(APP_MODE_STORAGE_KEY);
+    if (isAppMode(storedMode)) {
+      setAppMode(storedMode);
+      document.documentElement.dataset.careMode = storedMode;
+    }
+  }, []);
+
+  function handleModeChange(nextMode: AppMode) {
+    setAppMode(nextMode);
+    window.localStorage.setItem(APP_MODE_STORAGE_KEY, nextMode);
+    document.documentElement.dataset.careMode = nextMode;
+    if (nextMode === "my-care" && activeTab === "messages") {
+      setActiveTab("dashboard");
+    }
+  }
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function syncUserProfile() {
+      try {
+        const response = await fetch("/api/profile", { cache: "no-store" });
+        if (!response.ok || !isActive) return;
+
+        const data = (await response.json()) as UserProfileApiResponse;
+        if (isActive) setUserProfile(data.profile);
+      } catch {
+        // Keep the last available profile when the sync API is offline.
+      }
+    }
+
+    syncUserProfile();
+    window.addEventListener("focus", syncUserProfile);
+
+    return () => {
+      isActive = false;
+      window.removeEventListener("focus", syncUserProfile);
+    };
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -207,24 +272,35 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-cream text-ink">
+    <main className={`min-h-screen bg-cream text-ink ${appMode === "my-care" ? "my-care-mode" : ""}`}>
       <div className="flex min-h-screen">
-        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          profile={userProfile}
+          mode={appMode}
+        />
 
         <section className="min-w-0 flex-1 pb-24 lg:pb-0">
           <div className="mx-auto w-full max-w-[1440px]">
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-cream/95 px-4 backdrop-blur sm:px-7 lg:h-20 lg:px-10">
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-7 lg:h-20 lg:px-10">
               <div>
                 <h1 className="text-lg font-bold text-ink lg:text-xl">
-                  {greetingForTime(analysisTime)}, Sarah
+                  {greetingForTime(analysisTime)}, {profileFirstName(userProfile)}
                 </h1>
                 <p className="mt-0.5 text-xs text-ink-soft lg:text-sm">
-                  {analysisDate} · here&apos;s what&apos;s happening with your
-                  circle
+                  {appMode === "my-care"
+                    ? `${analysisDate} · your medicine plan for today`
+                    : `${analysisDate} · here&apos;s what&apos;s happening with your circle`}
                 </p>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                <AppModeSwitcher
+                  compact
+                  mode={appMode}
+                  onChange={handleModeChange}
+                />
                 <button
                   type="button"
                   aria-label="Notifications"
@@ -235,7 +311,7 @@ export default function Home() {
                   <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-cream" />
                 </button>
                 <div className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-mint-soft text-xs font-bold text-mint-ink lg:hidden">
-                  SC
+                  {profileInitials(userProfile)}
                 </div>
               </div>
             </header>
@@ -243,43 +319,96 @@ export default function Home() {
             <MainSectionTabs
               activeTab={activeTab}
               onTabChange={setActiveTab}
+              mode={appMode}
             />
 
-            <div className="px-4 py-5 sm:px-7 lg:px-10 lg:py-8">
-              {activeTab === "initialisation" && (
-                <InitialisationSetupPanel
-                  schedule={medicationSchedule}
-                  statuses={medicationStatuses}
-                  analysisTime={analysisTime}
-                  onScheduleChange={handleScheduleChange}
-                  onApplyRecommendedBufferTimes={handleApplyRecommendedBufferTimes}
-                />
-              )}
+            <div className="px-4 pb-8 pt-8 sm:px-7 sm:pb-10 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-12">
+              {appMode === "my-care" ? (
+                <>
+                  {activeTab === "dashboard" && (
+                    <MyCareTodayPanel
+                      statuses={medicationStatuses}
+                      events={openingEvents}
+                      schedule={activeMedicationSchedule}
+                      analysisDate={analysisDate}
+                      analysisTime={analysisTime}
+                      deviceState={deviceState}
+                    />
+                  )}
+                  {activeTab === "initialisation" && (
+                    <MyCareMedicinesPanel
+                      statuses={medicationStatuses}
+                      events={openingEvents}
+                      schedule={activeMedicationSchedule}
+                      analysisDate={analysisDate}
+                      analysisTime={analysisTime}
+                      deviceState={deviceState}
+                    />
+                  )}
+                  {activeTab === "pillbox" && (
+                    <MyCarePillboxPanel
+                      statuses={medicationStatuses}
+                      events={openingEvents}
+                      schedule={activeMedicationSchedule}
+                      analysisDate={analysisDate}
+                      analysisTime={analysisTime}
+                      deviceState={deviceState}
+                    />
+                  )}
+                  {activeTab === "settings" && (
+                    <SettingsPanel
+                      profile={userProfile}
+                      onProfileChange={setUserProfile}
+                      mode={appMode}
+                      onModeChange={handleModeChange}
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  {activeTab === "initialisation" && (
+                    <InitialisationSetupPanel
+                      schedule={medicationSchedule}
+                      statuses={medicationStatuses}
+                      analysisTime={analysisTime}
+                      onScheduleChange={handleScheduleChange}
+                      onApplyRecommendedBufferTimes={handleApplyRecommendedBufferTimes}
+                    />
+                  )}
 
-              {activeTab === "pillbox" && (
-                <DeviceFeedPanel
-                  analysisDate={analysisDate}
-                  analysisTime={analysisTime}
-                  events={openingEvents}
-                  schedule={activeMedicationSchedule}
-                  deviceState={deviceState}
-                  onAnalysisDateChange={setAnalysisDate}
-                />
-              )}
+                  {activeTab === "pillbox" && (
+                    <DeviceFeedPanel
+                      analysisDate={analysisDate}
+                      analysisTime={analysisTime}
+                      events={openingEvents}
+                      schedule={activeMedicationSchedule}
+                      deviceState={deviceState}
+                      onAnalysisDateChange={setAnalysisDate}
+                    />
+                  )}
 
-              {activeTab === "messages" && <CareMessagesPanel />}
+                  {activeTab === "messages" && <CareMessagesPanel />}
 
-              {activeTab === "settings" && <SettingsPanel />}
+                  {activeTab === "settings" && (
+                    <SettingsPanel
+                      profile={userProfile}
+                      onProfileChange={setUserProfile}
+                      mode={appMode}
+                      onModeChange={handleModeChange}
+                    />
+                  )}
 
-              {activeTab === "dashboard" && (
-                <DashboardPanel
-                  statuses={medicationStatuses}
-                  events={openingEvents}
-                  schedule={activeMedicationSchedule}
-                  analysisDate={analysisDate}
-                  analysisTime={analysisTime}
-                  deviceState={deviceState}
-                />
+                  {activeTab === "dashboard" && (
+                    <DashboardPanel
+                      statuses={medicationStatuses}
+                      events={openingEvents}
+                      schedule={activeMedicationSchedule}
+                      analysisDate={analysisDate}
+                      analysisTime={analysisTime}
+                      deviceState={deviceState}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>

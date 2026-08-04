@@ -60,6 +60,14 @@ struct CareAPIClient {
         return response.slots.filter { !$0.medication.trimmingCharacters(in: .whitespaces).isEmpty }
     }
 
+    func fetchUserProfile() async throws -> CaregiverProfile {
+        let response: CaregiverProfileResponse = try await get(
+            path: "/api/profile",
+            queryItems: []
+        )
+        return response.profile
+    }
+
     func fetchInsightReport(patientID: String) async throws -> CaregiverInsightReport {
         let response: CaregiverInsightReportResponse = try await get(
             path: "/api/caregiver-insight",
@@ -90,6 +98,24 @@ struct CareAPIClient {
             body: HardwarePlanUpdateRequest(deviceId: deviceID, slots: slots)
         )
         return response.slots
+    }
+
+    func updateUserProfile(
+        fullName: String,
+        email: String,
+        phone: String,
+        role: String
+    ) async throws -> CaregiverProfile {
+        let response: CaregiverProfileResponse = try await put(
+            path: "/api/profile",
+            body: CaregiverProfileUpdateRequest(
+                fullName: fullName,
+                email: email,
+                phone: phone,
+                role: role
+            )
+        )
+        return response.profile
     }
 
     private func get<Response: Decodable>(
@@ -149,6 +175,35 @@ struct CareAPIClient {
 
         return try JSONDecoder().decode(Response.self, from: data)
     }
+
+    private func put<Body: Encodable, Response: Decodable>(
+        path: String,
+        body: Body
+    ) async throws -> Response {
+        let url = baseURL.appendingPathComponent(
+            path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        )
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 30
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        guard 200..<300 ~= httpResponse.statusCode else {
+            if let payload = try? JSONDecoder().decode(APIErrorResponse.self, from: data),
+               let message = payload.error {
+                throw APIError.serverMessage(message)
+            }
+            throw APIError.requestFailed(httpResponse.statusCode)
+        }
+
+        return try JSONDecoder().decode(Response.self, from: data)
+    }
 }
 
 private struct CaregiverInsightRequest: Encodable {
@@ -160,6 +215,17 @@ private struct CaregiverInsightRequest: Encodable {
 private struct HardwarePlanUpdateRequest: Encodable {
     let deviceId: String
     let slots: [MedicationSlot]
+}
+
+private struct CaregiverProfileResponse: Decodable {
+    let profile: CaregiverProfile
+}
+
+private struct CaregiverProfileUpdateRequest: Encodable {
+    let fullName: String
+    let email: String
+    let phone: String
+    let role: String
 }
 
 private struct APIErrorResponse: Decodable {

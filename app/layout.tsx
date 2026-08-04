@@ -5,13 +5,15 @@ import "./globals.css";
 
 const figtree = Figtree({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-figtree",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Smart Pillbox | Medication care",
-  description: "Medication monitoring and follow-up for family caregivers",
+  description:
+    "Calm medication monitoring for family caregivers and self-directed routines",
 };
 
 const themeInitializationScript = `

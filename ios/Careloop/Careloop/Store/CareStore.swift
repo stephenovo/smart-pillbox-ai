@@ -9,6 +9,8 @@ final class CareStore: ObservableObject {
         static let notes = "careloop.notes"
         static let patients = "smartpillbox.patients.v2"
         static let medicationPlans = "smartpillbox.medicationPlans.v2"
+        static let userProfile = "smartpillbox.userProfile.v1"
+        static let userProfileNeedsSync = "smartpillbox.userProfileNeedsSync.v1"
     }
 
     static let defaultServerURL = "http://127.0.0.1:3100"
@@ -31,8 +33,13 @@ final class CareStore: ObservableObject {
     @Published private(set) var insightErrorMessage: String?
     @Published private(set) var isLoadingInsightReport = false
     @Published private(set) var isGeneratingInsight = false
+    @Published private(set) var userProfile: CaregiverProfile
+    @Published private(set) var isSavingProfile = false
+    @Published private(set) var profileSyncMessage: String?
+    @Published private(set) var profileSyncFailed = false
     @Published var serverURL: String
     @Published var deviceID: String
+    private var userProfileNeedsSync: Bool
 
     var selectedPatient: CarePatient {
         patients.first(where: { $0.id == selectedPatientID })
@@ -87,6 +94,13 @@ final class CareStore: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         serverURL = defaults.string(forKey: DefaultsKey.serverURL) ?? Self.defaultServerURL
         deviceID = defaults.string(forKey: DefaultsKey.deviceID) ?? Self.defaultDeviceID
+        if let data = defaults.data(forKey: DefaultsKey.userProfile),
+           let savedProfile = try? JSONDecoder().decode(CaregiverProfile.self, from: data) {
+            userProfile = savedProfile
+        } else {
+            userProfile = .defaultProfile
+        }
+        userProfileNeedsSync = defaults.bool(forKey: DefaultsKey.userProfileNeedsSync)
 
         let restoredSavedPatients: Bool
         if let data = defaults.data(forKey: DefaultsKey.patients),
@@ -347,6 +361,107 @@ final class CareStore: ObservableObject {
         }
         resetSelectedDeviceState()
         await refresh()
+        await refreshUserProfile(reportFailure: true)
+    }
+
+    @discardableResult
+    func updateUserProfile(
+        fullName: String,
+        email: String,
+        phone: String,
+        role: String
+    ) async -> Bool {
+        let cleanName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanRole = role.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !cleanName.isEmpty, !cleanRole.isEmpty else {
+            profileSyncFailed = true
+            profileSyncMessage = "Enter your full name and caregiver role."
+            return false
+        }
+        guard cleanName.count <= 80, cleanRole.count <= 80,
+              cleanEmail.count <= 160, cleanPhone.count <= 40 else {
+            profileSyncFailed = true
+            profileSyncMessage = "One or more profile details are too long."
+            return false
+        }
+        if !cleanEmail.isEmpty,
+           cleanEmail.range(
+               of: #"^[^\s@]+@[^\s@]+\.[^\s@]+$"#,
+               options: .regularExpression
+           ) == nil {
+            profileSyncFailed = true
+            profileSyncMessage = "Enter a valid email address."
+            return false
+        }
+
+        isSavingProfile = true
+        profileSyncMessage = nil
+        defer { isSavingProfile = false }
+
+        userProfile = CaregiverProfile(
+            id: userProfile.id,
+            fullName: cleanName,
+            email: cleanEmail,
+            phone: cleanPhone,
+            role: cleanRole,
+            updatedAt: ISO8601DateFormatter().string(from: .now)
+        )
+        userProfileNeedsSync = true
+        persistUserProfile()
+
+        do {
+            let client = try CareAPIClient(serverURL: serverURL, deviceID: deviceID)
+            userProfile = try await client.updateUserProfile(
+                fullName: cleanName,
+                email: cleanEmail,
+                phone: cleanPhone,
+                role: cleanRole
+            )
+            userProfileNeedsSync = false
+            persistUserProfile()
+            profileSyncFailed = false
+            profileSyncMessage = "Profile updated and synced."
+        } catch {
+            profileSyncFailed = true
+            profileSyncMessage = "Saved on this iPhone. The profile will sync when the server is available."
+        }
+
+        return true
+    }
+
+    func refreshUserProfile(reportFailure: Bool = false) async {
+        do {
+            let client = try CareAPIClient(serverURL: serverURL, deviceID: deviceID)
+            let wasPendingSync = userProfileNeedsSync
+            if userProfileNeedsSync {
+                userProfile = try await client.updateUserProfile(
+                    fullName: userProfile.fullName,
+                    email: userProfile.email,
+                    phone: userProfile.phone,
+                    role: userProfile.role
+                )
+                userProfileNeedsSync = false
+            } else {
+                userProfile = try await client.fetchUserProfile()
+            }
+            persistUserProfile()
+            profileSyncFailed = false
+            if wasPendingSync {
+                profileSyncMessage = "Profile updated and synced."
+            } else if reportFailure {
+                profileSyncMessage = "Profile is up to date."
+            } else {
+                profileSyncMessage = nil
+            }
+        } catch {
+            if reportFailure {
+                profileSyncFailed = true
+                profileSyncMessage = "Using the profile saved on this iPhone until the server reconnects."
+            }
+        }
     }
 
     func refresh() async {
@@ -390,10 +505,12 @@ final class CareStore: ObservableObject {
     }
 
     func startPolling() async {
+        await refreshUserProfile()
         await refresh()
         while !Task.isCancelled {
             try? await Task.sleep(nanoseconds: 10_000_000_000)
             guard !Task.isCancelled else { return }
+            await refreshUserProfile()
             await refresh()
         }
     }
@@ -481,6 +598,15 @@ final class CareStore: ObservableObject {
         if let planData = try? JSONEncoder().encode(medicationPlans) {
             UserDefaults.standard.set(planData, forKey: DefaultsKey.medicationPlans)
         }
+    }
+
+    private func persistUserProfile() {
+        guard let data = try? JSONEncoder().encode(userProfile) else { return }
+        UserDefaults.standard.set(data, forKey: DefaultsKey.userProfile)
+        UserDefaults.standard.set(
+            userProfileNeedsSync,
+            forKey: DefaultsKey.userProfileNeedsSync
+        )
     }
 
     private func resetSelectedDeviceState() {

@@ -27,6 +27,7 @@ struct TodayView: View {
             }
             .background(Color.careCream)
             .refreshable {
+                await store.refreshUserProfile()
                 await store.refresh()
             }
             .navigationTitle("Smart Pillbox")
@@ -48,14 +49,14 @@ struct TodayView: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle().fill(Color.careMintSoft)
-                Text("SC")
+                Text(store.userProfile.initials)
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color.careMintInk)
             }
             .frame(width: 44, height: 44)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(greeting), Sarah")
+                Text("\(greeting), \(store.userProfile.firstName)")
                     .font(.title3.weight(.bold))
                     .foregroundStyle(Color.careInk)
                 Text(headerSummary)

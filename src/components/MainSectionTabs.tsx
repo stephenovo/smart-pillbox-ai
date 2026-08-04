@@ -7,6 +7,7 @@ import {
   Pill,
   Settings,
 } from "lucide-react";
+import type { AppMode } from "../lib/appMode";
 
 export type MainSectionTab =
   | "dashboard"
@@ -18,6 +19,7 @@ export type MainSectionTab =
 type MainSectionTabsProps = {
   activeTab: MainSectionTab;
   onTabChange: (tab: MainSectionTab) => void;
+  mode: AppMode;
 };
 
 const tabs: {
@@ -35,14 +37,32 @@ const tabs: {
 export default function MainSectionTabs({
   activeTab,
   onTabChange,
+  mode,
 }: MainSectionTabsProps) {
+  const visibleTabs =
+    mode === "my-care"
+      ? tabs
+          .filter((tab) => tab.id !== "messages")
+          .map((tab) => ({
+            ...tab,
+            label:
+              tab.id === "dashboard"
+                ? "Today"
+                : tab.id === "initialisation"
+                  ? "Medicines"
+                  : tab.id === "pillbox"
+                    ? "Pillbox"
+                    : tab.label,
+          }))
+      : tabs;
+
   return (
     <nav
       aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden"
     >
-      <div className="mx-auto grid max-w-md grid-cols-5">
-        {tabs.map((tab) => {
+      <div className={`mx-auto grid max-w-md ${mode === "my-care" ? "grid-cols-4" : "grid-cols-5"}`}>
+        {visibleTabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
 

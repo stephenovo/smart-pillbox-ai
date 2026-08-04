@@ -38,6 +38,11 @@ Mac must be on the same network. Use an HTTPS API endpoint for production.
 
 - Margaret reads live events, device state and medication plan from the
   existing hardware API.
+- The caregiver profile can be edited from the fourth, native Settings tab.
+  Changes are saved on the iPhone immediately and synced through
+  `/api/profile`; the app automatically retries edits made while offline.
+- The caregiver name, role and initials shown in the native Today and Settings
+  views come from the shared profile rather than hard-coded UI text.
 - David and Ellen remain static prototype profiles until additional devices
   are mapped by patient ID.
 - The native app never creates fake opening events or labels sample data as

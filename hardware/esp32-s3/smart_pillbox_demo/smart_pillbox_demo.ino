@@ -23,6 +23,7 @@ constexpr uint8_t SLOT_COUNT = 8;
 constexpr unsigned long DEBOUNCE_MS = 80;
 constexpr unsigned long STATE_POLL_MS = 1500;
 constexpr unsigned long WIFI_RETRY_MS = 5000;
+constexpr unsigned long WIFI_CONNECT_TIMEOUT_MS = 20000;
 constexpr unsigned long HTTP_TIMEOUT_MS = 1500;
 constexpr unsigned long WRONG_WARNING_MS = 2000;
 constexpr unsigned long TEMP_MESSAGE_MS = 2000;
@@ -73,6 +74,7 @@ uint8_t activeSlot = 0;
 uint8_t locallyAcknowledgedSlot = 0;
 unsigned long lastStatePollAt = 0;
 unsigned long lastWifiAttemptAt = 0;
+bool wifiConnectionInProgress = false;
 unsigned long wrongWarningStartedAt = 0;
 unsigned long temporaryMessageUntil = 0;
 
@@ -133,6 +135,7 @@ void setReminderState(bool enabled, uint8_t slotId = 0) {
 
 void startWifiConnection() {
   lastWifiAttemptAt = millis();
+  wifiConnectionInProgress = true;
   Serial.print("[WiFi] Connecting to ");
   Serial.println(WIFI_SSID);
   WiFi.mode(WIFI_STA);
@@ -146,13 +149,26 @@ void maintainWifi(unsigned long now) {
   if (status != previousStatus) {
     previousStatus = status;
     if (status == WL_CONNECTED) {
+      wifiConnectionInProgress = false;
       Serial.print("[WiFi] Connected. ESP32 IP: ");
       Serial.println(WiFi.localIP());
       if (now >= temporaryMessageUntil) showCurrentState();
     }
   }
 
-  if (status != WL_CONNECTED && now - lastWifiAttemptAt >= WIFI_RETRY_MS) {
+  if (status == WL_CONNECTED) return;
+
+  if (wifiConnectionInProgress) {
+    if (now - lastWifiAttemptAt < WIFI_CONNECT_TIMEOUT_MS) return;
+
+    Serial.println("[WiFi] Connection timed out; retrying shortly.");
+    WiFi.disconnect(false, false);
+    wifiConnectionInProgress = false;
+    lastWifiAttemptAt = now;
+    return;
+  }
+
+  if (now - lastWifiAttemptAt >= WIFI_RETRY_MS) {
     startWifiConnection();
   }
 }

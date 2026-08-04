@@ -1,5 +1,36 @@
 import Foundation
 
+struct CaregiverProfile: Codable, Hashable {
+    let id: String
+    let fullName: String
+    let email: String
+    let phone: String
+    let role: String
+    let updatedAt: String
+
+    var firstName: String {
+        fullName.split(whereSeparator: \.isWhitespace).first.map(String.init)
+            ?? fullName
+    }
+
+    var initials: String {
+        let words = fullName.split(whereSeparator: \.isWhitespace)
+        if words.count >= 2 {
+            return words.prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
+        }
+        return String(fullName.prefix(2)).uppercased()
+    }
+
+    static let defaultProfile = CaregiverProfile(
+        id: "primary-caregiver",
+        fullName: "Sarah Chen",
+        email: "sarah.chen@example.com",
+        phone: "+852 5555 0108",
+        role: "Family caregiver",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+    )
+}
+
 enum PatientWellbeing: String, Codable, CaseIterable {
     case attention
     case watch

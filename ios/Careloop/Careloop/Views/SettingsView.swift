@@ -19,22 +19,46 @@ struct SettingsView: View {
                     HStack(spacing: 14) {
                         ZStack {
                             Circle().fill(Color.careMintSoft)
-                            Text("SC")
+                            Text(store.userProfile.initials)
                                 .font(.headline.weight(.bold))
                                 .foregroundStyle(Color.careMintInk)
                         }
                         .frame(width: 54, height: 54)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Sarah Chen")
+                            Text(store.userProfile.fullName)
                                 .font(.headline)
                                 .foregroundStyle(Color.careInk)
-                            Text("Family caregiver · \(store.patients.count) \(store.patients.count == 1 ? "person" : "people")")
+                            Text("\(store.userProfile.role) · \(store.patients.count) \(store.patients.count == 1 ? "person" : "people")")
                                 .font(.caption)
                                 .foregroundStyle(Color.careInkSoft)
                         }
                     }
                     .padding(.vertical, 5)
+
+                    NavigationLink {
+                        EditProfileView()
+                            .environmentObject(store)
+                    } label: {
+                        Label("Edit profile", systemImage: "person.crop.circle.badge.pencil")
+                    }
+
+                    if let message = store.profileSyncMessage {
+                        Label(
+                            message,
+                            systemImage: store.profileSyncFailed
+                                ? "exclamationmark.icloud"
+                                : "checkmark.icloud.fill"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(
+                            store.profileSyncFailed
+                                ? Color.careCoralInk
+                                : Color.careMintInk
+                        )
+                    }
+                } header: {
+                    Text("Profile")
                 }
 
                 Section {
@@ -116,10 +140,99 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(Color.careCream)
             .navigationTitle("Settings")
+            .refreshable {
+                await store.refreshUserProfile(reportFailure: true)
+            }
             .onAppear {
                 draftServerURL = store.serverURL
                 draftDeviceID = store.deviceID
             }
+        }
+    }
+}
+
+private struct EditProfileView: View {
+    @EnvironmentObject private var store: CareStore
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var fullName = ""
+    @State private var role = ""
+    @State private var email = ""
+    @State private var phone = ""
+    @State private var hasLoadedDraft = false
+
+    var body: some View {
+        Form {
+            Section("About you") {
+                TextField("Full name", text: $fullName)
+                    .textContentType(.name)
+
+                TextField("Caregiver role", text: $role)
+            }
+
+            Section("Contact") {
+                TextField("Email", text: $email)
+                    .keyboardType(.emailAddress)
+                    .textContentType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+
+                TextField("Phone", text: $phone)
+                    .keyboardType(.phonePad)
+                    .textContentType(.telephoneNumber)
+            }
+
+            if let message = store.profileSyncMessage,
+               store.profileSyncFailed {
+                Section {
+                    Label(message, systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(Color.careCoralInk)
+                }
+            }
+
+            Section {
+                Button {
+                    Task {
+                        let didSave = await store.updateUserProfile(
+                            fullName: fullName,
+                            email: email,
+                            phone: phone,
+                            role: role
+                        )
+                        if didSave {
+                            dismiss()
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Label("Save profile", systemImage: "checkmark.circle.fill")
+                        Spacer()
+                        if store.isSavingProfile {
+                            ProgressView()
+                        }
+                    }
+                }
+                .disabled(
+                    store.isSavingProfile
+                        || fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        || role.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                )
+            } footer: {
+                Text("Changes are saved on this iPhone first, then synced with the Smart Pillbox server.")
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(Color.careCream)
+        .navigationTitle("Edit profile")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            guard !hasLoadedDraft else { return }
+            fullName = store.userProfile.fullName
+            role = store.userProfile.role
+            email = store.userProfile.email
+            phone = store.userProfile.phone
+            hasLoadedDraft = true
         }
     }
 }

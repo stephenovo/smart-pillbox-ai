@@ -105,6 +105,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* My Care is intentionally easier to read at a glance for the person taking the medicine. */
+.my-care-mode .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.35rem;
+}
+
+.my-care-mode .text-sm {
+  font-size: 1rem;
+  line-height: 1.55rem;
+}
+
+.my-care-mode .text-lg {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
 button,
 input,
 textarea,

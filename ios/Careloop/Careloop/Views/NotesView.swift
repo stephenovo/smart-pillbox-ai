@@ -10,38 +10,51 @@ struct NotesView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 18) {
-                    PatientCarousel {
-                        showingConnectPillbox = true
-                    }
-                    .environmentObject(store)
+                    if store.appMode == .circleCare {
+                        PatientCarousel {
+                            showingConnectPillbox = true
+                        }
+                        .environmentObject(store)
 
-                    aiInsightCard
-                    medicationRiskSection
-                    clinicNoteCard
-                    careNotesSection
+                        aiInsightCard
+                        medicationRiskSection
+                        clinicNoteCard
+                        careNotesSection
+                    } else {
+                        myCareInsightView
+                    }
                 }
+                .padding(.top, 20)
                 .padding(.bottom, 30)
             }
             .background(Color.careCream)
-            .navigationTitle("Insights")
+            .navigationTitle(store.appMode == .myCare ? "AI Insight" : "Insights")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingComposer = true
-                    } label: {
-                        Image(systemName: "square.and.pencil")
+                if store.appMode == .circleCare {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showingComposer = true
+                        } label: {
+                            Image(systemName: "square.and.pencil")
+                        }
+                        .accessibilityLabel("Add note")
                     }
-                    .accessibilityLabel("Add note")
                 }
             }
             .refreshable {
-                await store.loadInsightReport(force: true)
+                if store.appMode == .circleCare {
+                    await store.loadInsightReport(force: true)
+                } else {
+                    await store.refresh()
+                }
             }
-            .task {
-                await store.loadInsightReport()
+            .task(id: store.appMode) {
+                if store.appMode == .circleCare {
+                    await store.loadInsightReport()
+                }
             }
             .sheet(isPresented: $showingComposer) {
                 NoteComposerView(initialPatientID: store.selectedPatientID)
@@ -52,6 +65,103 @@ struct NotesView: View {
                 ConnectPillboxView()
             }
         }
+    }
+
+    private var myCareInsightView: some View {
+        VStack(spacing: 18) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("A simple check-in")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(Color.careInk)
+                Text("One clear thought based on your pillbox activity today.")
+                    .font(.body)
+                    .foregroundStyle(Color.careInkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 18) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(Color.careCoralInk)
+                    .frame(width: 54, height: 54)
+                    .background(Color.careSurface)
+                    .clipShape(Circle())
+
+                Text(myCareInsight)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color.careInk)
+                    .lineSpacing(7)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Label("Based on today's pillbox activity", systemImage: "lock.shield.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.careMintInk)
+
+                Button {
+                    Task { await store.refresh() }
+                } label: {
+                    HStack {
+                        Label("Refresh check-in", systemImage: "arrow.clockwise")
+                        Spacer()
+                        if store.isRefreshing {
+                            ProgressView()
+                                .tint(.careOnAction)
+                        }
+                    }
+                    .font(.headline)
+                    .foregroundStyle(Color.careOnAction)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 16)
+                    .background(Color.careAction)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(store.isRefreshing)
+            }
+            .padding(22)
+            .background(Color.careMintSoft)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.careMint.opacity(0.24), lineWidth: 1)
+            }
+
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: "cross.case.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(Color.careSkyInk)
+                    .frame(width: 40, height: 40)
+                Text("This check-in helps you notice your routine. Keep following the medicine instructions from your clinician.")
+                    .font(.body)
+                    .foregroundStyle(Color.careInkSoft)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(18)
+            .careCard()
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var myCareInsight: String {
+        if let status = store.doseStatuses.first(where: { $0.kind == .openedTwice }) {
+            return "The \(status.slot.medication) compartment opened twice. Before taking another dose, check your instructions or ask someone you trust."
+        }
+        if store.doseStatuses.contains(where: { $0.kind == .wrongCompartment }) {
+            return "Your pillbox noticed a different compartment opening. Please check the medicine label before your next dose."
+        }
+        if let status = store.doseStatuses.first(where: { $0.kind == .missed }) {
+            return "Your \(status.slot.medication) has not been recorded yet. Take a look at compartment \(status.slot.slotId) when you are ready."
+        }
+        if let status = store.doseStatuses.first(where: { $0.kind == .takenLate }) {
+            return "Your \(status.slot.medication) was taken a little late. Linking it to breakfast, lunch or dinner may make the routine easier."
+        }
+        if store.takenCount > 0 {
+            return "Your routine looks steady today. \(store.takenCount) dose\(store.takenCount == 1 ? " has" : "s have") been recorded."
+        }
+        return "Your medicine plan is ready. Your first update will appear after the pillbox records an opening."
     }
 
     private var aiInsightCard: some View {

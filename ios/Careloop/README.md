@@ -36,6 +36,13 @@ Mac must be on the same network. Use an HTTPS API endpoint for production.
 
 ## Data behavior
 
+- Settings offers two persistent native experiences. `Circle Care` keeps the
+  complete family-care workflow, while `My Care` uses larger text and a calmer
+  self-management view. Switching modes does not change pillbox data or the
+  medication plan.
+- In `My Care`, the four native tabs become My Day, My Medicines, AI Insight
+  and Settings. Caregiver-only patient switching, contact actions, review
+  controls, detailed risk reports and care notes stay in `Circle Care`.
 - Margaret reads live events, device state and medication plan from the
   existing hardware API.
 - The caregiver profile can be edited from the fourth, native Settings tab.

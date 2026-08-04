@@ -1,5 +1,42 @@
 import Foundation
 
+enum CareExperienceMode: String, CaseIterable, Codable, Identifiable {
+    case circleCare = "circle-care"
+    case myCare = "my-care"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .circleCare: "Circle Care"
+        case .myCare: "My Care"
+        }
+    }
+
+    var shortDescription: String {
+        switch self {
+        case .circleCare: "Care for family"
+        case .myCare: "Care for myself"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .circleCare:
+            "A complete view for family members and caregivers looking after others."
+        case .myCare:
+            "A calmer, larger and simpler view for managing your own medicines."
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .circleCare: "person.2.fill"
+        case .myCare: "person.fill"
+        }
+    }
+}
+
 struct CaregiverProfile: Codable, Hashable {
     let id: String
     let fullName: String

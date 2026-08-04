@@ -16,13 +16,21 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 18) {
-                    caregiverHeader
-                    PatientCarousel {
-                        showingConnectPillbox = true
+                    if store.appMode == .circleCare {
+                        caregiverHeader
+                        PatientCarousel {
+                            showingConnectPillbox = true
+                        }
+                            .environmentObject(store)
+                        patientStatusCard
+                    } else {
+                        myCareHeader
+                        myCareProgressCard
+                        myCareNextDoseCard
+                        myCareInsightCard
                     }
-                        .environmentObject(store)
-                    patientStatusCard
                 }
+                .padding(.top, 20)
                 .padding(.bottom, 28)
             }
             .background(Color.careCream)
@@ -30,7 +38,7 @@ struct TodayView: View {
                 await store.refreshUserProfile()
                 await store.refresh()
             }
-            .navigationTitle("Smart Pillbox")
+            .navigationTitle(store.appMode == .myCare ? "My Care" : "Smart Pillbox")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -68,7 +76,6 @@ struct TodayView: View {
             SyncPill(isSynced: store.isDeviceSynced)
         }
         .padding(.horizontal, 20)
-        .padding(.top, 10)
     }
 
     private var headerSummary: String {
@@ -147,6 +154,160 @@ struct TodayView: View {
         }
         .careCard()
         .padding(.horizontal, 16)
+    }
+
+    private var myCareHeader: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                Circle().fill(Color.careMintSoft)
+                Text(store.userProfile.initials)
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color.careMintInk)
+            }
+            .frame(width: 54, height: 54)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(greeting), \(store.userProfile.firstName)")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(Color.careInk)
+                Text("Here is your medicine plan for today.")
+                    .font(.body)
+                    .foregroundStyle(Color.careInkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 6)
+        }
+        .padding(.horizontal, 20)
+    }
+
+    private var myCareProgressCard: some View {
+        let completed = store.takenCount
+        let total = store.doseStatuses.count
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                Image(systemName: "pills.fill")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Color.careCoral)
+
+                Spacer()
+                SyncPill(isSynced: store.isDeviceSynced)
+            }
+
+            Text("\(completed) of \(total)")
+                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.careInk)
+            Text("doses taken today")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Color.careInkSoft)
+            SegmentedDoseProgress(completed: completed, total: total)
+        }
+        .padding(20)
+        .careCard()
+        .padding(.horizontal, 16)
+    }
+
+    private var myCareNextDoseCard: some View {
+        HStack(alignment: .top, spacing: 15) {
+            Image(systemName: nextDose == nil ? "checkmark" : "heart.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color.careCoralInk)
+                .frame(width: 48, height: 48)
+                .background(Color.careSurface)
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text(nextDose?.kind == .missed ? "NEEDS ATTENTION" : "NEXT UP")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.careCoralInk)
+
+                if let nextDose {
+                    Text(nextDose.slot.medication)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(Color.careInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Compartment \(nextDose.slot.slotId) · scheduled for \(nextDose.slot.scheduledTime)")
+                        .font(.body)
+                        .foregroundStyle(Color.careInkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("You are all set for today")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(Color.careInk)
+                    Text("Take a moment to enjoy the rest of your day.")
+                        .font(.body)
+                        .foregroundStyle(Color.careInkSoft)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(20)
+        .background(Color.careCoralSoft)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.careCoral.opacity(0.24), lineWidth: 1)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var myCareInsightCard: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: "lightbulb.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color.careMintInk)
+                .frame(width: 42, height: 42)
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text("SIMPLE AI CHECK-IN")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.careMintInk)
+                Text(myCareInsight)
+                    .font(.title3)
+                    .foregroundStyle(Color.careInk)
+                    .lineSpacing(5)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background(Color.careMintSoft)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.careMint.opacity(0.24), lineWidth: 1)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var nextDose: DoseStatus? {
+        let pending = store.doseStatuses
+            .filter { !$0.kind.countsAsTaken }
+            .sorted { $0.slot.scheduledTime < $1.slot.scheduledTime }
+
+        return pending.first(where: { $0.kind == .missed || $0.kind == .dueSoon })
+            ?? pending.first
+    }
+
+    private var myCareInsight: String {
+        if let status = store.doseStatuses.first(where: { $0.kind == .openedTwice }) {
+            return "The \(status.slot.medication) compartment opened twice. Before taking another dose, please check your instructions or ask someone you trust."
+        }
+        if let status = store.doseStatuses.first(where: { $0.kind == .wrongCompartment }) {
+            return "Your pillbox noticed a different compartment opening. Please check the label before your next dose."
+        }
+        if let status = store.doseStatuses.first(where: { $0.kind == .missed }) {
+            return "Your \(status.slot.medication) is still waiting in compartment \(status.slot.slotId). Take a look when you are ready."
+        }
+        if let status = store.doseStatuses.first(where: { $0.kind == .takenLate }) {
+            return "Your \(status.slot.medication) was taken a little late today. Keeping the pillbox near your usual routine may make tomorrow easier."
+        }
+        if store.takenCount > 0 {
+            return "You are doing well today: \(store.takenCount) dose\(store.takenCount == 1 ? "" : "s") recorded. Keep your routine gentle and steady."
+        }
+        return "Your plan is ready for today. We will keep the important things easy to see."
     }
 
     @ViewBuilder

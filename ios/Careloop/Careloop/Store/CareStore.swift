@@ -11,6 +11,7 @@ final class CareStore: ObservableObject {
         static let medicationPlans = "smartpillbox.medicationPlans.v2"
         static let userProfile = "smartpillbox.userProfile.v1"
         static let userProfileNeedsSync = "smartpillbox.userProfileNeedsSync.v1"
+        static let appMode = "smartpillbox.appMode.v1"
     }
 
     static let defaultServerURL = "http://127.0.0.1:3100"
@@ -37,6 +38,7 @@ final class CareStore: ObservableObject {
     @Published private(set) var isSavingProfile = false
     @Published private(set) var profileSyncMessage: String?
     @Published private(set) var profileSyncFailed = false
+    @Published private(set) var appMode: CareExperienceMode
     @Published var serverURL: String
     @Published var deviceID: String
     private var userProfileNeedsSync: Bool
@@ -94,6 +96,9 @@ final class CareStore: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         serverURL = defaults.string(forKey: DefaultsKey.serverURL) ?? Self.defaultServerURL
         deviceID = defaults.string(forKey: DefaultsKey.deviceID) ?? Self.defaultDeviceID
+        appMode = defaults.string(forKey: DefaultsKey.appMode)
+            .flatMap(CareExperienceMode.init(rawValue:))
+            ?? .circleCare
         if let data = defaults.data(forKey: DefaultsKey.userProfile),
            let savedProfile = try? JSONDecoder().decode(CaregiverProfile.self, from: data) {
             userProfile = savedProfile
@@ -140,6 +145,12 @@ final class CareStore: ObservableObject {
         deviceID = patients.first(where: { $0.id == selectedPatientID })?.deviceID
             ?? patients.first?.deviceID
             ?? deviceID
+    }
+
+    func setAppMode(_ mode: CareExperienceMode) {
+        guard appMode != mode else { return }
+        appMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: DefaultsKey.appMode)
     }
 
     func wellbeing(for patient: CarePatient) -> PatientWellbeing {
@@ -378,7 +389,9 @@ final class CareStore: ObservableObject {
 
         guard !cleanName.isEmpty, !cleanRole.isEmpty else {
             profileSyncFailed = true
-            profileSyncMessage = "Enter your full name and caregiver role."
+            profileSyncMessage = appMode == .myCare
+                ? "Enter your full name and a short description."
+                : "Enter your full name and caregiver role."
             return false
         }
         guard cleanName.count <= 80, cleanRole.count <= 80,

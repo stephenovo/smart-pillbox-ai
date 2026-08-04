@@ -7,17 +7,26 @@ struct RootTabView: View {
         TabView {
             TodayView()
                 .tabItem {
-                    Label("Today", systemImage: "square.grid.2x2.fill")
+                    Label(
+                        store.appMode == .myCare ? "My Day" : "Today",
+                        systemImage: "square.grid.2x2.fill"
+                    )
                 }
 
             MedicationsView()
                 .tabItem {
-                    Label("Meds", systemImage: "pills.fill")
+                    Label(
+                        store.appMode == .myCare ? "My Medicines" : "Meds",
+                        systemImage: "pills.fill"
+                    )
                 }
 
             NotesView()
                 .tabItem {
-                    Label("Insights", systemImage: "sparkles")
+                    Label(
+                        store.appMode == .myCare ? "AI Insight" : "Insights",
+                        systemImage: "sparkles"
+                    )
                 }
 
             SettingsView()

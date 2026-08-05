@@ -166,6 +166,43 @@ DELETE http://YOUR_LAPTOP_IP:3000/api/hardware/events
 
 The web app polls `/api/hardware/events` every 2.5 seconds and merges uploaded hardware opening events into the existing Pillbox Event Log. Demo data is stored in the Git-ignored `.data/hardware-demo.json` file so Next.js hot restarts do not immediately erase the demo. It is not a production database.
 
+## Local ML Shadow Replay
+
+Generate the synthetic dataset, models, policy, and compact replay bundle by
+following `ml/README.md`. Then run the app in development and open:
+
+```text
+http://localhost:3000/hardware-simulator
+```
+
+Select **Run shadow replay**. The development-only
+`POST /api/hardware/replay` endpoint injects the 14-day bundle through the same
+payload validator and hardware event store used by the ESP32 endpoint. Before
+running it, start the local model service in another terminal:
+
+```bash
+/tmp/smart-pillbox-ml-venv/bin/python ml/serve_adherence_model.py
+```
+
+The endpoint rebuilds pre-dose features from up to 28 days of earlier opening
+events, calls the live local model for each dose, and then applies the saved
+threshold, daily reminder budget, and cooldown. The simulator shows shadow-only
+risk metrics and the model version, while Dashboard → Device activity shows the
+replayed opening events.
+
+In development, a normal `POST /api/hardware/events` also makes a best-effort
+prediction for the next scheduled dose. That prediction is available from:
+
+```http
+GET /api/adherence/shadow?patientId=YOUR_DEVICE_ID
+```
+
+The replay and Shadow read endpoints return `404` outside
+`NODE_ENV=development`. Model unavailability never rejects a hardware event.
+None of these paths sends a reminder, updates production alert logic, or
+exposes synthetic labels through the hardware event feed. Safety Control
+remains a separate hard-rule path.
+
 ## Firmware Starter
 
 Arduino sketch:

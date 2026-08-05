@@ -68,3 +68,49 @@ export type HardwareDeviceStateMutation = {
   status: HardwareReminderStatus;
   activeSlot?: number | null;
 };
+
+export type HardwareShadowDecision = {
+  doseId: string;
+  patientId: string;
+  doseDate: string;
+  compartmentId: number;
+  scheduledAt: string;
+  riskProbability: number;
+  behaviourChangeProbability: number;
+  adaptiveCandidate: boolean;
+  adaptiveAllowedAfterBudget: boolean;
+  safetyControlEvaluation: boolean;
+  syntheticStatus: string;
+  syntheticNeedsSupport: number;
+  syntheticBehaviourChangeSignal: number;
+  historyFeatures: Record<string, number>;
+  modelVersion?: string;
+  generatedAt?: string;
+  riskThreshold?: number;
+  budgetReason?: "allowed" | "below_threshold" | "daily_limit" | "cooldown";
+};
+
+export type HardwareReplaySession = {
+  sourcePatientId: string;
+  latentPersona: string;
+  dateRange: [string, string];
+  replayedAt: string;
+  recordedEventCount: number;
+  duplicateEventCount: number;
+  decisions: HardwareShadowDecision[];
+  metrics: {
+    doseCount: number;
+    adaptiveCandidateCount: number;
+    adaptiveAllowedCount: number;
+    safetyControlCount: number;
+    averageRiskProbability: number;
+    maxRiskProbability: number;
+  };
+};
+
+export type HardwareReplayApiResponse = {
+  available: boolean;
+  bundleReady: boolean;
+  session: HardwareReplaySession | null;
+  error?: string;
+};

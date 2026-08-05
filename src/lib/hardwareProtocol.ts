@@ -25,6 +25,20 @@ export function formatHardwareEventTime(date = new Date()): string {
   ].join("-") + ` ${padTwoDigits(date.getHours())}:${padTwoDigits(date.getMinutes())}`;
 }
 
+function resolveOpeningTime(
+  deviceTimestamp: string | undefined,
+  receivedAt: string
+): Date {
+  if (/^\d{4}-\d{2}-\d{2}T/.test(deviceTimestamp ?? "")) {
+    const parsed = new Date(deviceTimestamp as string);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return new Date(receivedAt);
+}
+
 export function isOpeningHardwareEvent(
   eventType: HardwareEventPayload["eventType"]
 ): eventType is "lid_open" | "wrong_slot_open" {
@@ -238,7 +252,9 @@ export function hardwarePayloadToOpeningEvent(
 
   return {
     id: `hardware-${globalThis.crypto.randomUUID()}`,
-    eventTime: formatHardwareEventTime(new Date(receivedAt)),
+    eventTime: formatHardwareEventTime(
+      resolveOpeningTime(deviceTimestamp, receivedAt)
+    ),
     receivedAt,
     compartment: payload.slotId,
     medication,

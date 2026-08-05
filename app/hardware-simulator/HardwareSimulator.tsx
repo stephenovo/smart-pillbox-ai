@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BellRing,
+  BrainCircuit,
   Box,
   CircleAlert,
   Clock3,
@@ -12,6 +13,9 @@ import {
   Power,
   Radio,
   RotateCcw,
+  ShieldCheck,
+  Sparkles,
+  Play,
   Trash2,
   Wifi,
   WifiOff,
@@ -23,6 +27,8 @@ import type {
   HardwareEventsApiResponse,
   HardwarePlanApiResponse,
   HardwarePlanSlot,
+  HardwareReplayApiResponse,
+  HardwareReplaySession,
 } from "../../src/types/hardware";
 import type { OpeningEvent } from "../../src/types/pillbox";
 
@@ -69,6 +75,10 @@ export default function HardwareSimulator() {
   const [loading, setLoading] = useState(true);
   const [pendingSlot, setPendingSlot] = useState<number | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [replaying, setReplaying] = useState(false);
+  const [replaySession, setReplaySession] = useState<HardwareReplaySession | null>(
+    null
+  );
   const [error, setError] = useState("");
 
   const refreshHardware = useCallback(async (sendHeartbeat: boolean) => {
@@ -116,6 +126,24 @@ export default function HardwareSimulator() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    fetch("/api/hardware/replay", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as HardwareReplayApiResponse;
+      })
+      .then((data) => {
+        if (isActive && data?.session) setReplaySession(data.session);
+      })
+      .catch(() => {
+        // Replay is a local development aid and may be unavailable in other builds.
+      });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -213,6 +241,30 @@ export default function HardwareSimulator() {
     }
   }
 
+  async function runShadowReplay() {
+    setReplaying(true);
+    setError("");
+    try {
+      const response = await fetch("/api/hardware/replay", {
+        method: "POST",
+      });
+      const data = (await response.json()) as HardwareReplayApiResponse;
+      if (!response.ok || !data.session) {
+        throw new Error(data.error || "The local replay bundle is unavailable.");
+      }
+      setReplaySession(data.session);
+      await refreshHardware(true);
+    } catch (replayError) {
+      setError(
+        replayError instanceof Error
+          ? replayError.message
+          : "The shadow replay could not be started."
+      );
+    } finally {
+      setReplaying(false);
+    }
+  }
+
   function togglePower() {
     setPowered((current) => !current);
     setOpenLids(new Set());
@@ -258,6 +310,21 @@ export default function HardwareSimulator() {
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#d9dfda] bg-white text-[#4e5a53] transition hover:bg-[#f3f5f3]"
             >
               <RotateCcw aria-hidden="true" size={17} />
+            </button>
+            <button
+              type="button"
+              onClick={() => void runShadowReplay()}
+              disabled={replaying}
+              aria-label="Run local shadow replay"
+              title="Run local shadow replay"
+              className="flex h-10 items-center gap-2 rounded-lg border border-[#b7d8c7] bg-[#eef9f2] px-3 text-sm font-bold text-[#176a4c] transition hover:bg-[#e2f4e9] disabled:cursor-wait disabled:opacity-60"
+            >
+              {replaying ? (
+                <LoaderCircle aria-hidden="true" className="animate-spin" size={17} />
+              ) : (
+                <Play aria-hidden="true" size={17} />
+              )}
+              <span className="hidden sm:inline">Run shadow replay</span>
             </button>
             <button
               type="button"
@@ -336,6 +403,65 @@ export default function HardwareSimulator() {
             </div>
           </div>
         </section>
+
+        {replaySession && (
+          <section className="mb-5 overflow-hidden rounded-lg border border-[#b7d8c7] bg-[#f5fbf7] shadow-sm">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dceee2] px-4 py-3 sm:px-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#dff4e7] text-[#176a4c]">
+                  <BrainCircuit aria-hidden="true" size={18} />
+                </span>
+                <div>
+                  <h2 className="text-sm font-bold">Shadow learning replay</h2>
+                  <p className="text-xs font-medium text-[#657169]">
+                    {replaySession.sourcePatientId} · {replaySession.latentPersona}
+                  </p>
+                  {replaySession.decisions[0]?.modelVersion && (
+                    <p className="mt-0.5 text-[10px] font-semibold text-[#718078]">
+                      Live model · {replaySession.decisions[0].modelVersion}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e4f5ed] px-2.5 py-1 text-[11px] font-bold text-[#176a4c]">
+                <Sparkles aria-hidden="true" size={13} />
+                Live shadow only
+              </span>
+            </header>
+
+            <div className="grid gap-px bg-[#dceee2] sm:grid-cols-4">
+              <div className="bg-[#f5fbf7] px-4 py-3 sm:px-5">
+                <p className="text-[11px] font-bold uppercase text-[#718078]">Doses</p>
+                <p className="mt-1 text-xl font-black text-[#253a2e]">
+                  {replaySession.metrics.doseCount}
+                </p>
+              </div>
+              <div className="bg-[#f5fbf7] px-4 py-3 sm:px-5">
+                <p className="text-[11px] font-bold uppercase text-[#718078]">Adaptive allowed</p>
+                <p className="mt-1 text-xl font-black text-[#176a4c]">
+                  {replaySession.metrics.adaptiveAllowedCount}
+                </p>
+              </div>
+              <div className="bg-[#f5fbf7] px-4 py-3 sm:px-5">
+                <p className="text-[11px] font-bold uppercase text-[#718078]">Safety review</p>
+                <p className="mt-1 text-xl font-black text-[#8c5d00]">
+                  {replaySession.metrics.safetyControlCount}
+                </p>
+              </div>
+              <div className="bg-[#f5fbf7] px-4 py-3 sm:px-5">
+                <p className="text-[11px] font-bold uppercase text-[#718078]">Peak risk</p>
+                <p className="mt-1 text-xl font-black text-[#315f80]">
+                  {(replaySession.metrics.maxRiskProbability * 100).toFixed(0)}%
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 border-t border-[#dceee2] px-4 py-3 text-xs font-semibold text-[#5d6c63] sm:px-5">
+              <ShieldCheck aria-hidden="true" size={15} className="text-[#176a4c]" />
+              No reminder was sent. Safety Control remains independent.
+            </div>
+          </section>
+        )}
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,0.65fr)]">
           <section className="min-w-0">

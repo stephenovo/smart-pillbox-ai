@@ -285,12 +285,17 @@ export function getHardwareOpeningEvents(deviceId?: string): OpeningEvent[] {
     : store.events;
 }
 
-export function addHardwareOpeningEvent(payload: HardwareEventPayload): {
+export function addHardwareOpeningEvent(
+  payload: HardwareEventPayload,
+  options: { receivedAt?: string } = {}
+): {
   event: OpeningEvent | null;
   duplicate: boolean;
 } {
   const now = new Date();
   const nowIso = now.toISOString();
+  const eventReceivedAt = options.receivedAt ?? nowIso;
+  const eventReceivedAtMs = new Date(eventReceivedAt).getTime();
   const currentState = getOrCreateState(payload.deviceId);
   const isOpeningEvent =
     payload.eventType === "lid_open" || payload.eventType === "wrong_slot_open";
@@ -298,7 +303,7 @@ export function addHardwareOpeningEvent(payload: HardwareEventPayload): {
   const nextSeenState: StoredDeviceState = {
     ...currentState,
     lastSeenAt: nowIso,
-    lastEventAt: isOpeningEvent ? nowIso : currentState.lastEventAt,
+    lastEventAt: isOpeningEvent ? eventReceivedAt : currentState.lastEventAt,
   };
   store.states.set(payload.deviceId, nextSeenState);
 
@@ -316,7 +321,10 @@ export function addHardwareOpeningEvent(payload: HardwareEventPayload): {
   const duplicateKey = `${payload.deviceId}:${payload.slotId}:${effectiveEventType}`;
   const recent = store.recentEventIds.get(duplicateKey);
 
-  if (recent && now.getTime() - recent.receivedAtMs < duplicateWindowMs) {
+  if (
+    recent &&
+    Math.abs(eventReceivedAtMs - recent.receivedAtMs) < duplicateWindowMs
+  ) {
     const duplicateEvent = store.events.find(
       (event) => event.id === recent.eventId
     );
@@ -329,7 +337,7 @@ export function addHardwareOpeningEvent(payload: HardwareEventPayload): {
     {
       eventType: effectiveEventType,
       activeSlotAtEvent: nextSeenState.activeSlot,
-      receivedAt: nowIso,
+      receivedAt: eventReceivedAt,
     }
   );
 
@@ -340,7 +348,7 @@ export function addHardwareOpeningEvent(payload: HardwareEventPayload): {
   store.events = [event, ...store.events].slice(0, maxStoredEvents);
   store.recentEventIds.set(duplicateKey, {
     eventId: event.id,
-    receivedAtMs: now.getTime(),
+    receivedAtMs: eventReceivedAtMs,
   });
 
   if (

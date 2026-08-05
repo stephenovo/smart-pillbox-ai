@@ -4,7 +4,9 @@ import {
   addHardwareOpeningEvent,
   clearHardwareOpeningEvents,
   getHardwareOpeningEvents,
+  getHardwarePlan,
 } from "../../../../src/lib/hardwareEventStore";
+import { scoreNextDoseAfterOpening } from "../../../../src/lib/adherenceShadow";
 import {
   DEMO_DEVICE_ID,
   validateHardwareEventPayload,
@@ -63,12 +65,30 @@ export async function POST(request: Request) {
   }
 
   const { event, duplicate } = addHardwareOpeningEvent(result.payload);
+  let shadowDecision = null;
+  let shadowError: string | undefined;
+  if (process.env.NODE_ENV === "development" && event && !duplicate) {
+    try {
+      shadowDecision = await scoreNextDoseAfterOpening({
+        deviceId: result.payload.deviceId,
+        event,
+        plan: getHardwarePlan(result.payload.deviceId),
+        events: getHardwareOpeningEvents(result.payload.deviceId),
+      });
+    } catch (error) {
+      // Shadow inference must never delay or reject ingestion from the device.
+      shadowError =
+        error instanceof Error ? error.message : "Shadow inference unavailable.";
+    }
+  }
 
   return jsonResponse({
     accepted: true,
     recorded: event !== null,
     duplicate,
     event,
+    shadowDecision,
+    shadowError,
   });
 }
 

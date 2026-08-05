@@ -1,732 +1,310 @@
-# Smart Pillbox AI Web
+<div align="center">
+  <img src="ios/Careloop/Careloop/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" width="150" alt="Smart Pillbox AI app icon" />
+  <h1>Smart Pillbox AI</h1>
+  <p><strong>Medication care that feels calm, clear, and connected</strong></p>
+  <p>See today's doses · Support someone you love · Manage your own routine · Learn from real pillbox events</p>
+  <p>
+    <a href="https://github.com/stephenovo/smart-pillbox-ai"><strong>GitHub</strong></a>
+    ·
+    <a href="ios/Careloop/README.md">Native iOS guide</a>
+    ·
+    <a href="docs/HARDWARE_MVP_SETUP.md">Hardware setup</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-16.2-111111?logo=nextdotjs&logoColor=white" alt="Next.js 16.2" />
+    <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
+    <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
+    <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%206-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 6" />
+  </p>
+</div>
 
-This repository contains the caregiver clients and hardware demo for **Smart Pillbox AI**.
+<p align="center">
+  <img src="public/landing/smart-pillbox-ai-family.jpg" width="920" alt="A family supporting an older adult at home" />
+</p>
 
-The web app is built with **Next.js, React, TypeScript, and Tailwind CSS**.
-It includes medication initialisation, caregiver monitoring, a separate pillbox hardware simulator, rule-based medication safety control, self-learning reminder escalation, and DeepSeek-powered caregiver insight reports.
+## Overview
 
-## Product Surfaces
+Smart Pillbox AI is an end-to-end medication adherence system for people who
+take daily medicines and the family members who support them. A Next.js care
+dashboard, a phone-first web view, a native SwiftUI iPhone app, and an ESP32
+hardware path all share the same medication and pillbox event API.
 
-The caregiver products and the hardware simulator are separate experiences:
+The product is intentionally built around two warm, practical experiences:
 
-| Surface | Entry point | Role |
+| Experience | Designed for | What it keeps in focus |
 | --- | --- | --- |
-| Caregiver desktop web | `http://localhost:3000` | Desktop monitoring and care management |
-| Caregiver mobile web | `http://localhost:3000/mobile` | Phone-sized caregiver experience |
-| Caregiver iOS app | `ios/Careloop` | Native caregiver app |
-| Pillbox hardware simulator | `http://localhost:3000/hardware-simulator` | Simulates the physical device, lid openings, reminders, and event uploads |
+| **Circle Care** | Family members and caregivers | Multiple people, medication risk, device activity, care notes, and follow-up actions |
+| **My Care** | Someone managing their own medicines | Larger type, fewer controls, today's progress, the next dose, and one simple AI check-in |
 
-The three caregiver clients consume device data. The hardware simulator produces
-that data through the same `/api/hardware/*` endpoints used by the ESP32 demo.
+> **The loop in one sentence:** configure a routine, receive a reminder, record
+> a real pillbox opening, turn the event into a clear status, and surface only
+> the next useful action.
 
----
+## Product loop
 
-## How to Run
-
-### 1. Install dependencies
-
-```bash
-npm install
+```mermaid
+flowchart LR
+    A["Medication plan"] --> B["Local reminder"]
+    B --> C["Pillbox lid opens"]
+    C --> D["Hardware event API"]
+    D --> E["Dose status + history"]
+    E --> F["Circle Care or My Care"]
+    F --> G["Simple AI insight"]
+    G --> A
 ```
 
-### 2. Start the development server
+## What is implemented
+
+| Area | Capabilities |
+| --- | --- |
+| **Two care experiences** | Persistent `Circle Care` and `My Care` mode switching in the web app and native iOS app |
+| **Circle Care** | Care circle selection, medication setup, adherence overview, device feed, care messages, profile sync, and detailed insights |
+| **My Care** | Larger self-management layout, My Day, My Medicines, AI Insight, simplified Settings, and no caregiver-only actions |
+| **Medication safety** | On-time, late, early, missed, duplicate-opening, wrong-compartment, due-soon, and waiting-for-device states |
+| **AI insight** | Rule-based adherence analysis plus optional DeepSeek-generated caregiver summaries and clinic notes |
+| **Hardware bridge** | ESP32-S3 starter firmware, reminder state, lid-event upload, device heartbeat, and the browser hardware simulator |
+| **Profile and persistence** | `/api/profile`, local profile recovery, medication plan storage, hardware event storage, and native UserDefaults persistence |
+| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, dark mode, physical-iPhone connection settings, and Build 6 dual-mode testing |
+| **Safety boundary** | The system records compartment or lid openings; it does not claim that a person swallowed a medicine or replace clinical advice |
+
+## Screens and experiences
+
+### Native iOS: Circle Care and My Care
+
+The native app keeps one four-tab structure and changes the language and
+complexity with the selected experience:
+
+```text
+Circle Care                  My Care
+Today                        My Day
+Meds                         My Medicines
+Insights                     AI Insight
+Settings                     Settings
+```
+
+`My Care` is not a reduced medical judgment system. It is a calmer way to see
+the same medication plan and real device events without caregiver workflow
+overhead.
+
+### Caregiver web dashboard
+
+The desktop web app is optimized for scanning and follow-up:
+
+- medication initialization and buffer-time setup
+- dashboard adherence matrix and event log
+- device activity and reminder controls
+- care messages and profile settings
+- full medication risk and clinic-visit insight reports
+
+### Phone-first web view
+
+The `/mobile` route provides a compact caregiver experience with today's
+overview, slot control, event polling, an event timeline, and AI insight.
+
+<details>
+  <summary><strong>View product imagery</strong></summary>
+  <br />
+  <p align="center">
+    <img src="public/landing/smart-pillbox-ai-hands.jpg" width="48%" alt="Hands resting together in a care setting" />
+    <img src="ios/Careloop/Careloop/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" width="28%" alt="Smart Pillbox AI icon" />
+  </p>
+</details>
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph CLIENTS["Care experiences"]
+        WEB["Next.js desktop\n/ "]
+        MOBILE["Next.js mobile\n/mobile"]
+        IOS["SwiftUI native iOS\nCircle Care / My Care"]
+    end
+
+    subgraph CORE["Next.js application"]
+        UI["React UI + Tailwind CSS"]
+        API["Hardware, profile, and insight API routes"]
+        RULES["Medication safety + adherence rules"]
+        STORE["Local demo event and profile stores"]
+    end
+
+    subgraph DEVICE["Physical-device path"]
+        SIM["Browser hardware simulator"]
+        ESP["ESP32-S3 firmware"]
+        BOX["Smart Pillbox lid / reminder hardware"]
+    end
+
+    WEB --> API
+    MOBILE --> API
+    IOS --> API
+    SIM --> API
+    BOX --> ESP --> API
+    API --> RULES --> STORE
+    RULES -. optional model summary .-> AI["DeepSeek caregiver insight"]
+```
+
+### Design principles
+
+1. **Real events over reassuring fiction.** The dashboard does not invent a
+   successful opening event when the device is offline.
+2. **Rules before language models.** Dose classification, safety states, and
+   caregiver-defined buffers stay deterministic and inspectable.
+3. **One source of truth.** Web, mobile, native iOS, and hardware demos use the
+   same `/api/hardware/*` contracts.
+4. **Different people need different density.** Circle Care supports follow-up;
+   My Care keeps the next meaningful piece of information obvious.
+5. **No clinical overreach.** AI summaries are plain-language support, not a
+   dosage change, diagnosis, or replacement for a clinician.
+
+## Repository layout
+
+```text
+smart-pillbox-ai-web/
+├── app/                         # Next.js App Router pages and API routes
+│   ├── page.tsx                 # Desktop Circle Care / My Care experience
+│   ├── mobile/                  # Phone-first caregiver view
+│   ├── hardware-simulator/     # Browser-based device event simulator
+│   └── api/                     # Hardware, profile, and insight endpoints
+├── src/
+│   ├── components/              # Product panels and shared UI
+│   ├── lib/                     # Safety rules, AI engine, sample data, stores
+│   └── types/                   # Hardware, medication, and profile contracts
+├── ios/Careloop/                # Native SwiftUI iOS 17+ app
+├── hardware/esp32-s3/           # ESP32-S3 starter firmware and wiring notes
+├── docs/                        # Hardware MVP setup and checklists
+├── public/landing/              # Product imagery used by the landing page
+├── package.json                 # Web scripts and dependencies
+└── README.md                    # This guide
+```
+
+## Quick start
+
+### 1. Web app
+
+Requirements: Node.js 20+, npm, and a modern browser.
 
 ```bash
+git clone https://github.com/stephenovo/smart-pillbox-ai.git
+cd smart-pillbox-ai
+npm install
 npm run dev
 ```
 
-Then open:
+Open the main experience at [http://localhost:3000](http://localhost:3000).
 
-```txt
-http://localhost:3000
+| Route | Purpose |
+| --- | --- |
+| `/` | Desktop care dashboard with Circle Care and My Care |
+| `/mobile` | Phone-first caregiver view |
+| `/hardware-simulator` | Simulated pillbox reminders and lid openings |
+| `/landing` | Product and brand presentation |
+
+### 2. Native iOS app
+
+Requirements: macOS, Xcode 16+, and iOS 17+.
+
+```bash
+open ios/Careloop/Careloop.xcodeproj
 ```
 
-Mobile caregiver view:
+Select the `Careloop` scheme and an iPhone simulator. For live hardware data,
+run the web server on port `3100`:
 
-```txt
-http://localhost:3000/mobile
+```bash
+env -u NODE_OPTIONS npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
-Pillbox hardware simulator:
+The native app defaults to `http://127.0.0.1:3100` and device ID
+`PILLBOX-DEMO-001`. A physical iPhone must use the Mac's LAN address or a
+production HTTPS endpoint; both values are editable in native Settings.
 
-```txt
-http://localhost:3000/hardware-simulator
+Build from the command line:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild \
+  -project ios/Careloop/Careloop.xcodeproj \
+  -scheme Careloop \
+  -sdk iphonesimulator \
+  -configuration Debug \
+  CODE_SIGNING_ALLOWED=NO \
+  build
 ```
 
----
+### 3. ESP32-S3 hardware path
 
-## How to Use the Web Demo
+Start with the single-slot loop before wiring the full eight-slot prototype:
 
-The main caregiver web app is divided into monitoring and care-management tabs,
-including:
-
-```txt
-Care feed → Medication plan → Device activity → Care messages → Settings
-```
-
----
-
-### 1. Initialisation
-
-This page is used to set up the medication plan.
-
-Users can configure:
-
-* medication name
-* pillbox compartment
-* scheduled reminder time
-* buffer time
-* high-risk medication flag
-
-The page also includes a short onboarding tutorial for first-time users.
-
-After editing the medication plan, click:
-
-```txt
-Save Initialisation
-```
-
-The setup status will change between:
-
-```txt
-Unsaved changes
-Saved
-```
-
----
-
-### 2. Device Activity
-
-This page is part of the caregiver experience. It monitors the physical or
-simulated pillbox and can send a reminder to the device. It does not simulate
-opening a lid.
-
-It can:
-
-* display timestamped opening events
-* show connection and reminder state
-* send or stop a compartment reminder
-* review activity by date
-
----
-
-### 3. Dashboard
-
-This page displays the caregiver monitoring interface.
-
-It includes four main sections:
-
-1. Emergency reminder banner
-   Appears only when urgent medication patterns are detected.
-
-2. Weekly medication status matrix
-   Shows morning, noon, and evening adherence status using:
-
-   * green dots = normal
-   * yellow dots = late
-   * red dots = missed
-
-3. Adherence Overview + Pillbox Event Log
-   Shows KPI cards, rule-based adherence status, and raw opening events.
-
-4. AI Intelligent Data Report
-   Generates:
-
-   * Overall Summary
-   * Insight
-   * Clinic-Visit Note
-
-Each AI report section can be generated separately to reduce API usage.
-
----
-
-## Development Test Pages
-
-The project includes several test pages for checking AI and API logic.
-
-### DeepSeek API Test
-
-```txt
-http://localhost:3000/ai-api-test
-```
-
-Tests whether the DeepSeek caregiver insight API route works.
-
----
-
-### AI Engine Test
-
-```txt
-http://localhost:3000/ai-engine-test
-```
-
-Tests the full AI pipeline:
-
-* self-learning reminder escalation
-* caregiver insight report
-* DeepSeek-generated summary
-
----
-
-### AI Learning Test
-
-```txt
-http://localhost:3000/ai-learning-test
-```
-
-Demonstrates how the AI model updates when new adherence records are added.
-
-This page is useful for showing that the AI is self-learning rather than fixed rule-only logic.
-
----
-
-## Hardware MVP Prep
-
-The project now includes starter materials for the ESP32-S3 pillbox hardware demo.
-
-```txt
-docs/hardware/README.md
-docs/hardware/MVP_CHECKLIST.md
+```text
 docs/HARDWARE_MVP_SETUP.md
 hardware/esp32-s3/smart_pillbox_demo/smart_pillbox_demo.ino
 ```
 
-Prepared web endpoints:
+The firmware sends real lid events to:
 
-```txt
+```text
 GET    /api/hardware/plan
-POST   /api/hardware/plan
-GET    /api/hardware/events
 POST   /api/hardware/events
-DELETE /api/hardware/events
-GET    /api/hardware/state
+GET    /api/hardware/events
+GET    /api/hardware/state?deviceId=PILLBOX-DEMO-001
 POST   /api/hardware/state
 ```
 
-The caregiver clients poll uploaded hardware opening events. The independent
-hardware simulator at `/hardware-simulator` sends those events through the same
-API as the ESP32 firmware.
-
----
-
-## Mobile View
-
-The project includes a phone-first caregiver view:
-
-```txt
-http://localhost:3000/mobile
-```
-
-It includes:
-
-* Today overview
-* slot control
-* hardware event polling
-* mobile event timeline
-* AI caregiver insight summary
-
-The web manifest starts at `/mobile`, so the page can be tested as a lightweight mobile web app.
-
----
-
-## File Structure
-
-```txt
-app/
-  page.tsx
-  layout.tsx
-  globals.css
-
-  api/
-    caregiver-insight/
-      route.ts
-
-  ai-api-test/
-    page.tsx
-
-  ai-engine-test/
-    page.tsx
-
-  ai-learning-test/
-    page.tsx
-
-src/
-  components/
-    Sidebar.tsx
-    MainSectionTabs.tsx
-    InitialisationSetupPanel.tsx
-    InitialisationTable.tsx
-    CareSessionControl.tsx
-    PillboxSimulator.tsx
-    DashboardPanel.tsx
-    AdherenceOverview.tsx
-    EventLog.tsx
-    AiFeaturePanel.tsx
-    AiReportPanel.tsx
-
-  lib/
-    hardwareSimulation.ts
-    safetyControl.ts
-    scheduleDefaults.ts
-    sampleData.ts
-    sampleHistory.ts
-    aiAdherence.ts
-    aiCaregiverInsights.ts
-    aiEngine.ts
-
-  types/
-    pillbox.ts
-```
-
----
-
-## Main App Files
-
-### `app/page.tsx`
-
-Main application page.
-
-Responsibilities:
-
-* stores main React state
-* manages active tab selection
-* stores medication schedule
-* stores pillbox opening events
-* connects Initialisation, Pillbox, and Dashboard pages
-* handles demo database import
-* passes data into dashboard components
-
----
-
-### `app/layout.tsx`
-
-Root layout for the Next.js app.
-
-Responsibilities:
-
-* defines the HTML shell
-* applies global metadata
-* loads global CSS
-
----
-
-### `app/globals.css`
-
-Global CSS file.
-
-Responsibilities:
-
-* imports Tailwind CSS
-* defines global styles
-* sets base body styling and font family
-
----
-
-## API Route
-
-### `app/api/caregiver-insight/route.ts`
-
-Server-side API route for generating AI caregiver reports with DeepSeek.
-
-Responsibilities:
-
-* reads `DEEPSEEK_API_KEY` from `.env.local`
-* receives structured caregiver insight reports from the frontend
-* sends prompts to the DeepSeek API
-* returns generated AI text to the dashboard
-* supports separate report sections:
-
-  * caregiver summary
-  * key insight
-  * clinic-visit note
-
-Important:
-
-* API keys are only used server-side
-* no API key is exposed to the browser
-* do not use `NEXT_PUBLIC_` for the DeepSeek key
-
----
-
-## Component Files
-
-### `src/components/Sidebar.tsx`
-
-Left sidebar component.
-
-Responsibilities:
-
-* displays project branding
-* shows app status / sidebar information
-* provides consistent layout identity
-
----
-
-### `src/components/MainSectionTabs.tsx`
-
-Top navigation tabs.
-
-Responsibilities:
-
-* switches between:
-
-  * Initialisation
-  * Pillbox
-  * Dashboard
-* keeps the main interface separated into clear user flows
-
----
-
-### `src/components/InitialisationSetupPanel.tsx`
-
-Outer wrapper for the Initialisation page.
-
-Responsibilities:
-
-* displays the setup page header
-* shows configured medication count
-* provides first-time onboarding tutorial
-* wraps the medication setup table
-
----
-
-### `src/components/InitialisationTable.tsx`
-
-Medication setup editor.
-
-Responsibilities:
-
-* displays each pillbox compartment as an editable card
-* allows editing medication name
-* allows editing scheduled time
-* allows editing buffer time
-* allows toggling high-risk medication
-* tracks saved / unsaved setup state
-* provides:
-
-  * Apply Recommended Buffer Times
-  * Save Initialisation
-
----
-
-### `src/components/CareSessionControl.tsx`
-
-Demo session control panel.
-
-Responsibilities:
-
-* controls analysis date
-* controls analysis time
-* provides the simulated current time for pillbox opening events
-
----
-
-### `src/components/PillboxSimulator.tsx`
-
-Local hardware simulation UI.
-
-Responsibilities:
-
-* displays pillbox compartments
-* simulates opening a compartment
-* creates opening events
-* shows compartment status
-* clears opening records
-
-This component represents the demo hardware layer before ESP32 integration.
-
----
-
-### `src/components/DashboardPanel.tsx`
-
-Main dashboard page component.
-
-Responsibilities:
-
-* displays emergency reminder banner
-* displays weekly medication status matrix
-* groups Adherence Overview and Event Log
-* displays AI Intelligent Data Report
-* organizes the dashboard into four major sections
-
----
-
-### `src/components/AdherenceOverview.tsx`
-
-Rule-based adherence overview.
-
-Responsibilities:
-
-* displays dashboard KPI cards
-* shows rule-based medication status
-* displays status such as:
-
-  * Taken - On Time
-  * Taken - Delayed
-  * Missed / Very Late
-  * Duplicate Risk
-  * Pending
-
----
-
-### `src/components/EventLog.tsx`
-
-Pillbox opening event log.
-
-Responsibilities:
-
-* displays recorded opening events
-* shows timestamped pillbox activity
-* provides evidence for dashboard status calculation
-
----
-
-### `src/components/AiFeaturePanel.tsx`
-
-Earlier AI feature panel component.
-
-Responsibilities:
-
-* displays self-learning reminder escalation results
-* displays caregiver insight summary
-* can call the caregiver insight API
-
-This component is kept for development and reference.
-
----
-
-### `src/components/AiReportPanel.tsx`
-
-Current AI report panel used in the Dashboard.
-
-Responsibilities:
-
-* displays AI Intelligent Data Report
-* generates report sections separately:
-
-  * Overall Summary
-  * Insight
-  * Clinic-Visit Note
-* calls `/api/caregiver-insight`
-* displays medication concern heatmap
-
----
-
-## Logic Files
-
-### `src/lib/hardwareSimulation.ts`
-
-Hardware simulation logic.
-
-Responsibilities:
-
-* creates simulated pillbox opening events
-* clears opening events
-* provides helper logic for the local demo layer
-
----
-
-### `src/lib/safetyControl.ts`
-
-Rule-based medication safety control logic.
-
-Responsibilities:
-
-* compares medication schedules with opening events
-* classifies adherence status
-* detects duplicate opening risk
-* calculates dashboard KPI values
-
-This file contains deterministic safety logic and is not AI.
-
----
-
-### `src/lib/scheduleDefaults.ts`
-
-Default schedule helper logic.
-
-Responsibilities:
-
-* provides recommended buffer times
-* applies different default buffer values for normal-risk and high-risk medications
-
----
-
-### `src/lib/sampleData.ts`
-
-Default medication schedule data.
-
-Responsibilities:
-
-* provides the initial pillbox medication schedule
-* populates the Initialisation page when the app starts
-
----
-
-### `src/lib/sampleHistory.ts`
-
-Simulated historical adherence data.
-
-Responsibilities:
-
-* provides historical medication behaviour records
-* supports self-learning AI testing
-* supports AI caregiver insight generation
-* includes examples of delayed, missed, and duplicate opening patterns
-
----
-
-### `src/lib/aiAdherence.ts`
-
-Self-learning reminder escalation AI logic.
-
-Responsibilities:
-
-* calculates delay profile
-* calculates average delay
-* calculates median delay
-* calculates standard deviation
-* detects recent adherence trend
-* compares long-term and recent behaviour
-* calculates adaptive escalation threshold
-* generates AI reminder recommendation
-
-The AI recommendation can output:
-
-* Continue local reminder
-* Second reminder recommended
-* Caregiver alert recommended
-* High-risk escalation recommended
-* Insufficient history
-
----
-
-### `src/lib/aiCaregiverInsights.ts`
-
-Caregiver insight report logic.
-
-Responsibilities:
-
-* analyzes historical adherence records
-* counts delayed, missed, and duplicate opening events
-* identifies high-risk concerns
-* calculates medication concern level
-* generates structured caregiver insight report
-* builds prompts for the DeepSeek API
-
----
-
-### `src/lib/aiEngine.ts`
-
-Unified AI engine.
-
-Responsibilities:
-
-* connects self-learning reminder escalation logic
-* connects caregiver insight report logic
-* provides a single function for running the AI pipeline
-
-Main function:
-
-```ts
-runSmartPillboxAiEngine(...)
-```
-
----
-
-## Type Definitions
-
-### `src/types/pillbox.ts`
-
-Shared TypeScript types.
-
-Responsibilities:
-
-* defines medication schedule data structure
-* defines pillbox opening event structure
-* defines medication status types used across the app
-
----
-
-## Demo Data Flow
-
-```txt
-Initialisation
-  ↓
-Medication schedule saved
-  ↓
-Pillbox simulator creates opening events
-  ↓
-Rule-based safety control classifies status
-  ↓
-Dashboard displays KPI cards and event log
-  ↓
-AI engine analyses adherence behaviour
-  ↓
-DeepSeek API generates caregiver-friendly report
-```
-
----
-
-## Environment Variables
-
-Required for AI report generation:
-
-```env
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
-DEEPSEEK_MODEL=deepseek-v4-flash
-```
-
-If these variables are missing, the web app can still run, but AI report generation will fail.
-
----
-
-## Useful Commands
-
-Run development server:
+The demo persists local hardware events under `.data/`; that file is ignored
+and is not a production database.
+
+## Configuration and safety
+
+- Copy environment examples locally when they are present; never commit live
+  API keys, passwords, device credentials, or provisioning secrets.
+- The DeepSeek route is optional. The core app keeps working with deterministic
+  local insight text when the model service is unavailable.
+- The hardware MVP detects lid or compartment openings, not ingestion.
+- Medication names, schedules, dosage decisions, and high-risk classifications
+  should be confirmed with a healthcare professional.
+- Native profile edits save on the iPhone first and retry server sync after an
+  offline edit.
+
+## Verification
 
 ```bash
-npm run dev
-```
-
-Build production version:
-
-```bash
+# Web lint and production build
+npm run lint
 npm run build
+
+# Native simulator build
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project ios/Careloop/Careloop.xcodeproj \
+  -scheme Careloop -sdk iphonesimulator -configuration Debug \
+  CODE_SIGNING_ALLOWED=NO build
 ```
 
-Run production build:
+The current native release line is `1.0 (6)`, distributed through TestFlight
+to the internal testing group.
 
-```bash
-npm start
-```
+## Documentation
 
-Check Git status:
+- [Native iOS development and TestFlight](ios/Careloop/README.md)
+- [Hardware MVP setup from zero](docs/HARDWARE_MVP_SETUP.md)
+- [Hardware API and parts guide](docs/hardware/README.md)
+- [Hardware MVP checklist](docs/hardware/MVP_CHECKLIST.md)
+- [ESP32-S3 firmware README](hardware/esp32-s3/smart_pillbox_demo/README.md)
 
-```bash
-git status
-```
+## Roadmap
 
-Commit changes:
-
-```bash
-git add .
-git commit -m "your commit message"
-```
-
-Push to GitHub:
-
-```bash
-git push origin main
-```
+- [x] Circle Care and My Care experiences across web and native iOS
+- [x] Hardware event API and browser simulator
+- [x] ESP32-S3 starter firmware and single-slot MVP path
+- [x] Deterministic medication safety states and caregiver insight reports
+- [x] Profile sync with local offline recovery
+- [x] Native iOS TestFlight Build 6
+- [ ] Expand hardware from the MVP loop to a production-ready enclosure
+- [ ] Collect real-device adherence history for model calibration
+- [ ] Add production authentication, database persistence, and observability
+- [ ] Complete App Store release workflow and accessibility audit
 
 ---
 
-## Notes for Developers
-
-* Keep API keys in `.env.local`.
-* Do not commit `.env.local`.
-* Do not expose DeepSeek API keys in client-side components.
-* Safety-critical medication classification should remain in `safetyControl.ts`.
-* AI logic should not decide schedule, dosage, prescription, or clinical safety.
-* Dashboard UI should read from structured logic outputs rather than duplicating business logic inside components.
+<div align="center">
+  <strong>Keep the important medicine moments visible, without making care feel complicated.</strong>
+</div>

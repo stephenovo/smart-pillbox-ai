@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafafa;
+  --foreground: #171717;
+  --muted: #737373;
+  --line: #e7e5e4;
+  --coral: #ff5c5c;
+  --coral-soft: #fff1f0;
+  --mint: #14b8a6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  margin: 0;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #ffd9d6;
+  color: #171717;
+}

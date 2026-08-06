@@ -29,6 +29,7 @@ type StoredDeviceState = {
 type HardwareStore = {
   events: OpeningEvent[];
   plans: Map<string, HardwarePlanSlot[]>;
+  planEffectiveAt: Map<string, string>;
   states: Map<string, StoredDeviceState>;
   recentEventIds: Map<string, { eventId: string; receivedAtMs: number }>;
   triggeredScheduleKeys: Set<string>;
@@ -37,6 +38,7 @@ type HardwareStore = {
 type PersistedHardwareStore = {
   events: OpeningEvent[];
   plans: Array<[string, HardwarePlanSlot[]]>;
+  planEffectiveAt: Array<[string, string]>;
   states: Array<[string, StoredDeviceState]>;
   recentEventIds: Array<
     [string, { eventId: string; receivedAtMs: number }]
@@ -51,6 +53,7 @@ function createEmptyStore(): HardwareStore {
   return {
     events: [],
     plans: new Map(),
+    planEffectiveAt: new Map(),
     states: new Map(),
     recentEventIds: new Map(),
     triggeredScheduleKeys: new Set(),
@@ -66,6 +69,9 @@ function loadPersistedStore(): HardwareStore {
     return {
       events: Array.isArray(parsed.events) ? parsed.events : [],
       plans: new Map(Array.isArray(parsed.plans) ? parsed.plans : []),
+      planEffectiveAt: new Map(
+        Array.isArray(parsed.planEffectiveAt) ? parsed.planEffectiveAt : []
+      ),
       states: new Map(Array.isArray(parsed.states) ? parsed.states : []),
       recentEventIds: new Map(
         Array.isArray(parsed.recentEventIds) ? parsed.recentEventIds : []
@@ -88,11 +94,16 @@ const globalHardwareStore = globalThis as typeof globalThis & {
 const store =
   globalHardwareStore.__smartPillboxHardwareStore ??
   (globalHardwareStore.__smartPillboxHardwareStore = loadPersistedStore());
+if (!(store.planEffectiveAt instanceof Map)) {
+  // Migrate the in-memory development store across Next.js hot reloads.
+  store.planEffectiveAt = new Map();
+}
 
 function persistStore(): void {
   const serialized: PersistedHardwareStore = {
     events: store.events,
     plans: Array.from(store.plans.entries()),
+    planEffectiveAt: Array.from(store.planEffectiveAt.entries()),
     states: Array.from(store.states.entries()),
     recentEventIds: Array.from(store.recentEventIds.entries()),
     triggeredScheduleKeys: Array.from(store.triggeredScheduleKeys),
@@ -218,12 +229,23 @@ function toPublicDeviceState(
 export function getHardwarePlan(deviceId: string): HardwarePlanSlot[] {
   const current = store.plans.get(deviceId);
   if (current) {
+    if (!store.planEffectiveAt.has(deviceId)) {
+      store.planEffectiveAt.set(deviceId, new Date().toISOString());
+      persistStore();
+    }
     return current;
   }
 
   const initialPlan = getDefaultPlan();
   store.plans.set(deviceId, initialPlan);
+  store.planEffectiveAt.set(deviceId, new Date().toISOString());
+  persistStore();
   return initialPlan;
+}
+
+export function getHardwarePlanEffectiveAt(deviceId: string): string {
+  getHardwarePlan(deviceId);
+  return store.planEffectiveAt.get(deviceId) as string;
 }
 
 export function setHardwarePlan(
@@ -232,6 +254,7 @@ export function setHardwarePlan(
 ): HardwarePlanSlot[] {
   const plan = slots.map((slot) => ({ ...slot }));
   store.plans.set(deviceId, plan);
+  store.planEffectiveAt.set(deviceId, new Date().toISOString());
   persistStore();
   return plan;
 }

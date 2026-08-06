@@ -191,11 +191,20 @@ risk metrics and the model version, while Dashboard → Device activity shows th
 replayed opening events.
 
 In development, a normal `POST /api/hardware/events` also makes a best-effort
-prediction for the next scheduled dose. That prediction is available from:
+adherence lifecycle tick without delaying acceptance of the hardware event.
+Device heartbeats invoke the same idempotent worker. It scores a dose only
+inside the configured pre-dose horizon and labels the observed outcome after
+the buffer closes. Decisions and lifecycle records are available from:
 
 ```http
 GET /api/adherence/shadow?patientId=YOUR_DEVICE_ID
+GET /api/adherence/lifecycle?patientId=YOUR_DEVICE_ID
 ```
+
+Lifecycle labels are provisional until their 24-hour observation window
+matures. Late-uploaded events can revise a label, while plan effective time
+prevents dates before setup from being labelled as missed. An opening remains a
+behavioural proxy and does not confirm medication ingestion.
 
 The replay and Shadow read endpoints return `404` outside
 `NODE_ENV=development`. Model unavailability never rejects a hardware event.

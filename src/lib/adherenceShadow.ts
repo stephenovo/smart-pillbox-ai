@@ -94,6 +94,7 @@ export async function scoreShadowDose(options: {
   syntheticStatus?: string;
   syntheticNeedsSupport?: number;
   syntheticBehaviourChangeSignal?: number;
+  generatedAt?: string;
 }): Promise<HardwareShadowDecision> {
   const features = buildAdherenceFeatureSnapshot({
     slot: options.slot,
@@ -128,70 +129,10 @@ export async function scoreShadowDose(options: {
       options.syntheticBehaviourChangeSignal ?? 0,
     historyFeatures: features,
     modelVersion: prediction.modelVersion,
-    generatedAt: new Date().toISOString(),
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
     riskThreshold: policy.risk_threshold,
     budgetReason: budget.reason,
   };
   addShadowDecision(decision);
   return decision;
-}
-
-function localDateKey(value: Date): string {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function nextScheduledDose(
-  after: Date,
-  plan: HardwarePlanSlot[]
-): { slot: HardwarePlanSlot; doseDate: string; scheduledAt: string } | null {
-  const activeSlots = plan.filter((slot) => slot.scheduledTime);
-  for (let dayOffset = 0; dayOffset <= 1; dayOffset += 1) {
-    const day = new Date(after);
-    day.setDate(day.getDate() + dayOffset);
-    const doseDate = localDateKey(day);
-    const candidates = activeSlots
-      .map((slot) => ({
-        slot,
-        doseDate,
-        scheduledAt: `${doseDate}T${slot.scheduledTime}:00`,
-      }))
-      .filter(
-        (candidate) =>
-          new Date(candidate.scheduledAt).getTime() > after.getTime()
-      )
-      .sort(
-        (left, right) =>
-          left.scheduledAt.localeCompare(right.scheduledAt) ||
-          left.slot.slotId - right.slot.slotId
-      );
-    if (candidates[0]) return candidates[0];
-  }
-  return null;
-}
-
-export async function scoreNextDoseAfterOpening(options: {
-  deviceId: string;
-  event: OpeningEvent;
-  plan: HardwarePlanSlot[];
-  events: OpeningEvent[];
-}): Promise<HardwareShadowDecision | null> {
-  const eventTime = new Date(options.event.eventTime.replace(" ", "T") + ":00");
-  if (Number.isNaN(eventTime.getTime())) return null;
-  const next = nextScheduledDose(eventTime, options.plan);
-  if (!next) return null;
-  const observationStartedAt = [...options.events]
-    .sort((left, right) => left.eventTime.localeCompare(right.eventTime))[0]
-    ?.eventTime.replace(" ", "T");
-  return scoreShadowDose({
-    patientId: options.deviceId,
-    doseId: `live-${options.deviceId}-${next.doseDate}-${next.slot.slotId}`,
-    doseDate: next.doseDate,
-    slot: next.slot,
-    scheduledAt: next.scheduledAt,
-    events: options.events,
-    observationStartedAt,
-  });
 }

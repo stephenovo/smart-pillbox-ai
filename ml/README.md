@@ -36,6 +36,7 @@ python3 -m venv /tmp/smart-pillbox-ml-venv
 /tmp/smart-pillbox-ml-venv/bin/python ml/calibrate_intervention_policy.py
 /tmp/smart-pillbox-ml-venv/bin/python ml/replay_hardware_events.py
 /tmp/smart-pillbox-ml-venv/bin/python ml/serve_adherence_model.py
+/tmp/smart-pillbox-ml-venv/bin/python ml/run_pre_real_data_checkpoint.py
 ```
 
 The default run generates 2,000 synthetic users for 90 days (540,000 dose
@@ -68,8 +69,58 @@ before that dose, calls this service, then applies the saved threshold, daily
 budget, and cooldown. It does not reuse the probabilities stored by the offline
 replay script.
 
-Development hardware POSTs also score the next scheduled dose on a best-effort
-basis. Decisions are written to `.data/adherence-shadow.json` and can be read
+Development hardware POSTs also queue a best-effort lifecycle tick; upcoming
+doses are scored only inside the pre-dose horizon. Decisions are written to
+`.data/adherence-shadow.json` and can be read
 through `GET /api/adherence/shadow?patientId=...`. This read endpoint and the
 replay endpoint return `404` outside development. Model failure never rejects a
 hardware event, and no Shadow decision sends a reminder.
+
+## Scheduled scoring and observable outcomes
+
+The development lifecycle worker is invoked by hardware heartbeats and opening
+events. It creates deterministic dose IDs and scores only doses inside the
+pre-dose horizon, so an outcome that happens later cannot leak into prediction.
+The worker records each lifecycle in `.data/adherence-lifecycle.json`.
+
+After the dose buffer closes, the outcome labeler writes a provisional
+opening-event label. At 24 hours it matures the label to final. A late-arriving
+device event may revise either state, with a monotonically increasing revision
+number. Supported observable labels are:
+
+- `observed_on_time`
+- `observed_delayed`
+- `no_open_by_buffer`
+- `observed_very_late`
+- `duplicate_opening`
+- `opened_too_early`
+
+These are behavioural proxies only: a lid opening does not prove that the
+medication was ingested. Plan effective time prevents the backfill worker from
+creating false missed-dose labels for dates before setup.
+
+For deterministic local testing, advance time manually:
+
+```http
+POST /api/adherence/lifecycle
+Content-Type: application/json
+
+{
+  "deviceId": "PILLBOX-DEMO-001",
+  "now": "2026-08-10T07:40:00",
+  "scoringHorizonMinutes": 30,
+  "backfillDays": 7
+}
+```
+
+Use `GET /api/adherence/lifecycle?patientId=...` to inspect records. This API
+returns `404` outside development. Heartbeat invocation is a local integration
+checkpoint, not a durable production scheduler; production needs a database,
+patient time zones, a protected cron/queue worker, and concurrency controls.
+
+The final checkpoint command exports any mature observed lifecycle records,
+simulates a temporal champion/candidate upgrade, runs perturbation stress tests,
+and issues `.data/ml/readiness/final_report.json`. Automated gates can make a
+candidate eligible for more Shadow evaluation but can never promote it. See
+`ml/MODEL_CARD.md` and `docs/ADHERENCE_PRE_REAL_DATA_READINESS.md` for the model
+boundary and real-data entry criteria.

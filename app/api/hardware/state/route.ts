@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 
 import {
   getHardwareDeviceState,
+  getHardwareOpeningEvents,
+  getHardwarePlan,
+  getHardwarePlanEffectiveAt,
   setHardwareDeviceState,
 } from "../../../../src/lib/hardwareEventStore";
+import { queueAdherenceLifecycleTick } from "../../../../src/lib/adherenceLifecycle";
 import {
   DEMO_DEVICE_ID,
   validateHardwareStateMutation,
@@ -35,6 +39,16 @@ export async function GET(request: Request) {
     markSeen: isDeviceHeartbeat,
     evaluateSchedule: isDeviceHeartbeat,
   });
+  if (process.env.NODE_ENV === "development" && isDeviceHeartbeat) {
+    void queueAdherenceLifecycleTick({
+      deviceId,
+      plan: getHardwarePlan(deviceId),
+      events: getHardwareOpeningEvents(deviceId),
+      observationStartedAt: getHardwarePlanEffectiveAt(deviceId),
+    }).catch(() => {
+      // Heartbeats and the hard reminder path never depend on shadow inference.
+    });
+  }
 
   return jsonResponse(state);
 }

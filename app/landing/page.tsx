@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BellRing,
   Check,
-  HeartPulse,
   MessageCircle,
   Pill,
   Radio,
@@ -32,22 +31,17 @@ const compartments = [
   { id: 8, time: "", tone: "bg-[#f3eee7]" },
 ];
 
-function BrandMark({ inverse = false }: { inverse?: boolean }) {
+function BrandMark() {
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <span
-        className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_8px_20px_-10px_rgba(0,0,0,0.7)] ${
-          inverse ? "bg-white text-[#ff5a5f]" : "bg-[#ff5a5f] text-white"
-        } ${inverse ? "border-white/80" : "border-[#ff8a8e]"}`}
-      >
-        <HeartPulse aria-hidden="true" size={18} strokeWidth={2.4} />
-      </span>
-      <span
-        className={`text-lg font-bold ${inverse ? "text-white" : "text-[#22201c]"}`}
-      >
-        Smart Pillbox AI
-      </span>
-    </span>
+    <Image
+      src="/brand-icon.png"
+      alt=""
+      aria-hidden="true"
+      width={44}
+      height={44}
+      priority
+      className="h-11 w-11 drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]"
+    />
   );
 }
 
@@ -189,7 +183,7 @@ export default function LandingPage() {
 
         <nav className="absolute inset-x-0 top-0 z-20 border-b border-white/20 bg-black/10 backdrop-blur-md">
           <div className="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
-            <BrandMark inverse />
+            <BrandMark />
             <div className="hidden items-center gap-8 text-sm font-semibold text-white/90 md:flex">
               <a href="#why" className="transition hover:text-white">
                 Why Smart Pillbox AI
@@ -202,7 +196,7 @@ export default function LandingPage() {
               </a>
             </div>
             <Link
-              href="/"
+              href="/dashboard"
               className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/80 bg-white px-4 text-sm font-bold text-[#22201c] shadow-[0_10px_22px_-12px_rgba(0,0,0,0.75)] transition hover:-translate-y-0.5 hover:bg-[#f6f1e9]"
             >
               Open app <ArrowRight aria-hidden="true" size={16} />
@@ -421,7 +415,7 @@ export default function LandingPage() {
             <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Bring your care circle closer.</h2>
           </div>
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex h-12 shrink-0 items-center gap-2 rounded-lg border border-white/80 bg-white px-5 text-sm font-bold text-[#b63c43] shadow-[0_14px_24px_-15px_rgba(97,28,30,0.75)] transition hover:-translate-y-0.5 hover:bg-[#fff8f4]"
           >
             Open Smart Pillbox AI <ArrowRight aria-hidden="true" size={17} />
@@ -433,7 +427,7 @@ export default function LandingPage() {
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-5 py-9 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12">
           <BrandMark />
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-[#817a70]">
-            <Link href="/" className="hover:text-[#22201c]">Caregiver web</Link>
+            <Link href="/dashboard" className="hover:text-[#22201c]">Caregiver web</Link>
             <Link href="/mobile" className="hover:text-[#22201c]">Mobile app</Link>
             <Link href="/hardware-simulator" className="hover:text-[#22201c]">Pillbox demo</Link>
             <a

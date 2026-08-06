@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import {
   Activity,
-  HeartPulse,
   LayoutGrid,
   MessageCircle,
   Pill,
@@ -10,7 +10,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { profileInitials } from "../lib/userProfile";
-import { appModeDetails, type AppMode } from "../lib/appMode";
+import { type AppMode } from "../lib/appMode";
 import type { UserProfile } from "../types/profile";
 import type { MainSectionTab } from "./MainSectionTabs";
 
@@ -51,14 +51,16 @@ export function Sidebar({ activeTab, onTabChange, profile, mode }: SidebarProps)
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-surface px-5 py-7 lg:flex">
-      <div className="flex items-center gap-3 px-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-white">
-          <HeartPulse aria-hidden="true" size={20} strokeWidth={2.2} />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-ink">Smart Pillbox</h1>
-          <p className="text-xs text-ink-soft">{appModeDetails[mode].label}</p>
-        </div>
+      <div className="flex items-center px-2">
+        <Image
+          src="/brand-icon.png"
+          alt=""
+          aria-hidden="true"
+          width={44}
+          height={44}
+          className="h-11 w-11"
+          priority
+        />
       </div>
 
       <nav aria-label="Primary" className="mt-10 space-y-1.5">

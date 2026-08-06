@@ -4,6 +4,11 @@
   <p><strong>Medication care that feels calm, clear, and connected</strong></p>
   <p>See today's doses · Support someone you love · Manage your own routine · Learn from real pillbox events</p>
   <p>
+    <a href="README.md"><strong>English</strong></a>
+    ·
+    <a href="README.zh-Hant.md">繁體中文</a>
+  </p>
+  <p>
     <a href="https://github.com/stephenovo/smart-pillbox-ai"><strong>GitHub</strong></a>
     ·
     <a href="ios/Careloop/README.md">Native iOS guide</a>

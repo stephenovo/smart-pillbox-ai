@@ -204,6 +204,8 @@ final class CareStore: ObservableObject {
         deviceName: String,
         deviceID: String,
         isDemoConnected: Bool,
+        avatarPresetID: String?,
+        customAvatarData: Data?,
         plan: [MedicationSlot]
     ) async -> CarePatient {
         let cleanName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -236,7 +238,9 @@ final class CareStore: ObservableObject {
             batteryPercent: existingPatient?.batteryPercent ?? 100,
             weeklyRhythm: existingPatient?.weeklyRhythm ?? [0, 0, 0, 0, 0, 0, 0],
             deviceID: deviceID,
-            isDemoConnected: isDemoConnected || existingPatient?.isDemoConnected == true
+            isDemoConnected: isDemoConnected || existingPatient?.isDemoConnected == true,
+            avatarPresetID: avatarPresetID,
+            customAvatarData: customAvatarData
         )
 
         if let index = patients.firstIndex(where: { $0.id == patientID }) {
@@ -262,6 +266,38 @@ final class CareStore: ObservableObject {
         }
 
         return newPatient
+    }
+
+    func updateSelectedPatientAvatar(
+        presetID: String?,
+        customAvatarData: Data?
+    ) {
+        guard let index = patients.firstIndex(where: { $0.id == selectedPatientID }) else {
+            return
+        }
+        let patient = patients[index]
+        patients[index] = CarePatient(
+            id: patient.id,
+            name: patient.name,
+            firstName: patient.firstName,
+            initials: patient.initials,
+            age: patient.age,
+            city: patient.city,
+            relation: patient.relation,
+            livingSituation: patient.livingSituation,
+            phone: patient.phone,
+            wellbeing: patient.wellbeing,
+            wellbeingNote: patient.wellbeingNote,
+            snapshot: patient.snapshot,
+            deviceName: patient.deviceName,
+            batteryPercent: patient.batteryPercent,
+            weeklyRhythm: patient.weeklyRhythm,
+            deviceID: patient.deviceID,
+            isDemoConnected: patient.isDemoConnected,
+            avatarPresetID: presetID,
+            customAvatarData: customAvatarData
+        )
+        persistCareProfiles()
     }
 
     func toggleSelectedPatientReviewed() {
@@ -687,7 +723,9 @@ final class CareStore: ObservableObject {
             batteryPercent: patient.batteryPercent,
             weeklyRhythm: patient.weeklyRhythm,
             deviceID: deviceID,
-            isDemoConnected: patient.isDemoConnected
+            isDemoConnected: patient.isDemoConnected,
+            avatarPresetID: patient.avatarPresetID,
+            customAvatarData: patient.customAvatarData
         )
     }
 

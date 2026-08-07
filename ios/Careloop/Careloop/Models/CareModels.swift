@@ -89,6 +89,40 @@ struct PatientSnapshot: Codable, Hashable {
     let lastEventTime: String
 }
 
+struct CareAvatarPreset: Identifiable, Hashable {
+    let id: String
+    let assetName: String
+
+    static let all: [CareAvatarPreset] = [
+        CareAvatarPreset(id: "lorelei-ari", assetName: "avatar_lorelei_ari"),
+        CareAvatarPreset(id: "lorelei-eli", assetName: "avatar_lorelei_eli"),
+        CareAvatarPreset(id: "lorelei-luna", assetName: "avatar_lorelei_luna"),
+        CareAvatarPreset(id: "lorelei-noa", assetName: "avatar_lorelei_noa"),
+        CareAvatarPreset(id: "lorelei-river", assetName: "avatar_lorelei_river"),
+        CareAvatarPreset(id: "notionists-iman", assetName: "avatar_notionists_iman"),
+        CareAvatarPreset(id: "notionists-kai", assetName: "avatar_notionists_kai"),
+        CareAvatarPreset(id: "notionists-leo", assetName: "avatar_notionists_leo"),
+        CareAvatarPreset(id: "notionists-mei", assetName: "avatar_notionists_mei"),
+        CareAvatarPreset(id: "notionists-sam", assetName: "avatar_notionists_sam"),
+        CareAvatarPreset(id: "peeps-june", assetName: "avatar_peeps_june"),
+        CareAvatarPreset(id: "peeps-nana", assetName: "avatar_peeps_nana"),
+        CareAvatarPreset(id: "peeps-remy", assetName: "avatar_peeps_remy"),
+        CareAvatarPreset(id: "peeps-theo", assetName: "avatar_peeps_theo"),
+        CareAvatarPreset(id: "peeps-zuri", assetName: "avatar_peeps_zuri"),
+    ]
+
+    static func preset(for id: String?) -> CareAvatarPreset? {
+        all.first(where: { $0.id == id })
+    }
+
+    static func defaultID(for patientID: String) -> String {
+        let seed = patientID.unicodeScalars.reduce(0) { partialResult, scalar in
+            partialResult &+ Int(scalar.value)
+        }
+        return all[abs(seed) % all.count].id
+    }
+}
+
 struct CarePatient: Codable, Identifiable, Hashable {
     let id: String
     let name: String
@@ -107,8 +141,13 @@ struct CarePatient: Codable, Identifiable, Hashable {
     let weeklyRhythm: [Int]
     let deviceID: String
     let isDemoConnected: Bool
+    let avatarPresetID: String?
+    let customAvatarData: Data?
 
     var hasConnectedPillbox: Bool { !deviceID.isEmpty }
+    var resolvedAvatarPresetID: String {
+        avatarPresetID ?? CareAvatarPreset.defaultID(for: id)
+    }
 
     static let careCircle: [CarePatient] = [
         CarePatient(
@@ -133,7 +172,9 @@ struct CarePatient: Codable, Identifiable, Hashable {
             batteryPercent: 82,
             weeklyRhythm: [100, 100, 75, 100, 50, 75, 50],
             deviceID: "PILLBOX-DEMO-001",
-            isDemoConnected: false
+            isDemoConnected: false,
+            avatarPresetID: "peeps-nana",
+            customAvatarData: nil
         ),
     ]
 }

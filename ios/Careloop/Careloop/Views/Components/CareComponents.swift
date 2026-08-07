@@ -1,4 +1,37 @@
+import PhotosUI
 import SwiftUI
+import UIKit
+
+struct PatientAvatarPortrait: View {
+    let initials: String
+    let presetID: String?
+    let customAvatarData: Data?
+    var size: CGFloat
+    var background: Color = .careCreamDeep
+
+    var body: some View {
+        ZStack {
+            Circle().fill(background)
+
+            if let customAvatarData,
+               let image = UIImage(data: customAvatarData) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else if let preset = CareAvatarPreset.preset(for: presetID) {
+                Image(preset.assetName)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Text(initials)
+                    .font(.system(size: size * 0.25, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.careInkSoft)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+    }
+}
 
 struct CareAvatar: View {
     let patient: CarePatient
@@ -13,16 +46,16 @@ struct CareAvatar: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Circle()
-                .fill(fill)
+            PatientAvatarPortrait(
+                initials: patient.initials,
+                presetID: patient.resolvedAvatarPresetID,
+                customAvatarData: patient.customAvatarData,
+                size: size,
+                background: fill
+            )
                 .overlay {
                     Circle()
                         .stroke(wellbeing.tint, lineWidth: 2.5)
-                }
-                .overlay {
-                    Text(patient.initials)
-                        .font(.system(size: size * 0.25, weight: .bold, design: .rounded))
-                        .foregroundStyle(wellbeing.foreground)
                 }
 
             Circle()
@@ -33,6 +66,252 @@ struct CareAvatar: View {
         }
         .frame(width: size, height: size)
         .accessibilityLabel("\(patient.name), \(wellbeing.label)")
+    }
+}
+
+struct PatientAvatarPickerView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let initials: String
+    @Binding var selectedPresetID: String?
+    @Binding var customAvatarData: Data?
+    var onSave: ((String?, Data?) -> Void)?
+
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var workingPresetID: String?
+    @State private var workingAvatarData: Data?
+    @State private var isLoadingPhoto = false
+    @State private var photoError: String?
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 72, maximum: 86), spacing: 14),
+    ]
+
+    init(
+        initials: String,
+        selectedPresetID: Binding<String?>,
+        customAvatarData: Binding<Data?>,
+        onSave: ((String?, Data?) -> Void)? = nil
+    ) {
+        self.initials = initials
+        _selectedPresetID = selectedPresetID
+        _customAvatarData = customAvatarData
+        self.onSave = onSave
+        _workingPresetID = State(initialValue: selectedPresetID.wrappedValue)
+        _workingAvatarData = State(initialValue: customAvatarData.wrappedValue)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    currentAvatar
+                    photoSection
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Choose a character")
+                            .font(.headline)
+                            .foregroundStyle(Color.careInk)
+                        Text("Every character is available to every person—pick the one that feels most like them.")
+                            .font(.caption)
+                            .foregroundStyle(Color.careInkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(Array(CareAvatarPreset.all.enumerated()), id: \.element.id) { index, preset in
+                                Button {
+                                    withAnimation(.easeOut(duration: 0.18)) {
+                                        workingPresetID = preset.id
+                                        workingAvatarData = nil
+                                    }
+                                } label: {
+                                    PatientAvatarPortrait(
+                                        initials: initials,
+                                        presetID: preset.id,
+                                        customAvatarData: nil,
+                                        size: 72
+                                    )
+                                    .padding(4)
+                                    .background(
+                                        Circle().fill(Color.careSurface)
+                                    )
+                                    .overlay {
+                                        Circle().stroke(
+                                            workingAvatarData == nil && workingPresetID == preset.id
+                                                ? Color.careCoral
+                                                : Color.clear,
+                                            lineWidth: 3
+                                        )
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Character avatar option \(index + 1)")
+                                .accessibilityAddTraits(
+                                    workingAvatarData == nil && workingPresetID == preset.id
+                                        ? .isSelected
+                                        : []
+                                )
+                            }
+                        }
+                    }
+
+                    Label(
+                        "Built-in artwork is bundled under CC0 1.0. Photos are processed and stored locally, and the app doesn’t upload them.",
+                        systemImage: "checkmark.shield.fill"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(Color.careInkSoft)
+                    .padding(13)
+                    .background(Color.careMintSoft.opacity(0.65))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .padding(18)
+            }
+            .background(Color.careCream)
+            .navigationTitle("Person avatar")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        selectedPresetID = workingPresetID
+                        customAvatarData = workingAvatarData
+                        onSave?(workingPresetID, workingAvatarData)
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+            .alert("Couldn’t use that photo", isPresented: photoErrorBinding) {
+                Button("OK", role: .cancel) { photoError = nil }
+            } message: {
+                Text(photoError ?? "Please try another image.")
+            }
+        }
+    }
+
+    private var currentAvatar: some View {
+        HStack(spacing: 16) {
+            PatientAvatarPortrait(
+                initials: initials,
+                presetID: workingPresetID,
+                customAvatarData: workingAvatarData,
+                size: 92
+            )
+            .overlay { Circle().stroke(Color.careCoral, lineWidth: 3) }
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Their pillbox, their look")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color.careInk)
+                Text("This avatar appears throughout Circle Care and My Care.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.careInkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Use a photo")
+                .font(.headline)
+                .foregroundStyle(Color.careInk)
+
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                HStack {
+                    Label(
+                        workingAvatarData == nil ? "Choose from Photos" : "Choose a different photo",
+                        systemImage: "photo.on.rectangle.angled"
+                    )
+                    .font(.subheadline.weight(.semibold))
+                    Spacer()
+                    if isLoadingPhoto {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
+                    }
+                }
+                .foregroundStyle(Color.careInk)
+                .padding(14)
+                .background(Color.careSurface)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .disabled(isLoadingPhoto)
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                guard let newItem else { return }
+                Task { await loadPhoto(newItem) }
+            }
+        }
+    }
+
+    private var photoErrorBinding: Binding<Bool> {
+        Binding(
+            get: { photoError != nil },
+            set: { if !$0 { photoError = nil } }
+        )
+    }
+
+    @MainActor
+    private func loadPhoto(_ item: PhotosPickerItem) async {
+        isLoadingPhoto = true
+        defer { isLoadingPhoto = false }
+
+        do {
+            guard let sourceData = try await item.loadTransferable(type: Data.self),
+                  let preparedData = AvatarPhotoProcessor.preparedData(from: sourceData) else {
+                throw AvatarPhotoError.unreadable
+            }
+            workingAvatarData = preparedData
+        } catch {
+            photoError = "The selected image couldn’t be prepared. Please choose another photo."
+        }
+    }
+}
+
+private enum AvatarPhotoError: Error {
+    case unreadable
+}
+
+private enum AvatarPhotoProcessor {
+    static func preparedData(from sourceData: Data) -> Data? {
+        guard let image = UIImage(data: sourceData),
+              image.size.width > 0,
+              image.size.height > 0 else {
+            return nil
+        }
+
+        let outputSize = CGSize(width: 512, height: 512)
+        let scale = max(
+            outputSize.width / image.size.width,
+            outputSize.height / image.size.height
+        )
+        let drawSize = CGSize(
+            width: image.size.width * scale,
+            height: image.size.height * scale
+        )
+        let drawRect = CGRect(
+            x: (outputSize.width - drawSize.width) / 2,
+            y: (outputSize.height - drawSize.height) / 2,
+            width: drawSize.width,
+            height: drawSize.height
+        )
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let preparedImage = UIGraphicsImageRenderer(size: outputSize, format: format).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: outputSize))
+            image.draw(in: drawRect)
+        }
+        return preparedImage.jpegData(compressionQuality: 0.82)
     }
 }
 

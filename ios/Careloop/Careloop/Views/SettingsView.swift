@@ -17,6 +17,9 @@ struct SettingsView: View {
     @State private var pendingMode: CareExperienceMode?
     @State private var isSwitchingMode = false
     @State private var modeSwitchStatus = ""
+    @State private var showingAvatarPicker = false
+    @State private var avatarPresetDraft: String?
+    @State private var customAvatarDataDraft: Data?
 
     var body: some View {
         NavigationStack {
@@ -166,6 +169,34 @@ struct SettingsView: View {
                 }
 
                 Section("Device") {
+                    Button {
+                        avatarPresetDraft = store.selectedPatient.resolvedAvatarPresetID
+                        customAvatarDataDraft = store.selectedPatient.customAvatarData
+                        showingAvatarPicker = true
+                    } label: {
+                        HStack(spacing: 13) {
+                            PatientAvatarPortrait(
+                                initials: store.selectedPatient.initials,
+                                presetID: store.selectedPatient.resolvedAvatarPresetID,
+                                customAvatarData: store.selectedPatient.customAvatarData,
+                                size: 48
+                            )
+                            .overlay { Circle().stroke(Color.careCoral, lineWidth: 2) }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Person avatar")
+                                    .foregroundStyle(Color.careInk)
+                                Text("Change character or photo")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.careInkSoft)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Color.careInkFaint)
+                        }
+                        .padding(.vertical, 3)
+                    }
+                    .buttonStyle(.plain)
                     LabeledContent("Name", value: store.selectedPatient.deviceName)
                     LabeledContent("Status", value: store.isDeviceSynced ? "Synced" : "Waiting")
                     LabeledContent("Battery", value: "\(store.selectedPatient.batteryPercent)%")
@@ -199,6 +230,19 @@ struct SettingsView: View {
                     pendingMode = mode
                     showingModeConfirmation = true
                 }
+            }
+            .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showingAvatarPicker) {
+            PatientAvatarPickerView(
+                initials: store.selectedPatient.initials,
+                selectedPresetID: $avatarPresetDraft,
+                customAvatarData: $customAvatarDataDraft
+            ) { presetID, avatarData in
+                store.updateSelectedPatientAvatar(
+                    presetID: presetID,
+                    customAvatarData: avatarData
+                )
             }
             .presentationDetents([.large])
         }

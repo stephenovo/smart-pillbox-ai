@@ -16,6 +16,9 @@ struct PillboxSetupView: View {
     @State private var phone: String
     @State private var deviceName: String
     @State private var draftPlan: [MedicationSlot]
+    @State private var avatarPresetID: String?
+    @State private var customAvatarData: Data?
+    @State private var showingAvatarPicker = false
     @State private var isSaving = false
     @State private var guidebookPatient: CarePatient?
 
@@ -39,6 +42,10 @@ struct PillboxSetupView: View {
         )
         _phone = State(initialValue: patient?.phone ?? "")
         _deviceName = State(initialValue: patient?.deviceName ?? "Home pillbox")
+        _avatarPresetID = State(
+            initialValue: patient?.resolvedAvatarPresetID ?? CareAvatarPreset.all.first?.id
+        )
+        _customAvatarData = State(initialValue: patient?.customAvatarData)
         _draftPlan = State(
             initialValue: initialPlan.isEmpty ? Self.emptyPlan : initialPlan
         )
@@ -77,6 +84,14 @@ struct PillboxSetupView: View {
                     onComplete(patient)
                 }
             }
+            .sheet(isPresented: $showingAvatarPicker) {
+                PatientAvatarPickerView(
+                    initials: draftInitials,
+                    selectedPresetID: $avatarPresetID,
+                    customAvatarData: $customAvatarData
+                )
+                .presentationDetents([.large])
+            }
             .safeAreaInset(edge: .bottom) {
                 saveBar
             }
@@ -111,6 +126,38 @@ struct PillboxSetupView: View {
                 subtitle: "This name will appear beside Margaret in your care circle.",
                 symbol: "person.fill"
             )
+
+            Button {
+                showingAvatarPicker = true
+            } label: {
+                HStack(spacing: 13) {
+                    PatientAvatarPortrait(
+                        initials: draftInitials,
+                        presetID: avatarPresetID,
+                        customAvatarData: customAvatarData,
+                        size: 62
+                    )
+                    .overlay { Circle().stroke(Color.careCoral, lineWidth: 2.5) }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Choose their avatar")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color.careInk)
+                        Text("Pick a character or use a photo from this iPhone.")
+                            .font(.caption)
+                            .foregroundStyle(Color.careInkSoft)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.careInkFaint)
+                }
+                .padding(12)
+                .background(Color.careCreamDeep)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
 
             setupField(title: "Full name", placeholder: "e.g. Helen Wong", text: $fullName)
 
@@ -361,6 +408,15 @@ struct PillboxSetupView: View {
         }.count
     }
 
+    private var draftInitials: String {
+        let words = fullName.split(whereSeparator: \.isWhitespace)
+        if words.count >= 2 {
+            return words.prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
+        }
+        let initials = String(fullName.prefix(2)).uppercased()
+        return initials.isEmpty ? "YOU" : initials
+    }
+
     private var hasMedication: Bool { activeMedicationCount > 0 }
 
     private var canSave: Bool {
@@ -382,6 +438,8 @@ struct PillboxSetupView: View {
                 deviceName: deviceName,
                 deviceID: deviceID,
                 isDemoConnected: isDemoConnected,
+                avatarPresetID: avatarPresetID,
+                customAvatarData: customAvatarData,
                 plan: draftPlan
             )
             isSaving = false

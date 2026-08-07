@@ -1,29 +1,6 @@
-.heroPillboxFloat {
-  animation: hero-pillbox-float 7s cubic-bezier(0.45, 0, 0.25, 1) infinite;
-  transform-origin: 50% 80%;
-  will-change: transform;
-}
-
-.showcasePillboxFloat {
-  animation: showcase-pillbox-float 8.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
-  transform-origin: 50% 85%;
-  will-change: transform;
-}
-
 .phoneFloat {
   animation: phone-float 9s cubic-bezier(0.45, 0, 0.25, 1) infinite;
   will-change: transform;
-}
-
-.compartmentLid {
-  animation: lid-breathe 9s ease-in-out infinite;
-  transform-origin: 50% 100%;
-  will-change: transform;
-}
-
-.statusPulse {
-  animation: status-pulse 3.6s ease-in-out infinite;
-  box-shadow: 0 0 0 0 rgb(83 209 175 / 0.35);
 }
 
 .revealEyebrow,
@@ -49,29 +26,6 @@
   animation-delay: 340ms;
 }
 
-@keyframes hero-pillbox-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotateX(0deg);
-  }
-  48% {
-    transform: translate3d(0, -8px, 0) rotateX(1.2deg);
-  }
-  72% {
-    transform: translate3d(1px, -5px, 0) rotateX(0.5deg);
-  }
-}
-
-@keyframes showcase-pillbox-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -5px, 0);
-  }
-}
-
 @keyframes phone-float {
   0%,
   100% {
@@ -79,32 +33,6 @@
   }
   50% {
     transform: translate3d(0, -6px, 0);
-  }
-}
-
-@keyframes lid-breathe {
-  0%,
-  11%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  5% {
-    transform: translate3d(0, -2px, 0) scale(1.004);
-  }
-  8% {
-    transform: translate3d(0, -1px, 0);
-  }
-}
-
-@keyframes status-pulse {
-  0%,
-  100% {
-    opacity: 0.78;
-    box-shadow: 0 0 0 0 rgb(83 209 175 / 0.32);
-  }
-  48% {
-    opacity: 1;
-    box-shadow: 0 0 0 5px rgb(83 209 175 / 0);
   }
 }
 
@@ -120,11 +48,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .heroPillboxFloat,
-  .showcasePillboxFloat,
   .phoneFloat,
-  .compartmentLid,
-  .statusPulse,
   .revealEyebrow,
   .revealTitle,
   .revealCopy,

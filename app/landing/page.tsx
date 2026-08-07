@@ -6,12 +6,14 @@ import {
   BellRing,
   Check,
   MessageCircle,
+  MonitorPlay,
   Pill,
   Radio,
   ShieldCheck,
   Sparkles,
   Wifi,
 } from "lucide-react";
+import IOSComingSoonButton from "./IOSComingSoonButton";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
@@ -19,17 +21,6 @@ export const metadata: Metadata = {
   description:
     "A connected pillbox and a calm caregiver app for families supporting medication routines from near or far.",
 };
-
-const compartments = [
-  { id: 1, time: "8:00", tone: "bg-[#f7b7a8]" },
-  { id: 2, time: "8:00", tone: "bg-[#b7ded4]" },
-  { id: 3, time: "1:00", tone: "bg-[#f5dba3]" },
-  { id: 4, time: "8:00", tone: "bg-[#bcd3e7]" },
-  { id: 5, time: "", tone: "bg-[#f3eee7]" },
-  { id: 6, time: "", tone: "bg-[#f3eee7]" },
-  { id: 7, time: "", tone: "bg-[#f3eee7]" },
-  { id: 8, time: "", tone: "bg-[#f3eee7]" },
-];
 
 function BrandMark() {
   return (
@@ -42,56 +33,6 @@ function BrandMark() {
       priority
       className="h-11 w-11 drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]"
     />
-  );
-}
-
-function PillboxProduct({ compact = false }: { compact?: boolean }) {
-  return (
-    <div
-      className={`relative mx-auto w-full ${
-        compact ? "max-w-[360px]" : "max-w-[620px]"
-      }`}
-      aria-label="Smart Pillbox AI eight-compartment connected pillbox"
-    >
-      <div className="absolute inset-x-[8%] bottom-[-11%] h-[18%] rounded-full bg-black/30 blur-xl" />
-      <div className="absolute inset-x-[3%] bottom-[-10px] h-12 rounded-b-[24px] border border-black/10 bg-[#cbd2ce] shadow-[0_24px_40px_-24px_rgba(18,25,22,0.75)]" />
-      <div className="relative overflow-hidden rounded-[22px] border border-white/80 bg-[#e8edea] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-8px_18px_rgba(74,90,81,0.12),0_28px_55px_-30px_rgba(35,35,30,0.65)] sm:p-4">
-        <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-white" />
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-          {compartments.map((compartment, index) => (
-            <div
-              key={compartment.id}
-              className={`${styles.compartmentLid} relative aspect-square overflow-hidden rounded-lg border border-white/90 bg-[#fbfcfa] p-2 shadow-[inset_0_0_0_1px_rgba(34,32,28,0.08),inset_0_-7px_9px_rgba(50,65,58,0.09),0_5px_7px_-3px_rgba(34,32,28,0.28)] sm:p-3`}
-              style={{ animationDelay: `${index * 240}ms` }}
-            >
-              <span className="pointer-events-none absolute inset-x-2 top-1 h-px bg-white" />
-              <span className="pointer-events-none absolute bottom-0 left-2 right-2 h-1 rounded-t-full bg-black/5" />
-              <div className="flex h-full flex-col justify-between">
-                <div className="flex items-start justify-between gap-1">
-                  <span className="text-base font-black text-[#2b2b27] sm:text-xl">
-                    {compartment.id}
-                  </span>
-                  <span
-                    className={`h-2.5 w-2.5 rounded-full ${compartment.tone}`}
-                  />
-                </div>
-                <span className="text-[9px] font-bold text-[#726d64] sm:text-[11px]">
-                  {compartment.time || "Ready"}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex items-center justify-between rounded-lg border border-white/10 bg-[#19362f] px-3 py-2 text-white shadow-[inset_0_2px_5px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.8)] sm:px-4">
-          <span className="flex items-center gap-2 text-[10px] font-bold sm:text-xs">
-            <span className={`${styles.statusPulse} h-2 w-2 rounded-full bg-[#53d1af]`} /> Connected
-          </span>
-          <span className="font-mono text-[9px] font-semibold text-white/75 sm:text-[11px]">
-            ALL SET
-          </span>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -184,7 +125,7 @@ export default function LandingPage() {
         <nav className="absolute inset-x-0 top-0 z-20 border-b border-white/20 bg-black/10 backdrop-blur-md">
           <div className="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
             <BrandMark />
-            <div className="hidden items-center gap-8 text-sm font-semibold text-white/90 md:flex">
+            <div className="hidden items-center gap-8 text-sm font-semibold text-white/90 lg:flex">
               <a href="#why" className="transition hover:text-white">
                 Why Smart Pillbox AI
               </a>
@@ -193,6 +134,9 @@ export default function LandingPage() {
               </a>
               <a href="#together" className="transition hover:text-white">
                 For families
+              </a>
+              <a href="#simulator" className="transition hover:text-white">
+                Simulator demo
               </a>
             </div>
             <Link
@@ -205,7 +149,7 @@ export default function LandingPage() {
         </nav>
 
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[1440px] items-end px-5 pb-10 pt-24 sm:px-8 sm:pb-14 lg:px-12">
-          <div className="max-w-[680px] text-white">
+          <div className="max-w-[760px] text-white">
             <p className={`${styles.revealEyebrow} mb-3 flex items-center gap-2 text-xs font-bold uppercase text-white/80`}>
               <span className="h-2 w-2 rounded-full bg-[#53d1af]" />
               Connected medication care
@@ -220,18 +164,20 @@ export default function LandingPage() {
               A connected pillbox and a calm family app keep the medication routine visible, without turning every day into a check-in.
             </p>
             <div className={`${styles.revealActions} mt-7 flex flex-wrap gap-3`}>
+              <IOSComingSoonButton />
+              <Link
+                href="/hardware-simulator"
+                className="inline-flex h-14 items-center gap-2 rounded-full border border-white/55 bg-black/10 px-7 text-sm font-bold text-white shadow-[0_14px_26px_-18px_rgba(0,0,0,0.85)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-black/20"
+              >
+                <MonitorPlay aria-hidden="true" size={17} />
+                View simulator demo
+              </Link>
               <a
                 href="#how"
-                className="inline-flex h-12 items-center gap-2 rounded-lg border border-[#ff8b8f] bg-[#ff5a5f] px-5 text-sm font-bold text-white shadow-[0_14px_24px_-14px_rgba(0,0,0,0.8)] transition hover:-translate-y-0.5 hover:bg-[#ee4e53]"
+                className="inline-flex h-14 items-center gap-2 rounded-full px-4 text-sm font-bold text-white/90 transition hover:text-white"
               >
                 See how it works <ArrowRight aria-hidden="true" size={17} />
               </a>
-              <Link
-                href="/mobile"
-                className="inline-flex h-12 items-center gap-2 rounded-lg border border-white/55 bg-black/10 px-5 text-sm font-bold text-white shadow-[0_12px_22px_-16px_rgba(0,0,0,0.8)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-black/20"
-              >
-                View family app
-              </Link>
             </div>
             <div className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-white/80 lg:hidden">
               <Pill aria-hidden="true" size={15} /> Connected pillbox + caregiver app
@@ -239,11 +185,6 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-12 right-8 z-10 hidden w-[360px] rotate-[-3deg] drop-shadow-[0_22px_28px_rgba(0,0,0,0.2)] lg:block xl:right-14 xl:w-[410px]">
-          <div className={styles.heroPillboxFloat}>
-            <PillboxProduct compact />
-          </div>
-        </div>
       </section>
 
       <section id="why" className="border-b border-[#ece5da] bg-[#fffdfa]">
@@ -281,15 +222,16 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="relative flex min-h-[390px] items-center overflow-hidden border border-[#da5e59] bg-[#ed6c66] px-5 py-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_30px_60px_-42px_rgba(74,35,30,0.65)] sm:min-h-[520px] sm:px-12">
-            <div className="absolute inset-x-0 bottom-0 h-[29%] border-t border-white/15 bg-[#d95d58]" />
-            <div className="absolute inset-x-[14%] bottom-[22%] h-12 rounded-full bg-[#742d2f]/30 blur-xl" />
-            <div className="relative z-10 w-full translate-y-[-2%] rotate-[-1deg]">
-              <div className={styles.showcasePillboxFloat}>
-                <PillboxProduct />
-              </div>
-            </div>
-            <p className="absolute bottom-5 right-6 text-[10px] font-bold uppercase text-[#742d2f]/75">
+          <div className="relative overflow-hidden rounded-[30px] border border-[#ddd3c5] bg-[#faf6ee] shadow-[0_32px_70px_-48px_rgba(67,52,36,0.6)]">
+            <Image
+              src="/landing/smart-pillbox-product-v2.png"
+              alt="Smart Pillbox AI eight-compartment connected pillbox with illuminated lids"
+              width={1448}
+              height={1086}
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="h-auto w-full"
+            />
+            <p className="absolute bottom-5 right-6 rounded-full border border-[#c8bfae]/60 bg-white/75 px-3 py-1.5 text-[10px] font-bold uppercase text-[#514b42] shadow-sm backdrop-blur-sm">
               8-compartment connected pillbox
             </p>
           </div>
@@ -386,6 +328,132 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section
+        id="simulator"
+        className="border-y border-[#d7ded9] bg-[#f4f3ef] py-20 sm:py-24"
+      >
+        <div className="mx-auto grid w-full max-w-[1320px] gap-12 px-5 sm:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-12">
+          <div className="max-w-[500px]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#c9d8d1] bg-white/75 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#176a4c]">
+              <MonitorPlay aria-hidden="true" size={13} />
+              Digital hardware twin
+            </span>
+            <h2 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl">
+              Tap the pillbox. Watch care respond.
+            </h2>
+            <p className="mt-5 text-base leading-7 text-[#5f6d65]">
+              Explore the team&apos;s latest simulator through the same event flow
+              as the physical prototype. Open a compartment, start a reminder,
+              test wrong-slot and wrong-time warnings, then see the caregiver
+              timeline update live.
+            </p>
+            <Link
+              href="/hardware-simulator"
+              className="mt-8 inline-flex h-12 items-center gap-2 rounded-lg bg-[#173c35] px-5 text-sm font-bold text-white shadow-[0_16px_28px_-18px_rgba(23,60,53,0.8)] transition hover:-translate-y-0.5 hover:bg-[#245047]"
+            >
+              View simulator demo <ArrowRight aria-hidden="true" size={17} />
+            </Link>
+          </div>
+
+          <Link
+            href="/hardware-simulator"
+            aria-label="Open the interactive Smart Pillbox hardware simulator"
+            className="group block overflow-hidden rounded-[28px] border border-[#d8dcd8] bg-[#fbfaf7] p-3 shadow-[0_32px_75px_-48px_rgba(28,42,36,0.55)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_38px_85px_-46px_rgba(28,42,36,0.68)] sm:p-5"
+          >
+            <div className="flex items-center justify-between px-1 pb-4 sm:px-2">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#2a7d67] sm:text-[10px]">
+                  Smart Pillbox AI
+                </p>
+                <p className="mt-1 text-base font-bold sm:text-lg">Hardware Showcase</p>
+              </div>
+              <span className="flex items-center gap-2 rounded-lg border border-[#dfe3df] bg-white px-3 py-2 text-[10px] font-bold text-[#356d5e] shadow-sm sm:text-xs">
+                <Wifi aria-hidden="true" size={14} /> Linked
+              </span>
+            </div>
+
+            <div className="rounded-[25px] border border-white bg-[#f7f8f5] p-3 shadow-[inset_0_0_30px_rgba(87,115,101,0.08),0_18px_45px_-32px_rgba(26,55,44,0.6)] sm:p-5">
+              <div className="mb-3 flex items-center justify-between px-1">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-[#31816d] sm:text-[10px]">
+                    Digital hardware twin
+                  </p>
+                  <p className="mt-1 text-xs font-bold sm:text-sm">Click one to open the lid</p>
+                </div>
+                <ArrowRight
+                  aria-hidden="true"
+                  size={18}
+                  className="text-[#31816d] transition group-hover:translate-x-1"
+                />
+              </div>
+
+              <div className="rounded-[22px] border border-[#e4e7e3] bg-white/90 p-2.5 shadow-[0_16px_30px_-26px_rgba(18,46,37,0.65)] sm:p-3.5">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+                  {Array.from({ length: 8 }, (_, index) => {
+                    const pillTones = [
+                      "bg-white border-[#e9e4de]",
+                      "bg-[#f2c64f] border-[#e2ad24]",
+                      "bg-[#e66661] border-[#cf4b47]",
+                    ];
+
+                    return (
+                      <div key={index} className="min-w-0">
+                        <div className="relative aspect-[0.9] overflow-hidden rounded-[10px] border border-[#d9ddda] bg-[#fbfbfa] shadow-[inset_0_3px_8px_rgba(28,48,39,0.08),0_4px_8px_-7px_rgba(20,45,36,0.5)] sm:rounded-[14px]">
+                          <span className="absolute left-1/2 top-1 h-1 w-5 -translate-x-1/2 rounded-full bg-[#70caf3] sm:w-7" />
+                          <span className="absolute left-1/2 top-[23%] -translate-x-1/2 text-xs font-black text-[#2c3934] sm:text-base">
+                            {index + 1}
+                          </span>
+                          {index < 3 && (
+                            <span className="absolute inset-x-2 bottom-[18%] flex flex-wrap justify-center gap-0.5 opacity-90">
+                              {Array.from({ length: 6 }, (_, pillIndex) => (
+                                <span
+                                  key={pillIndex}
+                                  className={`h-1.5 w-2.5 rounded-full border sm:h-2 sm:w-3.5 ${pillTones[index]}`}
+                                />
+                              ))}
+                            </span>
+                          )}
+                          <span className="absolute bottom-0 left-1/2 h-2.5 w-8 -translate-x-1/2 rounded-t-md border border-[#35a995] bg-[#4fc7b5] sm:h-3.5 sm:w-11" />
+                        </div>
+                        <div className="mt-1 hidden min-w-0 sm:block">
+                          <p className="truncate text-[9px] font-bold text-[#2b3531]">
+                            {index < 3 ? ["Morning", "Midday", "Evening"][index] : "Empty slot"}
+                          </p>
+                          <p className="mt-0.5 text-[8px] text-[#89928d]">
+                            {index < 3 ? ["08:00", "13:00", "19:00"][index] : "--:--"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3 sm:mt-4">
+                  <div className="rounded-xl bg-[#173c35] px-3 py-2.5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] sm:px-4 sm:py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <BellRing aria-hidden="true" size={14} className="text-[#62d2bd]" />
+                        <div>
+                          <p className="text-[8px] text-white/55 sm:text-[9px]">Next Reminder</p>
+                          <p className="text-sm font-bold leading-none sm:text-lg">08:00</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[8px] text-white/55 sm:text-[9px]">Battery</p>
+                        <p className="text-[10px] font-bold sm:text-xs">100%</p>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="hidden rounded-full border border-[#c9e5dd] bg-[#eef8f5] px-3 py-2 text-[9px] font-bold text-[#26705d] sm:inline-flex">
+                    Live demo
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </section>
+
       <section className="relative min-h-[520px] overflow-hidden bg-[#272824] shadow-[inset_0_24px_50px_-40px_rgba(0,0,0,0.7)]">
         <Image
           src="/landing/smart-pillbox-ai-hands.jpg"
@@ -408,37 +476,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-[#ff5a5f] py-16 text-white sm:py-20">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-8 px-5 sm:px-8 md:flex-row md:items-center lg:px-12">
-          <div>
-            <p className="text-xs font-bold uppercase text-white/75">A calmer routine starts here</p>
-            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Bring your care circle closer.</h2>
-          </div>
-          <Link
-            href="/dashboard"
-            className="inline-flex h-12 shrink-0 items-center gap-2 rounded-lg border border-white/80 bg-white px-5 text-sm font-bold text-[#b63c43] shadow-[0_14px_24px_-15px_rgba(97,28,30,0.75)] transition hover:-translate-y-0.5 hover:bg-[#fff8f4]"
+      <footer id="team" className="bg-[#fffdfa]">
+        <div className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-9 text-xs font-semibold text-[#817a70] sm:px-8 lg:px-12">
+          <span>Our team</span>
+          <a
+            href="https://unsplash.com/@agecymru"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-[#22201c]"
           >
-            Open Smart Pillbox AI <ArrowRight aria-hidden="true" size={17} />
-          </Link>
-        </div>
-      </section>
-
-      <footer className="bg-[#fffdfa]">
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-5 py-9 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12">
-          <BrandMark />
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-[#817a70]">
-            <Link href="/dashboard" className="hover:text-[#22201c]">Caregiver web</Link>
-            <Link href="/mobile" className="hover:text-[#22201c]">Mobile app</Link>
-            <Link href="/hardware-simulator" className="hover:text-[#22201c]">Pillbox demo</Link>
-            <a
-              href="https://unsplash.com/@agecymru"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[#22201c]"
-            >
-              Photography: Age Cymru / Unsplash
-            </a>
-          </div>
+            Photography: Age Cymru / Unsplash
+          </a>
         </div>
       </footer>
     </main>

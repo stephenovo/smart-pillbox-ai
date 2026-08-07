@@ -28,7 +28,7 @@ struct NotesView: View {
                 .padding(.bottom, 30)
             }
             .background(Color.careCream)
-            .navigationTitle(store.appMode == .myCare ? "AI Insight" : "Insights")
+            .navigationTitle(store.appMode == .myCare ? "AI Check-in" : "Caregiver AI")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -40,7 +40,7 @@ struct NotesView: View {
                         } label: {
                             Image(systemName: "square.and.pencil")
                         }
-                        .accessibilityLabel("Add note")
+                        .accessibilityLabel("Add care journal entry")
                     }
                 }
             }
@@ -54,6 +54,10 @@ struct NotesView: View {
             .task(id: store.appMode) {
                 if store.appMode == .circleCare {
                     await store.loadInsightReport()
+                    if store.generatedInsight == nil,
+                       store.insightReport != nil {
+                        await store.generateInsight()
+                    }
                 }
             }
             .sheet(isPresented: $showingComposer) {
@@ -175,10 +179,10 @@ struct NotesView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("AI insight")
+                    Text("Your caregiver briefing")
                         .font(.headline)
                         .foregroundStyle(Color.careInk)
-                    Text("A warm, plain-language read of \(store.selectedPatient.firstName)'s recent pillbox pattern.")
+                    Text("A thoughtful read of \(store.selectedPatient.firstName)'s pillbox activity — what matters, why, and what you could do next.")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                         .fixedSize(horizontal: false, vertical: true)
@@ -201,6 +205,9 @@ struct NotesView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             } else if let generatedInsight = store.generatedInsight {
                 VStack(alignment: .leading, spacing: 9) {
+                    Text("WHAT I NOTICED")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Color.careCoralInk)
                     Text(generatedInsight)
                         .font(.subheadline)
                         .foregroundStyle(Color.careInk)
@@ -217,11 +224,37 @@ struct NotesView: View {
                 .background(Color.careCreamDeep)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             } else {
-                Text("Generate an up-to-date insight when you want a quick summary of what matters most. Smart Pillbox will not change medication instructions or give medical advice.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.careInkSoft)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("WHAT I NOTICED")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Color.careCoralInk)
+                    Text(caregiverBriefingFallback)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.careInk)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(14)
+                .background(Color.careCreamDeep)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+
+            HStack(alignment: .top, spacing: 11) {
+                Image(systemName: "heart.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.careMintInk)
+                    .frame(width: 30, height: 30)
+                    .background(Color.careMintSoft)
+                    .clipShape(Circle())
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("A gentle next step")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.careMintInk)
+                    Text(caregiverNextStep)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.careInkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             if let message = store.insightErrorMessage {
@@ -235,7 +268,7 @@ struct NotesView: View {
                 Task { await store.generateInsight() }
             } label: {
                 Label(
-                    store.generatedInsight == nil ? "Generate AI insight" : "Generate again",
+                    store.generatedInsight == nil ? "Write fresh caregiver briefing" : "Refresh caregiver briefing",
                     systemImage: "sparkles"
                 )
                 .font(.subheadline.weight(.semibold))
@@ -257,7 +290,7 @@ struct NotesView: View {
     private var medicationRiskSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             CareSectionHeader(
-                title: "Medication risk",
+                title: "Patterns behind the briefing",
                 trailing: store.insightReport.map { "\($0.totalRecordsAnalysed) records" }
             )
 
@@ -307,10 +340,10 @@ struct NotesView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("For the next clinic visit")
+                    Text("Clinic handoff")
                         .font(.headline)
                         .foregroundStyle(Color.careInk)
-                    Text("A concise note to bring into the conversation")
+                    Text("A concise summary to bring to the next appointment")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                 }
@@ -332,19 +365,25 @@ struct NotesView: View {
 
     private var careNotesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Care notes")
-                    .font(.headline)
-                    .foregroundStyle(Color.careInk)
-                Spacer()
-                Button {
-                    showingComposer = true
-                } label: {
-                    Label("Add note", systemImage: "plus")
-                        .font(.caption.weight(.bold))
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text("Care journal")
+                        .font(.headline)
                         .foregroundStyle(Color.careInk)
+                    Spacer()
+                    Button {
+                        showingComposer = true
+                    } label: {
+                        Label("Add entry", systemImage: "plus")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color.careInk)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+                Text("Human context for your care circle — calls, visits and family handoffs. These entries do not change the medicine plan.")
+                    .font(.caption)
+                    .foregroundStyle(Color.careInkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if store.selectedPatientNotes.isEmpty {
@@ -352,10 +391,10 @@ struct NotesView: View {
                     Image(systemName: "note.text")
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(Color.careSkyInk)
-                    Text("No care notes yet")
+                    Text("No journal entries yet")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.careInk)
-                    Text("Add a note after a call, visit or family handoff.")
+                    Text("Add an entry after a call, visit or family handoff so the next caregiver has the full picture.")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                         .multilineTextAlignment(.center)
@@ -372,6 +411,29 @@ struct NotesView: View {
             }
         }
         .padding(.horizontal, 16)
+    }
+
+    private var caregiverBriefingFallback: String {
+        if let status = store.attentionStatuses.first {
+            return "\(status.slot.medication) is the main routine to look at today. \(status.detail)"
+        }
+        if store.takenCount > 0 {
+            return "\(store.selectedPatient.firstName)'s routine looks steady today. \(store.takenCount) dose\(store.takenCount == 1 ? " has" : "s have") been recorded."
+        }
+        return "I'm waiting for today's first pillbox update. Once activity arrives, I'll turn it into a short caregiver briefing here."
+    }
+
+    private var caregiverNextStep: String {
+        if store.attentionStatuses.contains(where: { $0.kind == .openedTwice || $0.kind == .wrongCompartment }) {
+            return "Check in before another dose and confirm the compartment or instructions together."
+        }
+        if store.attentionStatuses.contains(where: { $0.kind == .missed }) {
+            return "A calm message or quick call may help — ask what got in the way before reminding."
+        }
+        if store.isDeviceSynced {
+            return "No urgent action right now. Keep an eye on the next scheduled routine."
+        }
+        return "Make sure the pillbox is powered and connected, then refresh this briefing."
     }
 }
 
@@ -472,7 +534,7 @@ private struct CareNoteCard: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("Note for \(patientName)")
+                    Text("Journal · \(patientName)")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.careInk)
                     Spacer()

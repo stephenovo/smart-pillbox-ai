@@ -17,6 +17,7 @@ struct PillboxSetupView: View {
     @State private var deviceName: String
     @State private var draftPlan: [MedicationSlot]
     @State private var isSaving = false
+    @State private var guidebookPatient: CarePatient?
 
     init(
         patient: CarePatient?,
@@ -65,6 +66,15 @@ struct PillboxSetupView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                }
+            }
+            .fullScreenCover(item: $guidebookPatient) { patient in
+                PillboxGuidebookView(
+                    mode: store.appMode,
+                    patient: patient
+                ) {
+                    guidebookPatient = nil
+                    onComplete(patient)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -375,7 +385,11 @@ struct PillboxSetupView: View {
                 plan: draftPlan
             )
             isSaving = false
-            onComplete(patient)
+            if existingPatientID == nil {
+                guidebookPatient = patient
+            } else {
+                onComplete(patient)
+            }
         }
     }
 

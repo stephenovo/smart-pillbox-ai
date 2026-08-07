@@ -36,13 +36,17 @@ Mac must be on the same network. Use an HTTPS API endpoint for production.
 
 ## Data behavior
 
-- Settings offers two persistent native experiences. `Circle Care` keeps the
-  complete family-care workflow, while `My Care` uses larger text and a calmer
-  self-management view. Switching modes does not change pillbox data or the
-  medication plan.
-- In `My Care`, the four native tabs become My Day, My Medicines, AI Insight
+- Settings presents `Circle Care` and `My Care` as two independent native
+  experiences. Switching requires a confirmation and short transition, while
+  pillbox data and the medication plan remain shared.
+- In `My Care`, the four native tabs become My Day, My Medicines, AI Check-in
   and Settings. Caregiver-only patient switching, contact actions, review
-  controls, detailed risk reports and care notes stay in `Circle Care`.
+  controls, detailed risk reports and the care journal stay in `Circle Care`.
+- A new pillbox setup finishes with a three-step guidebook tailored to the
+  active care mode.
+- Circle Care's `Caregiver AI` combines an automatic caregiver briefing,
+  medication patterns, clinic handoff summary, and a human-written care
+  journal for calls, visits, and family handoffs.
 - Margaret reads live events, device state and medication plan from the
   existing hardware API.
 - The caregiver profile can be edited from the fourth, native Settings tab.
@@ -54,4 +58,4 @@ Mac must be on the same network. Use an HTTPS API endpoint for production.
   are mapped by patient ID.
 - The native app never creates fake opening events or labels sample data as
   hardware data.
-- Care notes are stored locally on the iPhone with `UserDefaults`.
+- Care journal entries are stored locally on the iPhone with `UserDefaults`.

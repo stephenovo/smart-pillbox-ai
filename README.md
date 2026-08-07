@@ -20,7 +20,7 @@
     <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
     <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
-    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%206-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 6" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%207-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 7" />
   </p>
 </div>
 
@@ -39,7 +39,7 @@ The product is intentionally built around two warm, practical experiences:
 
 | Experience | Designed for | What it keeps in focus |
 | --- | --- | --- |
-| **Circle Care** | Family members and caregivers | Multiple people, medication risk, device activity, care notes, and follow-up actions |
+| **Circle Care** | Family members and caregivers | Multiple people, medication risk, device activity, caregiver briefings, care journal, and follow-up actions |
 | **My Care** | Someone managing their own medicines | Larger type, fewer controls, today's progress, the next dose, and one simple AI check-in |
 
 > **The loop in one sentence:** configure a routine, receive a reminder, record
@@ -65,12 +65,12 @@ flowchart LR
 | --- | --- |
 | **Two care experiences** | Persistent `Circle Care` and `My Care` mode switching in the web app and native iOS app |
 | **Circle Care** | Care circle selection, medication setup, adherence overview, device feed, care messages, profile sync, and detailed insights |
-| **My Care** | Larger self-management layout, My Day, My Medicines, AI Insight, simplified Settings, and no caregiver-only actions |
+| **My Care** | Larger self-management layout, My Day, My Medicines, AI Check-in, simplified Settings, and no caregiver-only actions |
 | **Medication safety** | On-time, late, early, missed, duplicate-opening, wrong-compartment, due-soon, and waiting-for-device states |
 | **AI insight** | Rule-based adherence analysis plus optional DeepSeek-generated caregiver summaries and clinic notes |
 | **Hardware bridge** | ESP32-S3 starter firmware, reminder state, lid-event upload, device heartbeat, and the browser hardware simulator |
 | **Profile and persistence** | `/api/profile`, local profile recovery, medication plan storage, hardware event storage, and native UserDefaults persistence |
-| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, dark mode, physical-iPhone connection settings, and Build 6 dual-mode testing |
+| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, new-pillbox guidebooks, caregiver briefings, deliberate mode switching, and Build 7 testing |
 | **Safety boundary** | The system records compartment or lid openings; it does not claim that a person swallowed a medicine or replace clinical advice |
 
 ## Screens and experiences
@@ -84,7 +84,7 @@ complexity with the selected experience:
 Circle Care                  My Care
 Today                        My Day
 Meds                         My Medicines
-Insights                     AI Insight
+Caregiver AI                 AI Check-in
 Settings                     Settings
 ```
 
@@ -287,7 +287,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-The current native release line is `1.0 (6)`, distributed through TestFlight
+The current native release line is `1.0 (7)`, distributed through TestFlight
 to the internal testing group.
 
 ## Documentation
@@ -305,7 +305,7 @@ to the internal testing group.
 - [x] ESP32-S3 firmware and verified two-slot hardware MVP path
 - [x] Deterministic medication safety states and caregiver insight reports
 - [x] Profile sync with local offline recovery
-- [x] Native iOS TestFlight Build 6
+- [x] Native iOS TestFlight Build 7
 - [ ] Expand hardware from the MVP loop to a production-ready enclosure
 - [ ] Collect real-device adherence history for model calibration
 - [ ] Add production authentication, database persistence, and observability

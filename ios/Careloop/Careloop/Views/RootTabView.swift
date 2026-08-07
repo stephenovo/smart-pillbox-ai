@@ -24,8 +24,10 @@ struct RootTabView: View {
             NotesView()
                 .tabItem {
                     Label(
-                        store.appMode == .myCare ? "AI Insight" : "Insights",
-                        systemImage: "sparkles"
+                        store.appMode == .myCare ? "AI Check-in" : "Caregiver AI",
+                        systemImage: store.appMode == .myCare
+                            ? "sparkles"
+                            : "heart.fill"
                     )
                 }
 

@@ -259,20 +259,35 @@ struct NoteComposerView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("For") {
+                Section {
                     Picker("Person", selection: $patientID) {
                         ForEach(store.patients) { patient in
                             Text(patient.name).tag(patient.id)
                         }
                     }
+                } header: {
+                    Text("Care journal")
+                } footer: {
+                    Text("Capture useful human context after a call, visit or handoff. Journal entries do not change medication instructions.")
                 }
 
-                Section("Care note") {
+                Section("Quick start") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            starterButton("Phone check-in", text: "Called \(selectedPatientName). ")
+                            starterButton("Home visit", text: "Visited \(selectedPatientName). ")
+                            starterButton("Family handoff", text: "Family handoff: ")
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 0))
+                }
+
+                Section("What should the next caregiver know?") {
                     TextEditor(text: $text)
                         .frame(minHeight: 150)
                 }
             }
-            .navigationTitle("Add note")
+            .navigationTitle("Add journal entry")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -288,6 +303,27 @@ struct NoteComposerView: View {
                 }
             }
         }
+    }
+
+    private var selectedPatientName: String {
+        store.patients.first(where: { $0.id == patientID })?.firstName ?? "them"
+    }
+
+    private func starterButton(_ title: String, text starterText: String) -> some View {
+        Button {
+            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                text = starterText
+            }
+        } label: {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.careInk)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(Color.careCreamDeep)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -602,6 +638,230 @@ struct ConnectPillboxView: View {
     private func showSetupMessage(_ message: String) {
         setupMessage = message
         showingSetupMessage = true
+    }
+}
+
+struct PillboxGuidebookView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let mode: CareExperienceMode
+    let patient: CarePatient
+    let onComplete: () -> Void
+
+    @State private var stepIndex = 0
+
+    private struct GuideStep: Identifiable {
+        let id: Int
+        let symbol: String
+        let eyebrow: String
+        let title: String
+        let description: String
+        let detail: String
+        let tint: Color
+        let background: Color
+    }
+
+    private var steps: [GuideStep] {
+        if mode == .circleCare {
+            return [
+                GuideStep(
+                    id: 0,
+                    symbol: "square.grid.2x2.fill",
+                    eyebrow: "STEP 1 · TODAY",
+                    title: "See what needs your attention",
+                    description: "Start with \(patient.firstName)'s dose status, pillbox connection and anything that may need a gentle check-in.",
+                    detail: "You do not need to read every event. The care feed brings the important changes forward.",
+                    tint: .careCoralInk,
+                    background: .careCoralSoft
+                ),
+                GuideStep(
+                    id: 1,
+                    symbol: "heart.fill",
+                    eyebrow: "STEP 2 · CAREGIVER AI",
+                    title: "Read the caregiver briefing",
+                    description: "AI turns recent pillbox activity into a warm summary of what changed and what you may want to do next.",
+                    detail: "It supports your judgement. It never changes medication instructions or replaces clinical advice.",
+                    tint: .careMintInk,
+                    background: .careMintSoft
+                ),
+                GuideStep(
+                    id: 2,
+                    symbol: "square.and.pencil",
+                    eyebrow: "STEP 3 · CARE JOURNAL",
+                    title: "Leave context for the next caregiver",
+                    description: "After a call, visit or family handoff, add a short journal entry so the care circle knows what happened.",
+                    detail: "The medicine plan and pillbox data stay shared even if you later open My Care.",
+                    tint: .careSkyInk,
+                    background: .careSkySoft
+                ),
+            ]
+        }
+
+        return [
+            GuideStep(
+                id: 0,
+                symbol: "sun.max.fill",
+                eyebrow: "STEP 1 · MY DAY",
+                title: "Begin with today's simple plan",
+                description: "My Day keeps the next medicine, today's progress and the most important pillbox update easy to see.",
+                detail: "The larger, calmer layout is designed for the person taking the medicine.",
+                tint: .careCoralInk,
+                background: .careCoralSoft
+            ),
+            GuideStep(
+                id: 1,
+                symbol: "bell.badge.fill",
+                eyebrow: "STEP 2 · REMINDERS",
+                title: "Follow the pillbox reminder",
+                description: "When it is time, open the matching compartment and keep following the instructions from your clinician.",
+                detail: "If something looks unfamiliar, pause and ask someone you trust before taking another dose.",
+                tint: .careHoneyInk,
+                background: .careHoneySoft
+            ),
+            GuideStep(
+                id: 2,
+                symbol: "sparkles",
+                eyebrow: "STEP 3 · AI CHECK-IN",
+                title: "Get one clear, reassuring thought",
+                description: "AI Check-in explains today's pillbox pattern in plain language and gently points out anything worth checking.",
+                detail: "Circle Care uses the same medicine plan and pillbox data when family support is needed.",
+                tint: .careMintInk,
+                background: .careMintSoft
+            ),
+        ]
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                HStack(spacing: 7) {
+                    ForEach(steps.indices, id: \.self) { index in
+                        Capsule()
+                            .fill(index <= stepIndex ? Color.careCoral : Color.careCreamDeep)
+                            .frame(height: 5)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 18)
+
+                TabView(selection: $stepIndex) {
+                    ForEach(steps) { step in
+                        guidePage(step)
+                            .tag(step.id)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+
+                VStack(spacing: 10) {
+                    Button {
+                        if stepIndex == steps.count - 1 {
+                            finishGuide()
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                stepIndex += 1
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(stepIndex == steps.count - 1 ? "Start \(mode.label)" : "Continue")
+                            Spacer()
+                            Image(systemName: stepIndex == steps.count - 1 ? "checkmark" : "arrow.right")
+                        }
+                        .font(.headline)
+                        .foregroundStyle(Color.careOnAction)
+                        .padding(.horizontal, 18)
+                        .frame(height: 54)
+                        .background(Color.careAction)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+
+                    Text("You can revisit setup from Medication Plan at any time.")
+                        .font(.caption)
+                        .foregroundStyle(Color.careInkFaint)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 14)
+                .background(Color.careSurface)
+            }
+            .background(Color.careCream)
+            .navigationTitle("Pillbox ready")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.careSurface, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") { finishGuide() }
+                }
+            }
+        }
+    }
+
+    private func guidePage(_ step: GuideStep) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack(spacing: 8) {
+                    Image(systemName: mode.symbol)
+                    Text(mode.label)
+                }
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Color.careInk)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 7)
+                .background(Color.careSurface)
+                .clipShape(Capsule())
+                .overlay {
+                    Capsule().stroke(Color.careLine, lineWidth: 1)
+                }
+
+                VStack(alignment: .leading, spacing: 18) {
+                    Image(systemName: step.symbol)
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundStyle(step.tint)
+                        .frame(width: 68, height: 68)
+                        .background(Color.careSurface)
+                        .clipShape(Circle())
+
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text(step.eyebrow)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(step.tint)
+                        Text(step.title)
+                            .font(.largeTitle.weight(.bold))
+                            .foregroundStyle(Color.careInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(step.description)
+                            .font(mode == .myCare ? .title3 : .body)
+                            .foregroundStyle(Color.careInkSoft)
+                            .lineSpacing(5)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(step.background)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                Label(step.detail, systemImage: "info.circle.fill")
+                    .font(mode == .myCare ? .body : .subheadline)
+                    .foregroundStyle(Color.careInkSoft)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(17)
+                    .careCard()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 24)
+        }
+    }
+
+    private func finishGuide() {
+        dismiss()
+        Task {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            onComplete()
+        }
     }
 }
 

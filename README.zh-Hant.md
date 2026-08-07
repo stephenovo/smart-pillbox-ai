@@ -20,7 +20,7 @@
     <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript 5" />
     <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
-    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%206-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 6" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%207-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 7" />
   </p>
 </div>
 
@@ -60,12 +60,12 @@ flowchart LR
 | --- | --- |
 | **雙照護體驗** | Web App 與原生 iOS App 皆支援持久化的 `Circle Care` / `My Care` 模式切換 |
 | **Circle Care** | 照護圈選擇、用藥設定、依從性總覽、裝置事件流、照護訊息、個人資料同步，以及詳細 insight |
-| **My Care** | 更適合自我管理的大字體版面、My Day、My Medicines、AI Insight、簡化版 Settings，並移除照護者專用操作 |
+| **My Care** | 更適合自我管理的大字體版面、My Day、My Medicines、AI Check-in、簡化版 Settings，並移除照護者專用操作 |
 | **用藥安全狀態** | 準時、延遲、過早、漏服、重複開啟、錯誤藥格、即將到期，以及等待裝置事件 |
 | **AI insight** | 以規則為基礎的依從性分析，並可選用 DeepSeek 產生照護者摘要與門診備註 |
 | **硬體橋接** | ESP32-S3 入門韌體、提醒狀態、藥盒蓋事件上傳、裝置心跳，以及瀏覽器硬體模擬器 |
 | **個人資料與持久化** | `/api/profile`、本地個人資料恢復、用藥計畫儲存、硬體事件儲存，以及原生 UserDefaults 持久化 |
-| **原生 iOS** | 支援 iOS 17+ 的 SwiftUI App、TestFlight 發佈、深色模式、實體 iPhone 連線設定，以及 Build 6 雙模式測試 |
+| **原生 iOS** | 支援 iOS 17+ 的 SwiftUI App、TestFlight 發佈、新藥盒 Guidebook、Caregiver AI、確認式模式切換，以及 Build 7 測試 |
 | **安全邊界** | 系統記錄藥格或藥盒蓋開啟事件；不宣稱使用者已吞服藥物，也不取代醫療建議 |
 
 ## 介面與體驗
@@ -78,7 +78,7 @@ flowchart LR
 Circle Care                  My Care
 Today                        My Day
 Meds                         My Medicines
-Insights                     AI Insight
+Caregiver AI                 AI Check-in
 Settings                     Settings
 ```
 
@@ -262,7 +262,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-目前原生 release line 是 `1.0 (6)`，透過 TestFlight 發佈給 internal testing group。
+目前原生 release line 是 `1.0 (7)`，透過 TestFlight 發佈給 internal testing group。
 
 ## 文件
 
@@ -279,7 +279,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 - [x] ESP32-S3 入門韌體與單格 MVP 路徑
 - [x] Deterministic medication safety states 與照護者 insight reports
 - [x] Profile sync 與本地離線恢復
-- [x] 原生 iOS TestFlight Build 6
+- [x] 原生 iOS TestFlight Build 7
 - [ ] 將硬體從 MVP 流程擴展成 production-ready enclosure
 - [ ] 收集真實裝置依從性歷史，用於模型校準
 - [ ] 加入 production authentication、database persistence 與 observability

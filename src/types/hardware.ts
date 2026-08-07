@@ -43,7 +43,8 @@ export type HardwarePlanUpdatePayload = {
 };
 
 export type HardwareReminderStatus = "idle" | "reminding";
-export type HardwareReminderTrigger = "manual" | "schedule" | null;
+export type HardwareReminderTrigger = "manual" | "schedule" | "adaptive" | null;
+export type HardwareReminderStage = "first" | "second" | null;
 export type HardwareConnectionStatus =
   | "connected"
   | "offline"
@@ -56,6 +57,7 @@ export type HardwareDeviceState = {
   scheduledAt: string | null;
   message: string;
   trigger: HardwareReminderTrigger;
+  reminderStage: HardwareReminderStage;
   updatedAt: string;
   lastSeenAt: string | null;
   lastEventAt: string | null;

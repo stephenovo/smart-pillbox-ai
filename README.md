@@ -202,6 +202,7 @@ Open the main experience at [http://localhost:3000](http://localhost:3000).
 | `/` | Desktop care dashboard with Circle Care and My Care |
 | `/mobile` | Phone-first caregiver view |
 | `/hardware-simulator` | Simulated pillbox reminders and lid openings |
+| `/studio` | Physical-device operations, telemetry, commands, and event provenance |
 | `/landing` | Product and brand presentation |
 
 ### 2. Native iOS app

@@ -13,6 +13,8 @@ export type DoseOutcomeState = "provisional" | "final";
 export type DoseObservationOutcome = {
   label: DoseObservationLabel;
   state: DoseOutcomeState;
+  doseCompleted: boolean;
+  completionBasis: "valid_lid_open" | "no_valid_lid_open";
   observedByBuffer: boolean;
   firstOpeningAt: string | null;
   openingCount: number;
@@ -62,6 +64,9 @@ export type AdherenceLifecycleTickSummary = {
   labeledCount: number;
   finalizedCount: number;
   safetyControlCount: number;
+  interventionDecisionCount: number;
+  interventionExecutedCount: number;
+  caregiverCallCount: number;
   touchedDoseIds: string[];
-  warning: "Shadow only. No reminder was sent.";
+  warning: string;
 };

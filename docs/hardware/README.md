@@ -199,18 +199,27 @@ the buffer closes. Decisions and lifecycle records are available from:
 ```http
 GET /api/adherence/shadow?patientId=YOUR_DEVICE_ID
 GET /api/adherence/lifecycle?patientId=YOUR_DEVICE_ID
+GET /api/adherence/interventions?patientId=YOUR_DEVICE_ID
 ```
 
 Lifecycle labels are provisional until their 24-hour observation window
 matures. Late-uploaded events can revise a label, while plan effective time
-prevents dates before setup from being labelled as missed. An opening remains a
-behavioural proxy and does not confirm medication ingestion.
+prevents dates before setup from being labelled as missed. For the product
+workflow, a valid opening of the scheduled compartment is treated as dose
+completion and stops later actions for that dose.
 
-The replay and Shadow read endpoints return `404` outside
-`NODE_ENV=development`. Model unavailability never rejects a hardware event.
-None of these paths sends a reminder, updates production alert logic, or
-exposes synthetic labels through the hardware event feed. Safety Control
-remains a separate hard-rule path.
+The replay, Shadow, lifecycle, and intervention inspection endpoints return
+`404` outside `NODE_ENV=development`. Model unavailability never rejects a
+hardware event. Synthetic labels are never exposed through the hardware event
+feed, and Safety Control remains a separate hard-rule path.
+
+The intervention engine turns the risk result into `first_alert`,
+`second_alert`, `caregiver_call`, `high_risk_escalation`, or `dose_completed`.
+Local development defaults to demo mode: First and Second Alerts reach the
+hardware state API, while caregiver calls are simulated and stored with an
+idempotency key. Live phone calls require a separately enabled and configured
+provider. See `docs/ADHERENCE_INTERVENTION_ENGINE.md` for the execution locks
+and decision contract.
 
 ## Firmware Starter
 

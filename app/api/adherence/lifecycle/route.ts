@@ -5,6 +5,7 @@ import {
   clearDoseLifecycles,
   getDoseLifecycles,
 } from "../../../../src/lib/adherenceLifecycleStore";
+import { clearInterventionDecisions } from "../../../../src/lib/interventionStore";
 import {
   getHardwareOpeningEvents,
   getHardwarePlan,
@@ -133,5 +134,6 @@ export async function DELETE(request: Request) {
   if (process.env.NODE_ENV !== "development") return unavailable();
   const patientId = new URL(request.url).searchParams.get("patientId")?.trim();
   clearDoseLifecycles(patientId || undefined);
+  clearInterventionDecisions(patientId || undefined);
   return NextResponse.json({ cleared: true, patientId: patientId || null });
 }

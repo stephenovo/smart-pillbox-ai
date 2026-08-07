@@ -19,6 +19,8 @@
 
 # production
 /build
+/.open-next/
+/.wrangler/
 
 # misc
 .DS_Store
@@ -42,6 +44,12 @@ hardware/**/config.h
 # local hardware demo data
 /.data/
 
+# generated local verification artifacts
+/.arduino-build/
+/tmp/
+**/__pycache__/
+*.py[cod]
+
 # vercel
 .vercel
 
@@ -59,3 +67,7 @@ xcuserdata/
 # Local agent working files
 /.workbuddy/
 /CODEX_CAREGIVER_APP_HANDOFF.md
+
+# local duplicate backups
+/README 2.md
+/app/page 2.tsx

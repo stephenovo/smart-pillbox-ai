@@ -2,11 +2,16 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { initialMedicationSchedule } from "./sampleData";
+import {
+  HARDWARE_DEMO_SLOT_ID,
+  isHardwareDemoSlot,
+} from "./hardwareDemoConfig";
 import { hardwarePayloadToOpeningEvent } from "./hardwareProtocol";
 import type {
   HardwareDeviceState,
   HardwareEventPayload,
   HardwarePlanSlot,
+  HardwareReminderStage,
   HardwareReminderTrigger,
 } from "../types/hardware";
 import type { OpeningEvent } from "../types/pillbox";
@@ -21,6 +26,7 @@ type StoredDeviceState = {
   scheduledAt: string | null;
   message: string;
   trigger: HardwareReminderTrigger;
+  reminderStage: HardwareReminderStage;
   updatedAt: string;
   lastSeenAt: string | null;
   lastEventAt: string | null;
@@ -121,7 +127,11 @@ function persistStore(): void {
 
 function getDefaultPlan(): HardwarePlanSlot[] {
   return initialMedicationSchedule
-    .filter((item) => item.medication.trim() !== "")
+    .filter(
+      (item) =>
+        item.compartment === HARDWARE_DEMO_SLOT_ID &&
+        item.medication.trim() !== ""
+    )
     .map((item) => ({
       slotId: item.compartment,
       medication: item.medication,
@@ -134,6 +144,29 @@ function getDefaultPlan(): HardwarePlanSlot[] {
 function getOrCreateState(deviceId: string): StoredDeviceState {
   const current = store.states.get(deviceId);
   if (current) {
+    const normalizedStage =
+      current.status === "reminding" ? current.reminderStage ?? "first" : null;
+    if (current.status === "reminding" && !isHardwareDemoSlot(current.activeSlot)) {
+      const normalized: StoredDeviceState = {
+        ...current,
+        status: "idle",
+        activeSlot: null,
+        scheduledAt: null,
+        message: "No active reminder",
+        trigger: null,
+        reminderStage: null,
+        updatedAt: new Date().toISOString(),
+      };
+      store.states.set(deviceId, normalized);
+      persistStore();
+      return normalized;
+    }
+    if (current.reminderStage !== normalizedStage) {
+      const normalized = { ...current, reminderStage: normalizedStage };
+      store.states.set(deviceId, normalized);
+      persistStore();
+      return normalized;
+    }
     return current;
   }
 
@@ -144,6 +177,7 @@ function getOrCreateState(deviceId: string): StoredDeviceState {
     scheduledAt: null,
     message: "No active reminder",
     trigger: null,
+    reminderStage: null,
     updatedAt: now,
     lastSeenAt: null,
     lastEventAt: null,
@@ -199,6 +233,7 @@ function evaluateScheduledReminder(deviceId: string, now: Date): void {
     scheduledAt: nowIso,
     message: `Open Slot ${dueSlot.slotId}`,
     trigger: "schedule",
+    reminderStage: "first",
     updatedAt: nowIso,
   });
   persistStore();
@@ -229,11 +264,18 @@ function toPublicDeviceState(
 export function getHardwarePlan(deviceId: string): HardwarePlanSlot[] {
   const current = store.plans.get(deviceId);
   if (current) {
+    const normalized = current.filter((slot) =>
+      isHardwareDemoSlot(slot.slotId)
+    );
+    if (normalized.length !== current.length) {
+      store.plans.set(deviceId, normalized);
+      persistStore();
+    }
     if (!store.planEffectiveAt.has(deviceId)) {
       store.planEffectiveAt.set(deviceId, new Date().toISOString());
       persistStore();
     }
-    return current;
+    return normalized;
   }
 
   const initialPlan = getDefaultPlan();
@@ -252,7 +294,9 @@ export function setHardwarePlan(
   deviceId: string,
   slots: HardwarePlanSlot[]
 ): HardwarePlanSlot[] {
-  const plan = slots.map((slot) => ({ ...slot }));
+  const plan = slots
+    .filter((slot) => isHardwareDemoSlot(slot.slotId))
+    .map((slot) => ({ ...slot }));
   store.plans.set(deviceId, plan);
   store.planEffectiveAt.set(deviceId, new Date().toISOString());
   persistStore();
@@ -282,7 +326,12 @@ export function getHardwareDeviceState(
 export function setHardwareDeviceState(
   deviceId: string,
   status: "idle" | "reminding",
-  activeSlot: number | null
+  activeSlot: number | null,
+  options: {
+    trigger?: Exclude<HardwareReminderTrigger, null>;
+    reminderStage?: Exclude<HardwareReminderStage, null>;
+    message?: string;
+  } = {}
 ): HardwareDeviceState {
   const current = getOrCreateState(deviceId);
   const now = new Date();
@@ -292,8 +341,12 @@ export function setHardwareDeviceState(
     activeSlot: status === "reminding" ? activeSlot : null,
     scheduledAt: status === "reminding" ? now.toISOString() : null,
     message:
-      status === "reminding" ? `Open Slot ${activeSlot}` : "No active reminder",
-    trigger: status === "reminding" ? "manual" : null,
+      status === "reminding"
+        ? options.message ?? `Open Slot ${activeSlot}`
+        : "No active reminder",
+    trigger: status === "reminding" ? options.trigger ?? "manual" : null,
+    reminderStage:
+      status === "reminding" ? options.reminderStage ?? "first" : null,
     updatedAt: now.toISOString(),
   };
 
@@ -386,6 +439,7 @@ export function addHardwareOpeningEvent(
       scheduledAt: null,
       message: "No active reminder",
       trigger: null,
+      reminderStage: null,
       updatedAt: nowIso,
     });
   }

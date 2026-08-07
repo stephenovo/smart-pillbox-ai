@@ -16,15 +16,15 @@ import {
   WifiOff,
 } from "lucide-react";
 
-import { DEMO_DEVICE_ID } from "../../src/lib/hardwareProtocol";
-import { initialMedicationSchedule } from "../../src/lib/sampleData";
+import { DEMO_DEVICE_ID } from "./src/lib/hardwareProtocol";
+import { initialMedicationSchedule } from "./src/lib/sampleData";
 import type {
   HardwareDeviceState,
   HardwareEventsApiResponse,
   HardwarePlanApiResponse,
   HardwarePlanSlot,
-} from "../../src/types/hardware";
-import type { OpeningEvent } from "../../src/types/pillbox";
+} from "./src/types/hardware";
+import type { OpeningEvent } from "./src/types/pillbox";
 
 const firmwareVersion = "web-hardware-simulator-1.0.0";
 

@@ -17,3 +17,16 @@ Install these Arduino libraries through Library Manager:
 - Adafruit SSD1306
 
 `WiFi`, `HTTPClient`, and `Wire` are included with the ESP32 board package.
+
+## Single-slot demo startup
+
+With the Mac and ESP32 using the same phone hotspot, connect the ESP32 Type-C
+data cable and run this command from the project root:
+
+```bash
+npm run demo:hardware
+```
+
+The script detects the Mac hotspot IP, updates only `SERVER_BASE_URL` in the
+ignored `config.h`, compiles and uploads the Slot 1 firmware, and starts the
+local dashboard/API on port 3000. Keep the terminal open during the demo.

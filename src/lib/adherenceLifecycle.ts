@@ -1,5 +1,6 @@
 import { scoreShadowDose } from "./adherenceShadow";
 import { getShadowDecisions } from "./adherenceShadowStore";
+import { evaluateAndExecuteIntervention } from "./interventionRuntime";
 import {
   getDoseLifecycle,
   upsertDoseLifecycle,
@@ -63,6 +64,8 @@ function semanticOutcomeChanged(
   return (
     previous.label !== next.label ||
     previous.state !== next.state ||
+    previous.doseCompleted !== next.doseCompleted ||
+    previous.completionBasis !== next.completionBasis ||
     previous.observedByBuffer !== next.observedByBuffer ||
     previous.firstOpeningAt !== next.firstOpeningAt ||
     previous.openingCount !== next.openingCount ||
@@ -130,6 +133,11 @@ export function evaluateDoseObservation(options: {
       options.now.getTime() >= maturesAt.getTime()
         ? ("final" as const)
         : ("provisional" as const),
+    doseCompleted: firstOpeningMs !== null,
+    completionBasis:
+      firstOpeningMs !== null
+        ? ("valid_lid_open" as const)
+        : ("no_valid_lid_open" as const),
     observedByBuffer:
       firstOpeningMs !== null && firstOpeningMs <= bufferDeadline.getTime(),
     firstOpeningAt: firstEvent?.eventTime ?? null,
@@ -222,8 +230,12 @@ export async function runAdherenceLifecycleTick(options: {
     labeledCount: 0,
     finalizedCount: 0,
     safetyControlCount: 0,
+    interventionDecisionCount: 0,
+    interventionExecutedCount: 0,
+    caregiverCallCount: 0,
     touchedDoseIds: [],
-    warning: "Shadow only. No reminder was sent.",
+    warning:
+      "Valid scheduled-compartment openings are treated as dose completion. Calls are simulated unless explicitly unlocked for live execution.",
   };
   const existingShadowDecisions = getShadowDecisions(patientId);
 
@@ -254,6 +266,7 @@ export async function runAdherenceLifecycleTick(options: {
       const existingDecision = existingShadowDecisions.find(
         (decision) => decision.doseId === doseId
       );
+      let shadowDecision = existingDecision;
 
       if (existingDecision && record.scoringStatus !== "scored") {
         record = {
@@ -284,6 +297,7 @@ export async function runAdherenceLifecycleTick(options: {
               options.observationStartedAt ?? observationStartedAt(options.events),
             generatedAt: now.toISOString(),
           });
+          shadowDecision = decision;
           record = {
             ...record,
             scoringStatus: "scored",
@@ -348,6 +362,30 @@ export async function runAdherenceLifecycleTick(options: {
       if (record !== before || !getDoseLifecycle(doseId)) {
         upsertDoseLifecycle(record);
         summary.touchedDoseIds.push(doseId);
+      }
+
+      if (doseDate === localDateKey(now)) {
+        const intervention = await evaluateAndExecuteIntervention({
+          record,
+          shadowDecision,
+          events: options.events,
+          now,
+        });
+        if (intervention.created && intervention.decision) {
+          summary.interventionDecisionCount += 1;
+          if (
+            intervention.decision.executionStatus === "executed" ||
+            intervention.decision.executionStatus === "simulated"
+          ) {
+            summary.interventionExecutedCount += 1;
+          }
+          if (
+            intervention.decision.action === "caregiver_call" ||
+            intervention.decision.action === "high_risk_escalation"
+          ) {
+            summary.caregiverCallCount += 1;
+          }
+        }
       }
     }
   }

@@ -12,6 +12,7 @@ import {
   DEMO_DEVICE_ID,
   validateHardwareStateMutation,
 } from "../../../../src/lib/hardwareProtocol";
+import { isHardwareDemoSlot } from "../../../../src/lib/hardwareDemoConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,16 @@ export async function POST(request: Request) {
   const result = validateHardwareStateMutation(body);
   if (!result.ok) {
     return jsonResponse({ error: result.error }, { status: 400 });
+  }
+
+  if (
+    result.payload.status === "reminding" &&
+    !isHardwareDemoSlot(result.payload.activeSlot)
+  ) {
+    return jsonResponse(
+      { error: "This hardware demo only supports Slot 1 and Slot 2." },
+      { status: 400 }
+    );
   }
 
   const state = setHardwareDeviceState(

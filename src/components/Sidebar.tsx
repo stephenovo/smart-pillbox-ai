@@ -8,6 +8,7 @@ import {
   Pill,
   Settings,
   Smartphone,
+  Wrench,
 } from "lucide-react";
 import { profileInitials } from "../lib/userProfile";
 import { type AppMode } from "../lib/appMode";
@@ -96,6 +97,13 @@ export function Sidebar({ activeTab, onTabChange, profile, mode }: SidebarProps)
         >
           <Smartphone aria-hidden="true" size={19} />
           {isMyCare ? "Share with family" : "Family mobile view"}
+        </a>
+        <a
+          href="/studio"
+          className="mt-1 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-ink-soft transition hover:bg-cream-deep hover:text-ink"
+        >
+          <Wrench aria-hidden="true" size={19} />
+          Device Studio
         </a>
       </div>
 

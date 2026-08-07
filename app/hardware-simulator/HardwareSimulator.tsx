@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 
 import { DEMO_DEVICE_ID } from "../../src/lib/hardwareProtocol";
+import {
+  HARDWARE_DEMO_SLOT_IDS,
+} from "../../src/lib/hardwareDemoConfig";
 import { initialMedicationSchedule } from "../../src/lib/sampleData";
 import type {
   HardwareDeviceState,
@@ -140,18 +143,16 @@ function getTimeWarning(
 }
 
 function getVisualPlan(plan: HardwarePlanSlot[]): HardwarePlanSlot[] {
-  return Array.from({ length: 8 }, (_, index) => {
-    const slotId = index + 1;
-    return (
+  return HARDWARE_DEMO_SLOT_IDS.map(
+    (slotId) =>
       plan.find((slot) => slot.slotId === slotId) ?? {
-        slotId,
-        medication: "",
-        scheduledTime: "",
-        highRisk: false,
-        bufferTimeMinutes: 60,
-      }
-    );
-  });
+      slotId,
+      medication: "",
+      scheduledTime: "",
+      highRisk: false,
+      bufferTimeMinutes: 60,
+    }
+  );
 }
 
 function getSlotOpenCount(events: OpeningEvent[], slotId: number): number {
@@ -1029,7 +1030,7 @@ export default function HardwareSimulatorPage() {
               <button
                 type="button"
                 onClick={() =>
-                  handleOpenSlot(activeSlot === 1 ? 3 : activeSlot ? 1 : 3)
+                  handleOpenSlot(activeSlot === 1 ? 2 : activeSlot ? 1 : 2)
                 }
                 disabled={isMutating || !isReminding}
                 className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"

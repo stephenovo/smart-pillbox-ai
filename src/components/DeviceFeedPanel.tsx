@@ -11,6 +11,10 @@ import {
   Wifi,
 } from "lucide-react";
 import { DEMO_DEVICE_ID } from "../lib/hardwareProtocol";
+import {
+  HARDWARE_DEMO_SLOT_ID,
+  HARDWARE_DEMO_SLOT_IDS,
+} from "../lib/hardwareDemoConfig";
 import type { HardwareDeviceState } from "../types/hardware";
 import type { MedicationSchedule, OpeningEvent } from "../types/pillbox";
 
@@ -37,9 +41,7 @@ export function DeviceFeedPanel({
   deviceState,
   onAnalysisDateChange,
 }: DeviceFeedPanelProps) {
-  const [selectedSlot, setSelectedSlot] = useState(
-    schedule[0]?.compartment ?? 1
-  );
+  const [selectedSlot, setSelectedSlot] = useState<number>(HARDWARE_DEMO_SLOT_ID);
   const [controlPending, setControlPending] = useState(false);
   const [controlError, setControlError] = useState("");
 
@@ -72,6 +74,9 @@ export function DeviceFeedPanel({
 
   const isSynced = deviceState?.connectionStatus === "connected";
   const latestEvent = events[0];
+  const demoScheduleItem = schedule.find(
+    (entry) => entry.compartment === selectedSlot
+  );
   const todayEvents = events.filter((event) =>
     event.eventTime.startsWith(analysisDate)
   );
@@ -219,8 +224,8 @@ export function DeviceFeedPanel({
               <h2 className="font-bold text-ink">Ring a reminder</h2>
             </div>
             <p className="mt-2 text-sm leading-6 text-ink-soft">
-              Make Margaret&apos;s pillbox light up and chime for a chosen
-              compartment — handy while you&apos;re on the phone with her.
+              Make the connected Slot 1 or Slot 2 light up and chime — handy while
+              you&apos;re on the phone with her.
             </p>
 
             <label className="mt-5 block">
@@ -232,20 +237,25 @@ export function DeviceFeedPanel({
                 onChange={(event) => setSelectedSlot(Number(event.target.value))}
                 className="mt-2 w-full rounded-lg border border-line bg-cream px-3 py-2.5 text-sm font-semibold text-ink outline-none focus:border-ink-soft"
               >
-                {Array.from({ length: 8 }, (_, index) => index + 1).map(
-                  (slotId) => {
-                    const item = schedule.find(
-                      (entry) => entry.compartment === slotId
-                    );
-                    return (
-                      <option key={slotId} value={slotId}>
-                        Compartment {slotId}
-                        {item?.medication ? ` — ${item.medication}` : ""}
-                      </option>
-                    );
-                  }
-                )}
+                {HARDWARE_DEMO_SLOT_IDS.map((slotId) => {
+                  const scheduleItem = schedule.find(
+                    (entry) => entry.compartment === slotId
+                  );
+                  return (
+                    <option key={slotId} value={slotId}>
+                      Compartment {slotId}
+                      {scheduleItem?.medication
+                        ? ` - ${scheduleItem.medication}`
+                        : ""}
+                    </option>
+                  );
+                })}
               </select>
+              {demoScheduleItem?.medication ? null : (
+                <p className="mt-2 text-xs text-ink-soft">
+                  No medication configured for this compartment.
+                </p>
+              )}
             </label>
 
             <div className="mt-4 grid grid-cols-2 gap-2">

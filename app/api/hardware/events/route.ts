@@ -12,6 +12,7 @@ import {
   DEMO_DEVICE_ID,
   validateHardwareEventPayload,
 } from "../../../../src/lib/hardwareProtocol";
+import { isHardwareDemoSlot } from "../../../../src/lib/hardwareDemoConfig";
 import type { HardwareEventsApiResponse } from "../../../../src/types/hardware";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,13 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     return jsonResponse({ error: result.error }, { status: 400 });
+  }
+
+  if (!isHardwareDemoSlot(result.payload.slotId)) {
+    return jsonResponse(
+      { error: "This hardware demo only accepts events from Slot 1 and Slot 2." },
+      { status: 400 }
+    );
   }
 
   const { event, duplicate } = addHardwareOpeningEvent(result.payload);

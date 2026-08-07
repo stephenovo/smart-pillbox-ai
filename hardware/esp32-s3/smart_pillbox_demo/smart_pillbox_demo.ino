@@ -20,8 +20,11 @@
 #include "config.h"
 
 constexpr uint8_t SLOT_COUNT = 8;
-constexpr unsigned long DEBOUNCE_MS = 80;
+// Require a reed state to remain unchanged long enough to reject contact
+// bounce and brief magnetic-field fluctuations around the lid threshold.
+constexpr unsigned long DEBOUNCE_MS = 300;
 constexpr unsigned long STATE_POLL_MS = 1500;
+constexpr unsigned long TELEMETRY_UPLOAD_MS = 10000;
 constexpr unsigned long WIFI_RETRY_MS = 5000;
 constexpr unsigned long WIFI_CONNECT_TIMEOUT_MS = 20000;
 constexpr unsigned long HTTP_TIMEOUT_MS = 1500;
@@ -33,22 +36,23 @@ constexpr uint8_t EVENT_QUEUE_SIZE = 12;
 // Safe defaults for a common ESP32-S3 DevKitC-1. Change only this block.
 const uint8_t REED_PINS[SLOT_COUNT] = {4, 5, 6, 7, 15, 16, 17, 18};
 const uint8_t GREEN_LED_PINS[SLOT_COUNT] = {8, 9, 10, 11, 12, 13, 14, 21};
-// Start with Slot 1 only. Change every value to true after all eight sensors work.
+// The physical demo currently uses Slot 1 and Slot 2.
 const bool SLOT_ENABLED[SLOT_COUNT] = {
-  true, false, false, false, false, false, false, false
+  true, true, false, false, false, false, false, false
 };
 constexpr uint8_t BUZZER_PIN = 38;
 constexpr uint8_t RED_LED_PIN = 39;
 constexpr uint8_t OLED_SDA_PIN = 41;
 constexpr uint8_t OLED_SCL_PIN = 42;
+constexpr unsigned int BUZZER_TONE_HZ = 2200;
 
 // Most 3.3 V reed modules output LOW while the lid magnet is close.
 // Change this one value to HIGH if Serial Monitor proves your module is inverted.
-constexpr int REED_CLOSED_LEVEL = LOW;
+// This module drives DO HIGH when the lid magnet is present (lid closed).
+constexpr int REED_CLOSED_LEVEL = HIGH;
 
 constexpr uint8_t SCREEN_WIDTH = 128;
 constexpr uint8_t SCREEN_HEIGHT = 64;
-constexpr uint8_t OLED_ADDRESS = 0x3C;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 struct QueuedEvent {
@@ -71,8 +75,10 @@ uint8_t queueCount = 0;
 bool oledReady = false;
 bool reminderActive = false;
 uint8_t activeSlot = 0;
+uint8_t reminderStage = 0;
 uint8_t locallyAcknowledgedSlot = 0;
 unsigned long lastStatePollAt = 0;
+unsigned long lastTelemetryUploadAt = 0;
 unsigned long lastWifiAttemptAt = 0;
 bool wifiConnectionInProgress = false;
 unsigned long wrongWarningStartedAt = 0;
@@ -85,6 +91,10 @@ String stateEndpoint() {
 
 String eventEndpoint() {
   return String(SERVER_BASE_URL) + "/api/hardware/events";
+}
+
+String telemetryEndpoint() {
+  return String(SERVER_BASE_URL) + "/api/hardware/telemetry";
 }
 
 void showMessage(const String& firstLine, const String& secondLine = "") {
@@ -103,7 +113,10 @@ void showMessage(const String& firstLine, const String& secondLine = "") {
 
 void showCurrentState() {
   if (reminderActive) {
-    showMessage("MEDICATION TIME", "OPEN SLOT " + String(activeSlot));
+    showMessage(
+      reminderStage >= 2 ? "SECOND REMINDER" : "MEDICATION TIME",
+      "OPEN SLOT " + String(activeSlot)
+    );
   } else if (WiFi.status() == WL_CONNECTED) {
     showMessage("READY", "NO REMINDER");
   } else {
@@ -115,15 +128,20 @@ bool readSlotOpen(uint8_t index) {
   return digitalRead(REED_PINS[index]) != REED_CLOSED_LEVEL;
 }
 
+bool isSlotEnabled(uint8_t slotId) {
+  return slotId >= 1 && slotId <= SLOT_COUNT && SLOT_ENABLED[slotId - 1];
+}
+
 void setAllSlotLeds(bool enabled) {
   for (uint8_t index = 0; index < SLOT_COUNT; index++) {
     digitalWrite(GREEN_LED_PINS[index], enabled ? HIGH : LOW);
   }
 }
 
-void setReminderState(bool enabled, uint8_t slotId = 0) {
+void setReminderState(bool enabled, uint8_t slotId = 0, uint8_t stage = 1) {
   reminderActive = enabled;
   activeSlot = enabled ? slotId : 0;
+  reminderStage = enabled ? stage : 0;
   setAllSlotLeds(false);
 
   if (enabled && slotId >= 1 && slotId <= SLOT_COUNT) {
@@ -252,6 +270,43 @@ void processEventQueue(unsigned long now) {
   temporaryMessageUntil = now + 900;
 }
 
+void uploadTelemetry(unsigned long now) {
+  if (
+    WiFi.status() != WL_CONNECTED ||
+    now - lastTelemetryUploadAt < TELEMETRY_UPLOAD_MS
+  ) {
+    return;
+  }
+  lastTelemetryUploadAt = now;
+
+  HTTPClient http;
+  http.setTimeout(HTTP_TIMEOUT_MS);
+  http.begin(telemetryEndpoint());
+  http.addHeader("Content-Type", "application/json");
+  addDeviceKeyHeader(http);
+
+  JsonDocument document;
+  document["deviceId"] = DEVICE_ID;
+  document["firmwareVersion"] = FIRMWARE_VERSION;
+  document["ipAddress"] = WiFi.localIP().toString();
+  document["wifiRssi"] = WiFi.RSSI();
+  document["uptimeMs"] = now;
+  document["freeHeapBytes"] = ESP.getFreeHeap();
+  document["uploadQueueDepth"] = queueCount;
+  document["reminderActive"] = reminderActive;
+  if (reminderActive) {
+    document["activeSlot"] = activeSlot;
+  } else {
+    document["activeSlot"] = nullptr;
+  }
+
+  String body;
+  serializeJson(document, body);
+  const int statusCode = http.POST(body);
+  http.end();
+  Serial.printf("[HTTP] POST telemetry -> %d\n", statusCode);
+}
+
 void pollDeviceState(unsigned long now) {
   if (WiFi.status() != WL_CONNECTED || now - lastStatePollAt < STATE_POLL_MS) {
     return;
@@ -270,26 +325,38 @@ void pollDeviceState(unsigned long now) {
     return;
   }
 
-  JsonDocument document;
-  const DeserializationError error = deserializeJson(document, http.getStream());
+  const String response = http.getString();
   http.end();
+
+  JsonDocument document;
+  const DeserializationError error = deserializeJson(document, response);
   if (error) {
     Serial.printf("[HTTP] Invalid state JSON: %s\n", error.c_str());
+    Serial.printf("[HTTP] State response was: %s\n", response.c_str());
     return;
   }
 
   const String status = document["status"] | "idle";
   const uint8_t nextActiveSlot = document["activeSlot"] | 0;
+  const String nextReminderStage = document["reminderStage"] | "first";
+  const uint8_t nextStage = nextReminderStage == "second" ? 2 : 1;
 
   if (
     status == "reminding" &&
-    nextActiveSlot >= 1 &&
-    nextActiveSlot <= SLOT_COUNT &&
+    isSlotEnabled(nextActiveSlot) &&
     locallyAcknowledgedSlot != nextActiveSlot
   ) {
-    if (!reminderActive || activeSlot != nextActiveSlot) {
-      Serial.printf("[State] Reminder active for Slot %u.\n", nextActiveSlot);
-      setReminderState(true, nextActiveSlot);
+    if (
+      !reminderActive ||
+      activeSlot != nextActiveSlot ||
+      reminderStage != nextStage
+    ) {
+      Serial.printf(
+        "[State] Reminder stage %u active for Slot %u.\n",
+        nextStage,
+        nextActiveSlot
+      );
+      setReminderState(true, nextActiveSlot, nextStage);
     }
   } else if (status == "idle") {
     locallyAcknowledgedSlot = 0;
@@ -352,11 +419,18 @@ void updateIndicators(unsigned long now) {
 
   if (wrongWarningActive) {
     digitalWrite(RED_LED_PIN, HIGH);
-    digitalWrite(BUZZER_PIN, ((now - wrongWarningStartedAt) / 100) % 2 == 0);
+    setBuzzer(((now - wrongWarningStartedAt) / 100) % 2 == 0);
   } else {
     digitalWrite(RED_LED_PIN, LOW);
-    const bool reminderBeep = reminderActive && now % 1000 < 350;
-    digitalWrite(BUZZER_PIN, reminderBeep ? HIGH : LOW);
+    const unsigned long reminderPhase = now % 1600;
+    const bool firstReminderBeep = reminderPhase < 220;
+    const bool secondReminderBeep =
+      reminderPhase < 260 ||
+      (reminderPhase >= 480 && reminderPhase < 740);
+    const bool reminderBeep =
+      reminderActive &&
+      (reminderStage >= 2 ? secondReminderBeep : firstReminderBeep);
+    setBuzzer(reminderBeep);
   }
 
   if (temporaryMessageUntil > 0 && now >= temporaryMessageUntil) {
@@ -365,10 +439,31 @@ void updateIndicators(unsigned long now) {
   }
 }
 
+void setBuzzer(bool enabled) {
+  if (enabled) {
+    tone(BUZZER_PIN, BUZZER_TONE_HZ);
+  } else {
+    noTone(BUZZER_PIN);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
-  delay(300);
+  const unsigned long serialStartAt = millis();
+  while (!Serial && millis() - serialStartAt < 4000) {
+    delay(50);
+  }
+  delay(500);
   Serial.println("\n[Boot] Smart Pillbox AI starting.");
+
+  WiFi.onEvent(
+    [](WiFiEvent_t event, WiFiEventInfo_t info) {
+      Serial.printf("[WiFi] Disconnected. Reason=%u.\n",
+                    info.wifi_sta_disconnected.reason);
+    },
+    WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED
+  );
 
   for (uint8_t index = 0; index < SLOT_COUNT; index++) {
     pinMode(REED_PINS[index], SLOT_ENABLED[index] ? INPUT : INPUT_PULLUP);
@@ -385,14 +480,44 @@ void setup() {
 
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, LOW);
+  setBuzzer(false);
   digitalWrite(RED_LED_PIN, LOW);
+  setBuzzer(true);
+  delay(200);
+  setBuzzer(false);
+  delay(200);
+  setBuzzer(true);
+  delay(200);
+  setBuzzer(false);
 
-  Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
-  oledReady = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS);
+  uint8_t oledAddress = 0;
+  uint8_t oledSdaPin = OLED_SDA_PIN;
+  uint8_t oledSclPin = OLED_SCL_PIN;
+  const uint8_t oledPinPairs[2][2] = {
+    {OLED_SDA_PIN, OLED_SCL_PIN},
+    {OLED_SCL_PIN, OLED_SDA_PIN},
+  };
+  for (uint8_t pairIndex = 0; pairIndex < 2 && oledAddress == 0; pairIndex++) {
+    if (pairIndex > 0) Wire.end();
+    Wire.begin(oledPinPairs[pairIndex][0], oledPinPairs[pairIndex][1]);
+    delay(10);
+    for (uint8_t address = 0x3C; address <= 0x3D; address++) {
+      Wire.beginTransmission(address);
+      if (Wire.endTransmission() == 0) {
+        oledAddress = address;
+        oledSdaPin = oledPinPairs[pairIndex][0];
+        oledSclPin = oledPinPairs[pairIndex][1];
+        break;
+      }
+    }
+  }
+  oledReady = oledAddress != 0 &&
+              display.begin(SSD1306_SWITCHCAPVCC, oledAddress, true, false);
   if (!oledReady) {
-    Serial.println("[OLED] SSD1306 not found; continuing without display.");
+    Serial.println("[OLED] Display unavailable; continuing without it.");
   } else {
+    Serial.printf("[OLED] SSD1306 initialized at 0x%02X (SDA=%u, SCL=%u).\n",
+                  oledAddress, oledSdaPin, oledSclPin);
     showMessage("SMART PILLBOX", "CONNECTING WIFI");
   }
 
@@ -406,6 +531,7 @@ void loop() {
   maintainWifi(now);
   processEventQueue(now);
   pollDeviceState(now);
+  uploadTelemetry(now);
   updateIndicators(now);
   delay(5);
 }

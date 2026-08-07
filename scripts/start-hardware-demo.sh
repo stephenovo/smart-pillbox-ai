@@ -85,7 +85,7 @@ if [[ -z "${ESP32_SERIAL_PORT}" ]]; then
   ESP32_SERIAL_PORT="${SERIAL_PORTS[0]}"
 fi
 
-echo "Compiling the single-slot ESP32 firmware..."
+echo "Compiling the two-slot ESP32 firmware..."
 arduino-cli compile \
   --fqbn "${ESP32_FQBN}" \
   --build-path "${BUILD_DIRECTORY}" \

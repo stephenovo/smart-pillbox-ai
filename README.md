@@ -239,7 +239,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 
 ### 3. ESP32-S3 hardware path
 
-Start with the single-slot loop before wiring the full eight-slot prototype:
+The current physical MVP runs a verified two-slot loop before expansion to the
+full eight-slot prototype:
 
 ```text
 docs/HARDWARE_MVP_SETUP.md
@@ -254,6 +255,7 @@ POST   /api/hardware/events
 GET    /api/hardware/events
 GET    /api/hardware/state?deviceId=PILLBOX-DEMO-001
 POST   /api/hardware/state
+POST   /api/hardware/telemetry
 ```
 
 The demo persists local hardware events under `.data/`; that file is ignored
@@ -300,7 +302,7 @@ to the internal testing group.
 
 - [x] Circle Care and My Care experiences across web and native iOS
 - [x] Hardware event API and browser simulator
-- [x] ESP32-S3 starter firmware and single-slot MVP path
+- [x] ESP32-S3 firmware and verified two-slot hardware MVP path
 - [x] Deterministic medication safety states and caregiver insight reports
 - [x] Profile sync with local offline recovery
 - [x] Native iOS TestFlight Build 6

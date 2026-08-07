@@ -18,7 +18,7 @@ Install these Arduino libraries through Library Manager:
 
 `WiFi`, `HTTPClient`, and `Wire` are included with the ESP32 board package.
 
-## Single-slot demo startup
+## Two-slot demo startup
 
 With the Mac and ESP32 using the same phone hotspot, connect the ESP32 Type-C
 data cable and run this command from the project root:
@@ -28,5 +28,6 @@ npm run demo:hardware
 ```
 
 The script detects the Mac hotspot IP, updates only `SERVER_BASE_URL` in the
-ignored `config.h`, compiles and uploads the Slot 1 firmware, and starts the
-local dashboard/API on port 3000. Keep the terminal open during the demo.
+ignored `config.h`, compiles and uploads the Slot 1 and Slot 2 firmware, and
+starts the local dashboard/API on port 3000. Keep the terminal open during the
+demo.

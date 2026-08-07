@@ -392,7 +392,7 @@ struct NotesView: View {
                     Text("Doctor & clinic summary")
                         .font(.headline)
                         .foregroundStyle(Color.careInk)
-                    Text("System-generated from the activity log — separate from caregiver notes")
+                    Text("System-generated from the activity log — separate from human-written Notes")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                 }
@@ -417,7 +417,7 @@ struct NotesView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Caregiver Notes")
+                        Text("Notes")
                             .font(.title3.weight(.bold))
                             .foregroundStyle(Color.careInk)
                         Label("Human-written", systemImage: "person.fill.checkmark")
@@ -459,7 +459,7 @@ struct NotesView: View {
                     Image(systemName: "note.text.badge.plus")
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(Color.careSkyInk)
-                    Text("No caregiver notes yet")
+                    Text("No notes yet")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.careInk)
                     Text("Add a note after a call, visit or family handoff so a doctor can clearly see the human context.")
@@ -532,7 +532,7 @@ private enum CaregiverRecordSection: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .aiInsight: "AI Insight"
-        case .caregiverNotes: "Caregiver Notes"
+        case .caregiverNotes: "Notes"
         }
     }
 

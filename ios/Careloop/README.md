@@ -21,12 +21,12 @@ embed the existing Next.js `/mobile` route.
 3. Select an iPhone simulator and run the `Careloop` scheme.
 
 The app defaults to the production API at `https://smartpb.me` and device ID
-`PILLBOX-DEMO-001`. Build 11 migrates the old `127.0.0.1:3100` default to the
+`PILLBOX-DEMO-001`. Build 12 migrates the old `127.0.0.1:3100` default to the
 production endpoint so TestFlight users can generate DeepSeek AI Insights
 without changing Settings. Both values remain editable for local development.
 
-Circle Care presents AI Insights and caregiver notes as separate record
-sections. AI output is labelled as generated observation, while caregiver notes
+Circle Care presents AI Insights and Notes as separate record sections. AI
+output is labelled as generated observation, while Notes
 remain explicitly human-written and are never generated or rewritten by AI.
 
 ## Run on a physical iPhone

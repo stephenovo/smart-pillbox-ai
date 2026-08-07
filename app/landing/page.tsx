@@ -4,19 +4,16 @@ import Link from "next/link";
 import {
   ArrowRight,
   BellRing,
-  BrainCircuit,
   Check,
-  ChevronDown,
-  FileText,
   MessageCircle,
   MonitorPlay,
   Pill,
-  PhoneCall,
   Radio,
   ShieldCheck,
   Sparkles,
   Wifi,
 } from "lucide-react";
+import AIExplainer from "./AIExplainer";
 import IOSComingSoonButton from "./IOSComingSoonButton";
 import styles from "./landing.module.css";
 
@@ -245,139 +242,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="ai" className="scroll-mt-6 bg-[#fffdfa] px-5 py-20 sm:px-8 sm:py-24 lg:px-12">
-        <details
-          className={`${styles.aiDetails} mx-auto w-full max-w-[1320px] overflow-hidden rounded-[32px] border border-[#204f46] bg-[#173c35] text-white shadow-[0_34px_80px_-44px_rgba(23,60,53,0.82)]`}
-        >
-          <summary className="group flex cursor-pointer items-center justify-between gap-6 px-6 py-8 outline-none transition hover:bg-white/[0.035] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#81d8c8] sm:px-9 sm:py-10 lg:px-12">
-            <div className="flex min-w-0 items-start gap-4 sm:gap-6">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-[#53d1af] text-[#173c35] shadow-[0_16px_30px_-18px_rgba(0,0,0,0.6)] sm:h-14 sm:w-14">
-                <BrainCircuit aria-hidden="true" size={26} />
-              </span>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#81d8c8] sm:text-xs">
-                  Quiet intelligence, clear action
-                </p>
-                <h2 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-                  See how our AI works
-                </h2>
-                <p className="mt-3 max-w-[760px] text-sm leading-6 text-white/68 sm:text-base sm:leading-7">
-                  One opening becomes a signal. The system learns what is normal,
-                  stays quiet when it can, and escalates only when support may be needed.
-                </p>
-              </div>
-            </div>
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/8 text-white transition group-hover:bg-white/12 sm:h-12 sm:w-12">
-              <ChevronDown
-                aria-hidden="true"
-                size={22}
-                className={styles.aiChevron}
-              />
-            </span>
-          </summary>
-
-          <div className={`${styles.aiReveal} border-t border-white/12 px-6 pb-8 pt-7 sm:px-9 sm:pb-10 lg:px-12 lg:pb-12`}>
-            <div className="flex items-start gap-3 rounded-2xl border border-[#6bcbb7]/25 bg-[#214a42] px-4 py-3.5 sm:items-center">
-              <ShieldCheck aria-hidden="true" size={19} className="mt-0.5 shrink-0 text-[#81d8c8] sm:mt-0" />
-              <p className="text-xs font-semibold leading-5 text-white/78 sm:text-sm">
-                A support system, not a medical decision-maker. Medication schedules,
-                prescriptions, and dosage always stay with people and clinicians.
-              </p>
-            </div>
-
-            <div className="relative mt-8 grid gap-3 lg:grid-cols-4">
-              <div className="pointer-events-none absolute left-[12%] right-[12%] top-7 hidden h-px bg-gradient-to-r from-transparent via-[#72cbb9]/45 to-transparent lg:block" />
-              {[
-                {
-                  number: "01",
-                  icon: Radio,
-                  eyebrow: "IoT event",
-                  title: "Capture the opening",
-                  copy: "A switch sensor records the compartment and timestamp. In today’s workflow, that opening completes the dose event.",
-                },
-                {
-                  number: "02",
-                  icon: ShieldCheck,
-                  eyebrow: "Deterministic",
-                  title: "Apply safety rules",
-                  copy: "Transparent rules classify on-time, delayed, missed, or duplicate risk before any adaptive decision is made.",
-                },
-                {
-                  number: "03",
-                  icon: BrainCircuit,
-                  eyebrow: "Self-learning",
-                  title: "Learn the personal baseline",
-                  copy: "Adherence Analysis learns normal opening delays by medication time and compares recent behaviour with each person’s own pattern.",
-                },
-                {
-                  number: "04",
-                  icon: BellRing,
-                  eyebrow: "Right-sized response",
-                  title: "Escalate only when needed",
-                  copy: "Continue quietly, send a First Alert, move to a Second Alert, or automatically call the caregiver.",
-                },
-              ].map((step) => (
-                <article
-                  key={step.number}
-                  className="relative rounded-2xl border border-white/12 bg-white/[0.055] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                >
-                  <div className="relative z-10 flex items-center justify-between">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#81d8c8]/35 bg-[#173c35] text-[#81d8c8] shadow-[0_8px_20px_-12px_rgba(0,0,0,0.9)]">
-                      <step.icon aria-hidden="true" size={19} />
-                    </span>
-                    <span className="text-[10px] font-bold tracking-[0.16em] text-white/35">
-                      {step.number}
-                    </span>
-                  </div>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.16em] text-[#81d8c8]">
-                    {step.eyebrow}
-                  </p>
-                  <h3 className="mt-2 text-lg font-bold leading-6">{step.title}</h3>
-                  <p className="mt-3 text-xs leading-5 text-white/62 sm:text-sm sm:leading-6">
-                    {step.copy}
-                  </p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-4 grid gap-4 rounded-2xl border border-white/12 bg-[#102f2a] p-5 sm:p-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-8">
-              <div className="flex items-center gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fff8ec] text-[#b04a3c]">
-                  <FileText aria-hidden="true" size={23} />
-                </span>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e8b57b]">
-                    AI Insights
-                  </p>
-                  <h3 className="mt-1 text-xl font-bold">Turn events into understanding</h3>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm leading-6 text-white/68">
-                  Structured adherence history becomes a clear trend report, caregiver
-                  insight, and clinic-visit summary—explaining what changed without
-                  diagnosing or prescribing.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[
-                    [MessageCircle, "Caregiver insight"],
-                    [PhoneCall, "Care alert"],
-                    [FileText, "Clinic-visit note"],
-                  ].map(([Icon, label]) => (
-                    <span
-                      key={label as string}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.055] px-3 py-2 text-[10px] font-bold text-white/76 sm:text-xs"
-                    >
-                      <Icon aria-hidden="true" size={13} />
-                      {label as string}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </details>
-      </section>
+      <AIExplainer />
 
       <section id="together" className="bg-[#173c35] py-20 text-white sm:py-24">
         <div className="mx-auto grid w-full max-w-[1280px] gap-16 px-5 sm:px-8 lg:grid-cols-2 lg:items-center lg:px-12">

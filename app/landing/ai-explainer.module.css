@@ -1,0 +1,128 @@
+.teaser::before {
+  position: absolute;
+  inset: -40% auto auto 43%;
+  width: 38rem;
+  height: 38rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(83 209 175 / 0.18), transparent 67%);
+  content: "";
+  pointer-events: none;
+}
+
+.teaser::after {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgb(23 60 53 / 0.09) 0.7px, transparent 0.7px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to left, black, transparent 68%);
+  content: "";
+  pointer-events: none;
+}
+
+.signalRail {
+  position: absolute;
+  top: 1.75rem;
+  bottom: 1.75rem;
+  left: 2.22rem;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, #9fcfc2 18%, #9fcfc2 82%, transparent);
+}
+
+.dialog {
+  width: min(1480px, calc(100vw - 28px));
+  height: min(94dvh, 980px);
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  color: #24211d;
+  background: #f6f2eb;
+  border: 0;
+  border-radius: 28px;
+  box-shadow: 0 45px 120px -42px rgb(5 18 15 / 0.9);
+}
+
+.dialog[open] {
+  animation: dialog-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dialog::backdrop {
+  background: rgb(10 24 20 / 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.dialogScroller {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: #b9b0a4 transparent;
+  scrollbar-width: thin;
+}
+
+.walkthroughHero::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 78% 18%, rgb(129 216 200 / 0.2), transparent 28%),
+    radial-gradient(rgb(255 255 255 / 0.12) 0.7px, transparent 0.7px);
+  background-size: auto, 19px 19px;
+  mask-image: linear-gradient(to left, black, transparent 70%);
+  content: "";
+  pointer-events: none;
+}
+
+.policyDot {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 5px rgb(255 255 255 / 0.055);
+}
+
+.mint {
+  background: #65d2bc;
+}
+
+.neutral {
+  background: #aeb9b4;
+}
+
+.amber {
+  background: #e8b45f;
+}
+
+.coral {
+  background: #ef8277;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .teaser::before {
+    inset: auto -55% -20% auto;
+    width: 25rem;
+    height: 25rem;
+  }
+
+  .dialog {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog[open] {
+    animation: none;
+  }
+}

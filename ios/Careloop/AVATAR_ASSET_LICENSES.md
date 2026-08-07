@@ -1,15 +1,14 @@
 # Built-in avatar assets
 
-The built-in patient avatars in Careloop are generated with the DiceBear 10.x
-HTTP API and are bundled with the app so no patient data is sent to DiceBear at
-runtime.
+The current patient-avatar collection contains twelve original warm family
+portrait illustrations created for Careloop with OpenAI image generation on
+2026-08-07. Six portraits feature older adults, four feature adults, and two
+feature children. They share a soft gouache storybook style and avoid medical
+props or demographic labels in the product UI.
 
-The following source styles are dedicated to the public domain under CC0 1.0:
+The files are bundled with the app. Careloop does not call an avatar service or
+send patient data to an image provider at runtime.
 
-- **Lorelei** by Lisa Wischofsky — https://www.dicebear.com/styles/lorelei/
-- **Notionists** by Zoish — https://www.dicebear.com/styles/notionists/
-- **Open Peeps** by Pablo Stanley — https://www.dicebear.com/styles/open-peeps/
-- **CC0 1.0 legal text** — https://creativecommons.org/publicdomain/zero/1.0/
-
-Generated avatar PNGs were downloaded on 2026-08-07 from
-`https://api.dicebear.com/10.x/{style}/png` using non-identifying seed names.
+The DiceBear CC0 avatar assets used in Build 8 were removed when this original
+portrait collection replaced them. Legacy preset identifiers are mapped to the
+new portraits so saved Build 8 selections continue to display after upgrading.

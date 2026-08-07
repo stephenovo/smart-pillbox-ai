@@ -129,26 +129,26 @@ function generateMedicationInsightText(params: {
   } = params;
 
   if (highRisk && missedCount > 0) {
-    return `${medicationName} is a high-risk medication with missed events. Caregiver review is strongly recommended.`;
+    return `${medicationName} is marked for high attention, and ${missedCount} scheduled window(s) had no opening recorded.`;
   }
 
   if (trendDirection === "worsening") {
-    return `${medicationName} shows a worsening delay pattern. Recent responses are slower than the user's long-term habit.`;
+    return `${medicationName} shows a later-opening pattern. Recent openings occurred later than the person's longer-term pattern.`;
   }
 
   if (duplicateOpeningCount > 0) {
-    return `${medicationName} has duplicate opening events. This may indicate confusion or repeated access risk that caregivers should review.`;
+    return `${medicationName} recorded ${duplicateOpeningCount} repeat opening event(s) in the analysed history.`;
   }
 
   if (missedCount > 0) {
-    return `${medicationName} has missed events. Caregivers may need to check whether the routine is difficult to follow.`;
+    return `${medicationName} had ${missedCount} scheduled window(s) with no opening recorded.`;
   }
 
   if (delayedCount > 0) {
-    return `${medicationName} is sometimes delayed, but no severe pattern is detected yet. Continue monitoring.`;
+    return `${medicationName} had ${delayedCount} opening(s) recorded after the planned reminder time.`;
   }
 
-  return `${medicationName} shows a stable adherence pattern with no major concern detected.`;
+  return `${medicationName} shows no strong exception pattern in the recorded opening history.`;
 }
 
 export function generateMedicationInsights(
@@ -290,15 +290,15 @@ export function generateCaregiverInsightReport(
     mostConcerningMedication === null
       ? "No adherence history is available for AI insight generation."
       : overallConcernLevel === "high"
-      ? `AI detected a high adherence concern. ${mostConcerningMedication.medicationName} requires the most attention based on missed, delayed, duplicate, or worsening adherence patterns.`
+      ? `${mostConcerningMedication.medicationName} has the highest activity-exception score, based on windows without an opening, later openings, repeat openings, or a changing timing pattern.`
       : overallConcernLevel === "medium"
-      ? `AI detected moderate adherence concerns. ${mostConcerningMedication.medicationName} should be monitored more closely.`
-      : "AI detected a generally stable adherence pattern. Continue routine monitoring.";
+      ? `${mostConcerningMedication.medicationName} has some activity exceptions in the analysed opening history.`
+      : "The analysed pillbox opening history shows no strong exception pattern.";
 
   const clinicVisitSummary =
     mostConcerningMedication === null
       ? "No clinic summary can be generated because there is no adherence history."
-      : `For the next caregiver or clinic review, highlight ${mostConcerningMedication.medicationName}. The system observed ${totalMissedCount} missed event(s), ${totalDelayedCount} delayed event(s), and ${totalDuplicateOpeningCount} duplicate opening event(s) across the analysed history.`;
+      : `The analysed history contains ${totalMissedCount} scheduled window(s) without an opening, ${totalDelayedCount} later opening(s), and ${totalDuplicateOpeningCount} repeat opening event(s). ${mostConcerningMedication.medicationName} has the highest activity-exception score.`;
 
   return {
     patientId,
@@ -320,19 +320,15 @@ export function buildCaregiverInsightApiPrompt(
   report: CaregiverInsightReport
 ): string {
   return `
-You are helping generate a caregiver-friendly medication adherence summary.
+You are helping generate a family-friendly AI insight about recorded pillbox activity.
 
 Important safety boundary:
-Do not decide medication schedule, dosage, prescription, or whether a medication is clinically safe.
-Only summarise adherence patterns based on the structured report.
+- Only describe observations and patterns in compartment openings and timing.
+- Do not claim that an opening means medicine was taken or swallowed.
+- Do not diagnose, assess clinical safety, or recommend any action.
+- Do not decide or suggest medication schedule, dosage, prescription, or routine changes.
 
 Structured adherence report:
 ${JSON.stringify(report, null, 2)}
-
-Write:
-1. A short caregiver summary.
-2. The main medication routine that needs attention.
-3. A short clinic-visit note.
-4. A reminder that caregivers or healthcare professionals should review any high-risk concern.
 `;
 }

@@ -268,6 +268,51 @@ final class CareStore: ObservableObject {
         return newPatient
     }
 
+    @discardableResult
+    func removePillbox(from patientID: String) -> CarePatient? {
+        guard let index = patients.firstIndex(where: { $0.id == patientID }) else {
+            return nil
+        }
+
+        let patient = patients[index]
+        let disconnectedPatient = CarePatient(
+            id: patient.id,
+            name: patient.name,
+            firstName: patient.firstName,
+            initials: patient.initials,
+            age: patient.age,
+            city: patient.city,
+            relation: patient.relation,
+            livingSituation: patient.livingSituation,
+            phone: patient.phone,
+            wellbeing: .watch,
+            wellbeingNote: "No pillbox is connected right now.",
+            snapshot: PatientSnapshot(
+                dosesTaken: 0,
+                dosesTotal: 0,
+                lastEventLabel: "Pillbox removed",
+                lastEventTime: "Just now"
+            ),
+            deviceName: "No pillbox connected",
+            batteryPercent: 0,
+            weeklyRhythm: patient.weeklyRhythm,
+            deviceID: "",
+            isDemoConnected: false,
+            avatarPresetID: patient.avatarPresetID,
+            customAvatarData: patient.customAvatarData
+        )
+
+        patients[index] = disconnectedPatient
+        medicationPlans[patientID] = []
+        if selectedPatientID == patientID {
+            deviceID = ""
+            resetSelectedDeviceState()
+            connectionMessage = "The pillbox was removed from this iPhone."
+        }
+        persistCareProfiles()
+        return disconnectedPatient
+    }
+
     func updateSelectedPatientAvatar(
         presetID: String?,
         customAvatarData: Data?
@@ -334,6 +379,13 @@ final class CareStore: ObservableObject {
     func loadInsightReport(force: Bool = false) async {
         guard !isLoadingInsightReport else { return }
         let patient = selectedPatient
+        guard patient.hasConnectedPillbox else {
+            insightReport = nil
+            generatedInsight = nil
+            generatedInsightProvider = nil
+            insightErrorMessage = nil
+            return
+        }
         guard force || insightReport?.patientId != patient.id else { return }
 
         isLoadingInsightReport = true
@@ -516,6 +568,11 @@ final class CareStore: ObservableObject {
     func refresh() async {
         guard !isRefreshing else { return }
         let patient = selectedPatient
+        guard patient.hasConnectedPillbox else {
+            resetSelectedDeviceState()
+            connectionMessage = "Connect a pillbox to receive activity updates."
+            return
+        }
         isRefreshing = true
         defer { isRefreshing = false }
 

@@ -94,25 +94,41 @@ struct CareAvatarPreset: Identifiable, Hashable {
     let assetName: String
 
     static let all: [CareAvatarPreset] = [
-        CareAvatarPreset(id: "lorelei-ari", assetName: "avatar_lorelei_ari"),
-        CareAvatarPreset(id: "lorelei-eli", assetName: "avatar_lorelei_eli"),
-        CareAvatarPreset(id: "lorelei-luna", assetName: "avatar_lorelei_luna"),
-        CareAvatarPreset(id: "lorelei-noa", assetName: "avatar_lorelei_noa"),
-        CareAvatarPreset(id: "lorelei-river", assetName: "avatar_lorelei_river"),
-        CareAvatarPreset(id: "notionists-iman", assetName: "avatar_notionists_iman"),
-        CareAvatarPreset(id: "notionists-kai", assetName: "avatar_notionists_kai"),
-        CareAvatarPreset(id: "notionists-leo", assetName: "avatar_notionists_leo"),
-        CareAvatarPreset(id: "notionists-mei", assetName: "avatar_notionists_mei"),
-        CareAvatarPreset(id: "notionists-sam", assetName: "avatar_notionists_sam"),
-        CareAvatarPreset(id: "peeps-june", assetName: "avatar_peeps_june"),
-        CareAvatarPreset(id: "peeps-nana", assetName: "avatar_peeps_nana"),
-        CareAvatarPreset(id: "peeps-remy", assetName: "avatar_peeps_remy"),
-        CareAvatarPreset(id: "peeps-theo", assetName: "avatar_peeps_theo"),
-        CareAvatarPreset(id: "peeps-zuri", assetName: "avatar_peeps_zuri"),
+        CareAvatarPreset(id: "family-morning", assetName: "avatar_family_senior_east_asian_woman"),
+        CareAvatarPreset(id: "family-garden", assetName: "avatar_family_senior_black_woman"),
+        CareAvatarPreset(id: "family-sunrise", assetName: "avatar_family_senior_south_asian_man"),
+        CareAvatarPreset(id: "family-sky", assetName: "avatar_family_senior_east_asian_man"),
+        CareAvatarPreset(id: "family-lavender", assetName: "avatar_family_senior_white_woman"),
+        CareAvatarPreset(id: "family-mint", assetName: "avatar_family_senior_middle_eastern_woman"),
+        CareAvatarPreset(id: "family-coral", assetName: "avatar_family_adult_east_asian_woman"),
+        CareAvatarPreset(id: "family-sage", assetName: "avatar_family_adult_black_man"),
+        CareAvatarPreset(id: "family-heather", assetName: "avatar_family_adult_south_asian_woman"),
+        CareAvatarPreset(id: "family-blue", assetName: "avatar_family_adult_latino_man"),
+        CareAvatarPreset(id: "family-gold", assetName: "avatar_family_child_east_asian_girl"),
+        CareAvatarPreset(id: "family-teal", assetName: "avatar_family_child_black_boy"),
+    ]
+
+    private static let legacyAliases: [String: String] = [
+        "lorelei-ari": "family-sky",
+        "lorelei-eli": "family-coral",
+        "lorelei-luna": "family-sunrise",
+        "lorelei-noa": "family-gold",
+        "lorelei-river": "family-morning",
+        "notionists-iman": "family-mint",
+        "notionists-kai": "family-sage",
+        "notionists-leo": "family-blue",
+        "notionists-mei": "family-heather",
+        "notionists-sam": "family-garden",
+        "peeps-june": "family-lavender",
+        "peeps-nana": "family-morning",
+        "peeps-remy": "family-sunrise",
+        "peeps-theo": "family-teal",
+        "peeps-zuri": "family-gold",
     ]
 
     static func preset(for id: String?) -> CareAvatarPreset? {
-        all.first(where: { $0.id == id })
+        let resolvedID = id.flatMap { legacyAliases[$0] } ?? id
+        return all.first(where: { $0.id == resolvedID })
     }
 
     static func defaultID(for patientID: String) -> String {
@@ -173,7 +189,7 @@ struct CarePatient: Codable, Identifiable, Hashable {
             weeklyRhythm: [100, 100, 75, 100, 50, 75, 50],
             deviceID: "PILLBOX-DEMO-001",
             isDemoConnected: false,
-            avatarPresetID: "peeps-nana",
+            avatarPresetID: "family-morning",
             customAvatarData: nil
         ),
     ]

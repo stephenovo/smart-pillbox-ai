@@ -19,6 +19,7 @@ struct PillboxSetupView: View {
     @State private var avatarPresetID: String?
     @State private var customAvatarData: Data?
     @State private var showingAvatarPicker = false
+    @State private var showingRemoveConfirmation = false
     @State private var isSaving = false
     @State private var guidebookPatient: CarePatient?
 
@@ -60,6 +61,9 @@ struct PillboxSetupView: View {
                     deviceCard
                     medicationPlanSection
                     safetyNote
+                    if existingPatientID != nil && !deviceID.isEmpty {
+                        removePillboxSection
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
@@ -91,6 +95,14 @@ struct PillboxSetupView: View {
                     customAvatarData: $customAvatarData
                 )
                 .presentationDetents([.large])
+            }
+            .alert("Remove this pillbox?", isPresented: $showingRemoveConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Remove pillbox", role: .destructive) {
+                    removePillbox()
+                }
+            } message: {
+                Text("This removes \(deviceName) and its medication routine from this iPhone. \(fullName)'s profile, avatar and Care Journal entries will stay.")
             }
             .safeAreaInset(edge: .bottom) {
                 saveBar
@@ -317,6 +329,32 @@ struct PillboxSetupView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
+    private var removePillboxSection: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            Text("Remove pillbox")
+                .font(.headline)
+                .foregroundStyle(Color.careInk)
+            Text("Disconnect this device and clear its local medication routine. The person and Care Journal entries will remain.")
+                .font(.caption)
+                .foregroundStyle(Color.careInkSoft)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button(role: .destructive) {
+                showingRemoveConfirmation = true
+            } label: {
+                Label("Remove this pillbox", systemImage: "trash")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.careCoralSoft)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .careCard()
+    }
+
     private var saveBar: some View {
         VStack(spacing: 8) {
             if !hasMedication {
@@ -449,6 +487,14 @@ struct PillboxSetupView: View {
                 onComplete(patient)
             }
         }
+    }
+
+    private func removePillbox() {
+        guard let existingPatientID,
+              let patient = store.removePillbox(from: existingPatientID) else {
+            return
+        }
+        onComplete(patient)
     }
 
     private static let emptyPlan: [MedicationSlot] = [

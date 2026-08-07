@@ -49,7 +49,7 @@ struct SettingsView: View {
                         showingModeChooser = true
                     } label: {
                         HStack {
-                            Label("Explore or switch care mode", systemImage: "arrow.left.arrow.right")
+                            Label("Explore or switch care mode", systemImage: "person.2.circle.fill")
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
                             Image(systemName: "chevron.right")
@@ -270,7 +270,7 @@ struct SettingsView: View {
                             Circle()
                                 .fill(Color.careCoralSoft)
                                 .frame(width: 68, height: 68)
-                            Image(systemName: pendingMode?.symbol ?? "arrow.left.arrow.right")
+                            Image(systemName: pendingMode?.symbol ?? "person.2.circle.fill")
                                 .font(.system(size: 25, weight: .semibold))
                                 .foregroundStyle(Color.careCoralInk)
                         }
@@ -314,7 +314,7 @@ struct SettingsView: View {
         if pendingMode == .myCare {
             return "My Care is a calmer personal experience for the person taking the medicine. Circle Care data and the medication plan will stay unchanged."
         }
-        return "Circle Care is the caregiver experience for family oversight, AI briefings and handoff notes. My Care data and the medication plan will stay unchanged."
+        return "Circle Care is the caregiver experience for family oversight, AI activity insights and handoff notes. My Care data and the medication plan will stay unchanged."
     }
 
     private func beginModeSwitch() {
@@ -409,7 +409,7 @@ private struct CareModeChooserView: View {
                         background: .careCoralSoft,
                         points: [
                             "Family and caregiver overview",
-                            "Caregiver AI briefings and patterns",
+                            "AI activity insights and patterns",
                             "Journal entries for calls and handoffs",
                         ]
                     )

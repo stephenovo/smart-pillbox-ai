@@ -20,7 +20,7 @@
     <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
     <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
-    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%208-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 8" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%209-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 9" />
   </p>
 </div>
 
@@ -39,7 +39,7 @@ The product is intentionally built around two warm, practical experiences:
 
 | Experience | Designed for | What it keeps in focus |
 | --- | --- | --- |
-| **Circle Care** | Family members and caregivers | Multiple people, medication risk, device activity, caregiver briefings, care journal, and follow-up actions |
+| **Circle Care** | Family members and caregivers | Multiple people, medication activity, AI observations, care journal, and clinic handoff context |
 | **My Care** | Someone managing their own medicines | Larger type, fewer controls, today's progress, the next dose, and one simple AI check-in |
 
 > **The loop in one sentence:** configure a routine, receive a reminder, record
@@ -70,7 +70,7 @@ flowchart LR
 | **AI insight** | Rule-based adherence analysis plus optional DeepSeek-generated caregiver summaries and clinic notes |
 | **Hardware bridge** | ESP32-S3 starter firmware, reminder state, lid-event upload, device heartbeat, and the browser hardware simulator |
 | **Profile and persistence** | `/api/profile`, local profile recovery, medication plan storage, hardware event storage, and native UserDefaults persistence |
-| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, new-pillbox guidebooks, caregiver briefings, deliberate mode switching, CC0 character avatars, local photo avatars, and Build 8 testing |
+| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, new-pillbox guidebooks, bounded AI activity insights, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, and Build 9 testing |
 | **Safety boundary** | The system records compartment or lid openings; it does not claim that a person swallowed a medicine or replace clinical advice |
 
 ## Screens and experiences
@@ -287,7 +287,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-The current native release line is `1.0 (8)`, distributed through TestFlight
+The current native release line is `1.0 (9)`, distributed through TestFlight
 to the internal testing group.
 
 ## Documentation
@@ -305,7 +305,7 @@ to the internal testing group.
 - [x] ESP32-S3 firmware and verified two-slot hardware MVP path
 - [x] Deterministic medication safety states and caregiver insight reports
 - [x] Profile sync with local offline recovery
-- [x] Native iOS TestFlight Build 8
+- [x] Native iOS TestFlight Build 9
 - [ ] Expand hardware from the MVP loop to a production-ready enclosure
 - [ ] Collect real-device adherence history for model calibration
 - [ ] Add production authentication, database persistence, and observability

@@ -109,10 +109,10 @@ struct PatientAvatarPickerView: View {
                     photoSection
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Choose a character")
+                        Text("Choose a family portrait")
                             .font(.headline)
                             .foregroundStyle(Color.careInk)
-                        Text("Every character is available to every person—pick the one that feels most like them.")
+                        Text("Warm, familiar portraits for every generation. Pick the one that feels most like them.")
                             .font(.caption)
                             .foregroundStyle(Color.careInkSoft)
                             .fixedSize(horizontal: false, vertical: true)
@@ -145,7 +145,7 @@ struct PatientAvatarPickerView: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Character avatar option \(index + 1)")
+                                .accessibilityLabel("Family portrait option \(index + 1)")
                                 .accessibilityAddTraits(
                                     workingAvatarData == nil && workingPresetID == preset.id
                                         ? .isSelected
@@ -156,7 +156,7 @@ struct PatientAvatarPickerView: View {
                     }
 
                     Label(
-                        "Built-in artwork is bundled under CC0 1.0. Photos are processed and stored locally, and the app doesn’t upload them.",
+                        "Original portraits are bundled with the app. Photos are processed and stored locally, and the app doesn’t upload them.",
                         systemImage: "checkmark.shield.fill"
                     )
                     .font(.caption)
@@ -957,9 +957,9 @@ struct PillboxGuidebookView: View {
                     id: 1,
                     symbol: "heart.fill",
                     eyebrow: "STEP 2 · CAREGIVER AI",
-                    title: "Read the caregiver briefing",
-                    description: "AI turns recent pillbox activity into a warm summary of what changed and what you may want to do next.",
-                    detail: "It supports your judgement. It never changes medication instructions or replaces clinical advice.",
+                    title: "Review AI activity insights",
+                    description: "AI turns recent pillbox openings and timing into clear observations about what changed and which patterns are appearing.",
+                    detail: "It cannot confirm medicine was taken, give medical advice or change medication instructions.",
                     tint: .careMintInk,
                     background: .careMintSoft
                 ),

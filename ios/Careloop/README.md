@@ -44,13 +44,16 @@ Mac must be on the same network. Use an HTTPS API endpoint for production.
   controls, detailed risk reports and the care journal stay in `Circle Care`.
 - A new pillbox setup finishes with a three-step guidebook tailored to the
   active care mode.
-- Each pillbox owner can use one of 15 bundled CC0 character avatars or a
-  photo selected from the iPhone. Photos are cropped, compressed and stored
+- Each pillbox owner can use one of 12 original warm family portraits or a
+  photo selected from the iPhone. Six portraits feature older adults, with
+  adult and child options also included. Photos are cropped, compressed and stored
   locally without being uploaded by the app; both care modes show the same saved avatar. See
   [AVATAR_ASSET_LICENSES.md](AVATAR_ASSET_LICENSES.md) for source details.
-- Circle Care's `Caregiver AI` combines an automatic caregiver briefing,
-  medication patterns, clinic handoff summary, and a human-written care
-  journal for calls, visits, and family handoffs.
+- Pillbox setup can remove a connected device and its local medication routine
+  while keeping the person's profile, avatar and Care Journal entries.
+- Circle Care's `Caregiver AI` combines bounded AI observations of opening and
+  timing patterns, a clinic handoff summary, and a human-written care journal.
+  It does not confirm ingestion, diagnose, recommend actions, or change medication instructions.
 - Margaret reads live events, device state and medication plan from the
   existing hardware API.
 - The caregiver profile can be edited from the fourth, native Settings tab.

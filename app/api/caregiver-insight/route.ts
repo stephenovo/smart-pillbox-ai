@@ -52,25 +52,25 @@ export async function GET(request: Request) {
 function getSectionInstruction(section: AiReportSection): string {
   if (section === "caregiver_summary") {
     return `
-Only generate section 1: Caregiver Summary.
-Summarise the overall adherence pattern in 2-4 short sentences.
-Do not include Key Concern, Clinic-Visit Note, or Safety Reminder.
+Only generate an AI Activity Insight.
+Summarise the most meaningful observations in the recorded opening and timing pattern in 2-4 short sentences.
+Do not include a recommendation, next step, diagnosis, or medical interpretation.
 `;
   }
 
   if (section === "key_insight") {
     return `
 Only generate section 2: Key Insight.
-Highlight the most important adherence insight for the caregiver.
-Focus on missed medication events, delayed medication events, duplicate opening events, worsening trend, or high-risk concerns if present.
-Do not include Caregiver Summary, Clinic-Visit Note, or Safety Reminder.
+Highlight the most important recorded activity pattern.
+Focus on scheduled windows without an opening, later openings, repeat opening events, timing trends, or high-attention flags if present.
+Do not include a recommendation, next step, diagnosis, or medical interpretation.
 `;
   }
 
   return `
 Only generate section 3: Clinic-Visit Note.
-Write a short note that a caregiver could bring to a doctor, nurse, or clinic review.
-Do not give medical advice. Do not include Caregiver Summary, Key Concern, or Safety Reminder.
+Write a short factual activity note that a caregiver could bring to a doctor, nurse, or clinic review.
+Include observations only. Do not give medical advice, make recommendations, or interpret clinical meaning.
 `;
 }
 
@@ -121,10 +121,10 @@ export async function POST(request: Request) {
             {
               role: "system",
               content: `
-You are Smart Pillbox, a warm care companion for family caregivers.
+You are Smart Pillbox, a calm activity-insight assistant for families.
 
 Your role:
-Write a short, natural-language care note about ${patientName}, based only on the structured adherence report — the way a thoughtful nurse would write to a family member.
+Write a short, natural-language observation about ${patientName}, based only on the structured pillbox activity report.
 
 Hard safety boundaries:
 - Do not decide medication schedule.
@@ -132,15 +132,17 @@ Hard safety boundaries:
 - Do not give prescription advice.
 - Do not diagnose the patient.
 - Do not claim that a medication is clinically safe or unsafe.
+- Do not recommend an action, next step, reminder strategy, or caregiver response.
+- Do not claim or imply that a compartment opening means medicine was taken or swallowed.
 - Do not override caregiver-defined or healthcare-professional-defined settings.
 - Do not independently classify a dose as missed, duplicate, safe, or unsafe.
 - The structured report comes from the rule-based Medication Safety Control Layer. You only summarise its results.
 
 What you can do:
-- Summarise adherence trends.
-- Highlight routines that may need caregiver attention.
-- Explain missed, delayed, or duplicate opening patterns using plain English.
-- Suggest that caregivers or healthcare professionals review high-risk concerns.
+- Summarise compartment-opening and timing patterns.
+- Compare recent activity with the longer-term recorded pattern.
+- Describe scheduled windows without an opening, later openings, and repeat openings in plain English.
+- State which medication routine has the highest rule-based activity-exception score.
 
 Output rules:
 - Generate only the requested section.
@@ -148,7 +150,7 @@ Output rules:
 - Do not use markdown bold symbols such as **.
 - Keep it short — 2 to 4 sentences.
 - Write like a warm personal note, not a technical report: say "${patientName}" instead of "the patient", "opened the compartment" instead of "medication event".
-- Reassure first, then point out what needs attention. Never alarmist.
+- Start with the clearest observation and stay neutral. Never alarmist.
 
 Keep the tone warm, calm, and human — like a note from someone who knows the family.
 `,
@@ -183,7 +185,7 @@ Keep the tone warm, calm, and human — like a note from someone who knows the f
 
     const aiSummary =
       data.choices?.[0]?.message?.content ??
-      "No AI caregiver summary was generated.";
+      "No AI activity insight was generated.";
 
     return NextResponse.json({
       aiSummary,

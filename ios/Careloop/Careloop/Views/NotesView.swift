@@ -179,10 +179,10 @@ struct NotesView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Your caregiver briefing")
+                    Text("AI insights")
                         .font(.headline)
                         .foregroundStyle(Color.careInk)
-                    Text("A thoughtful read of \(store.selectedPatient.firstName)'s pillbox activity — what matters, why, and what you could do next.")
+                    Text("Observations from \(store.selectedPatient.firstName)'s pillbox openings, timing and medication routine patterns.")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                         .fixedSize(horizontal: false, vertical: true)
@@ -205,7 +205,7 @@ struct NotesView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             } else if let generatedInsight = store.generatedInsight {
                 VStack(alignment: .leading, spacing: 9) {
-                    Text("WHAT I NOTICED")
+                    Text("ACTIVITY OBSERVATION")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Color.careCoralInk)
                     Text(generatedInsight)
@@ -225,10 +225,10 @@ struct NotesView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             } else {
                 VStack(alignment: .leading, spacing: 7) {
-                    Text("WHAT I NOTICED")
+                    Text("ACTIVITY OBSERVATION")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Color.careCoralInk)
-                    Text(caregiverBriefingFallback)
+                    Text(aiInsightFallback)
                         .font(.subheadline)
                         .foregroundStyle(Color.careInk)
                         .lineSpacing(3)
@@ -240,17 +240,17 @@ struct NotesView: View {
             }
 
             HStack(alignment: .top, spacing: 11) {
-                Image(systemName: "heart.fill")
+                Image(systemName: "shield.checkered")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color.careMintInk)
                     .frame(width: 30, height: 30)
                     .background(Color.careMintSoft)
                     .clipShape(Circle())
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("A gentle next step")
+                    Text("Observation, not medical advice")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color.careMintInk)
-                    Text(caregiverNextStep)
+                    Text("AI describes recorded opening activity and timing. It cannot confirm that medicine was taken, diagnose a condition, or recommend dose or schedule changes.")
                         .font(.subheadline)
                         .foregroundStyle(Color.careInkSoft)
                         .fixedSize(horizontal: false, vertical: true)
@@ -268,7 +268,7 @@ struct NotesView: View {
                 Task { await store.generateInsight() }
             } label: {
                 Label(
-                    store.generatedInsight == nil ? "Write fresh caregiver briefing" : "Refresh caregiver briefing",
+                    store.generatedInsight == nil ? "Generate AI insight" : "Refresh AI insight",
                     systemImage: "sparkles"
                 )
                 .font(.subheadline.weight(.semibold))
@@ -290,7 +290,7 @@ struct NotesView: View {
     private var medicationRiskSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             CareSectionHeader(
-                title: "Patterns behind the briefing",
+                title: "Medication activity patterns",
                 trailing: store.insightReport.map { "\($0.totalRecordsAnalysed) records" }
             )
 
@@ -413,27 +413,40 @@ struct NotesView: View {
         .padding(.horizontal, 16)
     }
 
-    private var caregiverBriefingFallback: String {
+    private var aiInsightFallback: String {
         if let status = store.attentionStatuses.first {
-            return "\(status.slot.medication) is the main routine to look at today. \(status.detail)"
+            return "\(status.slot.medication): \(activityObservation(for: status))"
         }
         if store.takenCount > 0 {
-            return "\(store.selectedPatient.firstName)'s routine looks steady today. \(store.takenCount) dose\(store.takenCount == 1 ? " has" : "s have") been recorded."
+            return "\(store.selectedPatient.firstName)'s pillbox has recorded \(store.takenCount) scheduled compartment opening\(store.takenCount == 1 ? "" : "s") today, with no current exception pattern."
         }
-        return "I'm waiting for today's first pillbox update. Once activity arrives, I'll turn it into a short caregiver briefing here."
+        return "No pillbox opening activity has been received today. An AI observation will appear after the device reports activity."
     }
 
-    private var caregiverNextStep: String {
-        if store.attentionStatuses.contains(where: { $0.kind == .openedTwice || $0.kind == .wrongCompartment }) {
-            return "Check in before another dose and confirm the compartment or instructions together."
+    private func activityObservation(for status: DoseStatus) -> String {
+        switch status.kind {
+        case .openedTwice:
+            return "the compartment recorded \(status.openingCount) openings in the current schedule window."
+        case .wrongCompartment:
+            return "the compartment opened during a reminder assigned to a different compartment."
+        case .missed:
+            return "no opening was recorded by the end of the \(status.slot.scheduledTime) reminder window."
+        case .openedEarly:
+            return status.firstOpenTime.map { "the compartment opened before its reminder, at \($0)." }
+                ?? "the compartment opened before its reminder."
+        case .takenLate:
+            return status.delayMinutes.map { "the first opening was recorded \($0) minutes after the reminder." }
+                ?? "the first opening was recorded after the planned time."
+        case .takenOnTime:
+            return status.firstOpenTime.map { "an opening was recorded at \($0), within the reminder window." }
+                ?? "an opening was recorded within the reminder window."
+        case .dueSoon:
+            return "the reminder window is active or approaching."
+        case .upcoming:
+            return "the scheduled reminder is still upcoming."
+        case .waitingForDevice:
+            return "the device has not reported today's opening history yet."
         }
-        if store.attentionStatuses.contains(where: { $0.kind == .missed }) {
-            return "A calm message or quick call may help — ask what got in the way before reminding."
-        }
-        if store.isDeviceSynced {
-            return "No urgent action right now. Keep an eye on the next scheduled routine."
-        }
-        return "Make sure the pillbox is powered and connected, then refresh this briefing."
     }
 }
 
@@ -506,15 +519,15 @@ private struct MedicationInsightCard: View {
     private var insightSummary: String {
         var details: [String] = []
         if insight.missedCount > 0 {
-            details.append("\(insight.missedCount) missed")
+            details.append("\(insight.missedCount) without an opening")
         }
         if insight.delayedCount > 0 {
-            details.append("\(insight.delayedCount) late")
+            details.append("\(insight.delayedCount) later openings")
         }
         if insight.duplicateOpeningCount > 0 {
-            details.append("\(insight.duplicateOpeningCount) opened twice")
+            details.append("\(insight.duplicateOpeningCount) repeat openings")
         }
-        return details.isEmpty ? "Recent routine looks steady" : details.joined(separator: " · ")
+        return details.isEmpty ? "No exception pattern in recent openings" : details.joined(separator: " · ")
     }
 }
 

@@ -244,6 +244,19 @@ struct HardwarePlanResponse: Codable {
     let serverTime: String
 }
 
+struct PillboxConnectionAccount: Codable {
+    let connectCode: String
+    let deviceId: String
+    let deviceName: String
+    let accountType: String
+}
+
+struct PillboxConnectionResponse: Codable {
+    let connected: Bool
+    let account: PillboxConnectionAccount
+    let serverTime: String
+}
+
 enum DoseStatusKind: String, Codable {
     case takenOnTime
     case takenLate

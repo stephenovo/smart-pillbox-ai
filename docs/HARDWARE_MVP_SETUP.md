@@ -165,11 +165,16 @@ hardware/esp32-s3/smart_pillbox_demo/
 ```cpp
 #define WIFI_SSID "你们的 Wi-Fi 名称"
 #define WIFI_PASSWORD "你们的 Wi-Fi 密码"
-#define SERVER_BASE_URL "http://电脑局域网IP:3000"
-#define DEVICE_ID "PILLBOX-DEMO-001"
+#define SERVER_BASE_URL "https://smartpb.me"
+#define DEVICE_ID "PILLBOX-20260808"
 ```
 
-Mac 查询 Wi-Fi IP：
+在 iPhone App 新增 Pillbox 时输入连接码 `20260808`。App 会绑定同一个
+`PILLBOX-20260808` 账户；Studio 地址是 `https://smartpb.me/studio`。硬件上传的
+开盖记录、心跳和遥测，以及 App 设置的两格用药计划都会保存在同一云端账户。
+
+如需完全离线的本地开发，才把 `SERVER_BASE_URL` 改为
+`http://电脑局域网IP:3000`。Mac 查询 Wi-Fi IP：
 
 ```bash
 ipconfig getifaddr en0
@@ -177,9 +182,9 @@ ipconfig getifaddr en0
 
 如果没有输出，再试 `ipconfig getifaddr en1`。Windows 用 `ipconfig`，找无线网卡的 IPv4 Address。
 
-`SERVER_BASE_URL` 不能写 `localhost` 或 `127.0.0.1`，因为对 ESP32 来说那代表 ESP32 自己。
+本地开发时 `SERVER_BASE_URL` 不能写 `localhost` 或 `127.0.0.1`，因为对 ESP32 来说那代表 ESP32 自己。
 
-在项目根目录启动网页：
+云端模式无需在电脑启动网页。仅本地开发时，在项目根目录启动：
 
 ```bash
 npm install
@@ -194,12 +199,12 @@ npm run dev -- -H 0.0.0.0 -p 3000
 2. 确认 `config.h` 和 `.ino` 在同一文件夹。
 3. 点击 Verify；通过后点击 Upload。
 4. 打开 Serial Monitor，确认出现 `[WiFi] Connected` 和 ESP32 IP。
-5. 电脑浏览器打开网页，进入 `Pillbox`。
+5. 打开 `https://smartpb.me/studio`，确认连接码为 `20260808`。
 6. 在 `Hardware reminder` 选择 `Slot 1`，点击 `Start`。
 7. 最迟约 2 秒后，Slot 1 绿灯亮、蜂鸣器响、OLED 显示 `OPEN SLOT 1`。
 8. 打开 Slot 1。绿灯和蜂鸣器应立即停止。
 9. OLED 依次显示 `UPLOADING`、`UPLOADED`。
-10. 网页 Event history 和 Dashboard 的 Device Event Log 应在约 2.5 秒内出现 Hardware 事件。
+10. Studio 的 Recent device events 和已绑定 iPhone App 应出现 Hardware 事件（App 最长约 10 秒刷新）。
 
 只有这 10 步连续成功两次，才开始扩展第二格。
 
@@ -227,7 +232,7 @@ const bool SLOT_ENABLED[8] = {
 
 ## 11. 初始化计划和自动提醒
 
-`Initialisation` 页面点击 Save 后会把当前 8 格计划发送到 `/api/hardware/plan`。ESP32 轮询设备状态时，服务器会在计划的 `HH:mm` 到达时激活当天该 Slot 一次。
+App 的 Pillbox Setup 保存后会把当前两格计划发送到 `/api/hardware/plan`。ESP32 轮询设备状态时，服务器会在计划的 `HH:mm` 到达时激活当天该 Slot 一次。Studio 的 App link test 也可以写入明确标记的测试开盖记录，用来在没有触碰硬件时确认 App 通道。
 
 演示现场推荐使用 `Pillbox > Hardware reminder > Start` 立即触发，避免等待整分钟。计划触发仍然保留，用于展示正常流程。
 
@@ -236,31 +241,31 @@ const bool SLOT_ENABLED[8] = {
 查看设备状态：
 
 ```bash
-curl 'http://localhost:3000/api/hardware/state?deviceId=PILLBOX-DEMO-001'
+curl 'https://smartpb.me/api/hardware/state?deviceId=PILLBOX-20260808'
 ```
 
 启动 Slot 3：
 
 ```bash
-curl -X POST http://localhost:3000/api/hardware/state \
+curl -X POST https://smartpb.me/api/hardware/state \
   -H 'Content-Type: application/json' \
-  -d '{"deviceId":"PILLBOX-DEMO-001","status":"reminding","activeSlot":3}'
+  -d '{"deviceId":"PILLBOX-20260808","status":"reminding","activeSlot":1}'
 ```
 
 模拟 ESP32 上传 Slot 5 错误开盖：
 
 ```bash
-curl -X POST http://localhost:3000/api/hardware/events \
+curl -X POST https://smartpb.me/api/hardware/events \
   -H 'Content-Type: application/json' \
-  -d '{"deviceId":"PILLBOX-DEMO-001","slotId":5,"eventType":"wrong_slot_open","firmwareVersion":"manual-test"}'
+  -d '{"deviceId":"PILLBOX-20260808","slotId":2,"eventType":"wrong_slot_open","firmwareVersion":"manual-test"}'
 ```
 
 再上传正确 Slot 3，设备状态应自动回到 idle：
 
 ```bash
-curl -X POST http://localhost:3000/api/hardware/events \
+curl -X POST https://smartpb.me/api/hardware/events \
   -H 'Content-Type: application/json' \
-  -d '{"deviceId":"PILLBOX-DEMO-001","slotId":3,"eventType":"lid_open","firmwareVersion":"manual-test"}'
+  -d '{"deviceId":"PILLBOX-20260808","slotId":1,"eventType":"lid_open","firmwareVersion":"manual-test"}'
 ```
 
 ## 13. 常见故障
@@ -269,7 +274,7 @@ curl -X POST http://localhost:3000/api/hardware/events \
 |---|---|
 | ESP32 不上电 | USB 线是否只支持充电、端口是否选错 |
 | Wi-Fi 一直离线 | 账号密码、2.4 GHz 网络、电脑和 ESP32 是否同网段 |
-| 手机能开网页但 ESP32 不能 POST | `SERVER_BASE_URL`、macOS 防火墙、3000 端口 |
+| ESP32 不能 POST 云端 | 2.4 GHz Wi-Fi、DNS、设备时钟和 `https://smartpb.me` 是否可访问 |
 | 传感器状态相反 | 切换 `REED_CLOSED_LEVEL` LOW/HIGH |
 | 一次开盖出现多条 | 磁铁位置、线材松动；服务端另有 1.5 秒去重 |
 | 未接的格子乱报 | 对应 `SLOT_ENABLED` 必须保持 false |
@@ -277,7 +282,7 @@ curl -X POST http://localhost:3000/api/hardware/events \
 | 蜂鸣器不响 | 是否为有源高电平模块、VCC 电压、IN 是否接 GPIO 38 |
 | OLED 黑屏 | SDA/SCL、0x3C/0x3D 地址、供电和共地 |
 | 网页一直 Never connected | 固件是否成功 GET `/api/hardware/state?...&heartbeat=1` |
-| 事件在重启后仍异常消失 | 检查项目的 `.data/hardware-demo.json` 是否可写；它只是本地 demo 存储，不是生产数据库 |
+| 云端事件没有出现在 App | 确认 App 用 `20260808` 绑定、固件 Device ID 是 `PILLBOX-20260808`，等待 App 下一次刷新 |
 
 ## 14. 现场演示脚本
 

@@ -14,6 +14,12 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "kv_namespaces": [
+    {
+      "binding": "HARDWARE_DATA",
+      "id": "f1dce5039911446bb6893e3bc807abb0"
+    }
+  ],
   "observability": {
     "enabled": true
   }

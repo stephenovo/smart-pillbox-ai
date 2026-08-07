@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import {
-  getHardwarePlan,
-  setHardwarePlan,
-} from "../../../../src/lib/hardwareEventStore";
+  getCloudHardwarePlan,
+  setCloudHardwarePlan,
+} from "../../../../src/lib/hardwareCloudStore";
 import {
   DEMO_DEVICE_ID,
   validateHardwarePlanPayload,
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const response: HardwarePlanApiResponse = {
     deviceId,
     serverTime: new Date().toISOString(),
-    slots: getHardwarePlan(deviceId),
+    slots: await getCloudHardwarePlan(deviceId),
   };
 
   return jsonResponse(response);
@@ -54,7 +54,10 @@ export async function POST(request: Request) {
     return jsonResponse({ error: result.error }, { status: 400 });
   }
 
-  const slots = setHardwarePlan(result.payload.deviceId, result.payload.slots);
+  const slots = await setCloudHardwarePlan(
+    result.payload.deviceId,
+    result.payload.slots
+  );
   return jsonResponse({
     deviceId: result.payload.deviceId,
     slots,

@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import {
-  addHardwareOpeningEvent,
-  clearHardwareOpeningEvents,
-  getHardwareOpeningEvents,
   getHardwarePlan,
   getHardwarePlanEffectiveAt,
 } from "../../../../src/lib/hardwareEventStore";
+import {
+  addCloudHardwareEvent,
+  clearCloudHardwareEvents,
+  getCloudHardwareEvents,
+} from "../../../../src/lib/hardwareCloudStore";
 import { queueAdherenceLifecycleTick } from "../../../../src/lib/adherenceLifecycle";
 import {
   DEMO_DEVICE_ID,
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(100, Math.max(1, Math.trunc(requestedLimit)))
     : 50;
-  const events = getHardwareOpeningEvents(deviceId).slice(0, limit);
+  const events = (await getCloudHardwareEvents(deviceId)).slice(0, limit);
   const response: HardwareEventsApiResponse = {
     deviceId,
     events,
@@ -73,14 +75,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const { event, duplicate } = addHardwareOpeningEvent(result.payload);
+  const { event, duplicate } = await addCloudHardwareEvent(result.payload);
   let lifecycleTickQueued = false;
   if (process.env.NODE_ENV === "development" && event && !duplicate) {
     lifecycleTickQueued = true;
     void queueAdherenceLifecycleTick({
       deviceId: result.payload.deviceId,
       plan: getHardwarePlan(result.payload.deviceId),
-      events: getHardwareOpeningEvents(result.payload.deviceId),
+      events: await getCloudHardwareEvents(result.payload.deviceId),
       observationStartedAt: getHardwarePlanEffectiveAt(result.payload.deviceId),
     }).catch(() => {
       // The accepted hardware event remains authoritative if shadow work fails.
@@ -99,7 +101,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const deviceId = searchParams.get("deviceId")?.trim() || DEMO_DEVICE_ID;
-  clearHardwareOpeningEvents(deviceId);
+  await clearCloudHardwareEvents(deviceId);
   return jsonResponse({ cleared: true });
 }
 

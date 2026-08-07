@@ -21,9 +21,21 @@ embed the existing Next.js `/mobile` route.
 3. Select an iPhone simulator and run the `Careloop` scheme.
 
 The app defaults to the production API at `https://smartpb.me` and device ID
-`PILLBOX-DEMO-001`. Build 12 migrates the old `127.0.0.1:3100` default to the
+`PILLBOX-DEMO-001`. Build 13 migrates the old `127.0.0.1:3100` default to the
 production endpoint so TestFlight users can generate DeepSeek AI Insights
 without changing Settings. Both values remain editable for local development.
+
+## Live hardware account
+
+In Pillbox setup, enter connect code `20260808`. The production API resolves
+that code to `PILLBOX-20260808` and shares its medication plan, opening events,
+connection state, and telemetry between the iPhone app, the ESP32 firmware, and
+`https://smartpb.me/studio`. The app refreshes this live account automatically;
+it does not mark the device online unless a real firmware heartbeat is received.
+
+`20260808` is a controlled demo pairing code, not production-grade device
+authentication. Use unique expiring codes and device credentials before a
+patient deployment.
 
 Circle Care presents AI Insights and Notes as separate record sections. AI
 output is labelled as generated observation, while Notes

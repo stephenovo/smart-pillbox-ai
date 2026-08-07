@@ -31,7 +31,10 @@ import {
 } from "lucide-react";
 
 import { HARDWARE_DEMO_SLOT_ID } from "../../src/lib/hardwareDemoConfig";
-import { DEMO_DEVICE_ID } from "../../src/lib/hardwareProtocol";
+import {
+  LIVE_HARDWARE_CONNECT_CODE,
+  LIVE_HARDWARE_DEVICE_ID,
+} from "../../src/lib/liveHardwareAccount";
 import type {
   HardwareDeviceState,
   HardwareEventsApiResponse,
@@ -90,6 +93,10 @@ function eventIsSimulation(event: OpeningEvent): boolean {
   return event.firmwareVersion?.startsWith("web-hardware-simulator") ?? false;
 }
 
+function eventIsStudioTest(event: OpeningEvent): boolean {
+  return event.firmwareVersion?.startsWith("studio-link-test") ?? false;
+}
+
 function StatCard({
   icon: Icon,
   label,
@@ -138,7 +145,7 @@ export default function StudioConsole() {
     if (!quiet) setLoadState("loading");
 
     try {
-      const deviceId = encodeURIComponent(DEMO_DEVICE_ID);
+      const deviceId = encodeURIComponent(LIVE_HARDWARE_DEVICE_ID);
       const [stateResponse, telemetryResponse, eventsResponse, planResponse] =
         await Promise.all([
           fetch(`/api/hardware/state?deviceId=${deviceId}`, { cache: "no-store" }),
@@ -199,7 +206,11 @@ export default function StudioConsole() {
     () => events.filter(eventIsSimulation).length,
     [events]
   );
-  const realEventCount = events.length - simulatedEventCount;
+  const studioTestEventCount = useMemo(
+    () => events.filter(eventIsStudioTest).length,
+    [events]
+  );
+  const realEventCount = events.length - simulatedEventCount - studioTestEventCount;
   const activePlan = plan.find((slot) => slot.slotId === HARDWARE_DEMO_SLOT_ID);
 
   async function setReminder(status: "idle" | "reminding") {
@@ -210,7 +221,7 @@ export default function StudioConsole() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          deviceId: DEMO_DEVICE_ID,
+          deviceId: LIVE_HARDWARE_DEVICE_ID,
           status,
           activeSlot: status === "reminding" ? HARDWARE_DEMO_SLOT_ID : null,
         }),
@@ -234,6 +245,37 @@ export default function StudioConsole() {
     }
   }
 
+  async function recordStudioOpening(slotId: number) {
+    setCommandPending(true);
+    setNotice("");
+    try {
+      const response = await fetch("/api/hardware/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: LIVE_HARDWARE_DEVICE_ID,
+          slotId,
+          eventType: "lid_open",
+          firmwareVersion: "studio-link-test-1.0.0",
+        }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(body?.error ?? "The test opening was not recorded.");
+      }
+      setNotice(
+        `Studio recorded a Slot ${slotId} test opening. The iPhone app will receive it on its next refresh.`
+      );
+      await loadStudio(true);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Test opening failed.");
+    } finally {
+      setCommandPending(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-cream text-ink">
       <header className="border-b border-line bg-surface/95 backdrop-blur">
@@ -249,7 +291,9 @@ export default function StudioConsole() {
                   Device ops
                 </span>
               </div>
-              <p className="truncate text-xs text-ink-soft">{DEMO_DEVICE_ID}</p>
+              <p className="truncate text-xs text-ink-soft">
+                Connect {LIVE_HARDWARE_CONNECT_CODE} · {LIVE_HARDWARE_DEVICE_ID}
+              </p>
             </div>
           </div>
 
@@ -370,7 +414,7 @@ export default function StudioConsole() {
             icon={History}
             label="Event channel"
             value={`${realEventCount} physical`}
-            detail={`${simulatedEventCount} simulator events kept separate`}
+            detail={`${studioTestEventCount} Studio tests · ${simulatedEventCount} simulator`}
             tone={realEventCount > 0 ? "good" : "neutral"}
           />
         </section>
@@ -474,6 +518,7 @@ export default function StudioConsole() {
                 <div className="max-h-[430px] divide-y divide-line-soft overflow-y-auto feed-scroll">
                   {events.map((event) => {
                     const simulated = eventIsSimulation(event);
+                    const studioTest = eventIsStudioTest(event);
                     const wrongSlot = event.eventType === "wrong_slot_open";
                     return (
                       <article
@@ -486,6 +531,8 @@ export default function StudioConsole() {
                               ? "bg-coral-soft text-coral-ink"
                               : simulated
                                 ? "bg-sky-soft text-sky-ink"
+                                : studioTest
+                                  ? "bg-honey-soft text-honey-ink"
                                 : "bg-mint-soft text-mint-ink"
                           }`}
                         >
@@ -500,10 +547,12 @@ export default function StudioConsole() {
                               className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                                 simulated
                                   ? "bg-sky-soft text-sky-ink"
-                                  : "bg-mint-soft text-mint-ink"
+                                  : studioTest
+                                    ? "bg-honey-soft text-honey-ink"
+                                    : "bg-mint-soft text-mint-ink"
                               }`}
                             >
-                              {simulated ? "Simulator" : "Physical"}
+                              {simulated ? "Simulator" : studioTest ? "Studio test" : "Physical"}
                             </span>
                           </div>
                           <p className="mt-1 truncate text-xs text-ink-soft">
@@ -571,6 +620,27 @@ export default function StudioConsole() {
                 >
                   <Square aria-hidden="true" size={15} /> Stop
                 </button>
+              </div>
+              <div className="mt-5 border-t border-line-soft pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
+                  App link test
+                </p>
+                <p className="mt-2 text-xs leading-5 text-ink-soft">
+                  Record a clearly labelled Studio test opening, then confirm it appears in the connected iPhone app.
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {[1, 2].map((slotId) => (
+                    <button
+                      key={slotId}
+                      type="button"
+                      onClick={() => void recordStudioOpening(slotId)}
+                      disabled={commandPending}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-honey-line bg-honey-soft px-3 py-3 text-sm font-semibold text-honey-ink transition hover:brightness-95 disabled:opacity-50"
+                    >
+                      <Box aria-hidden="true" size={15} /> Open Slot {slotId}
+                    </button>
+                  ))}
+                </div>
               </div>
               {!isConnected ? (
                 <p className="mt-3 text-xs leading-5 text-honey-ink">

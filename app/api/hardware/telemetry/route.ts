@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import {
-  getHardwareTelemetry,
-  setHardwareTelemetry,
-} from "../../../../src/lib/hardwareTelemetryStore";
+  getCloudHardwareTelemetry,
+  setCloudHardwareTelemetry,
+} from "../../../../src/lib/hardwareCloudStore";
 import { DEMO_DEVICE_ID } from "../../../../src/lib/hardwareProtocol";
 import type { HardwareTelemetryPayload } from "../../../../src/types/hardwareTelemetry";
 
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
 
   return jsonResponse({
     deviceId,
-    telemetry: getHardwareTelemetry(deviceId),
+    telemetry: await getCloudHardwareTelemetry(deviceId),
     serverTime: new Date().toISOString(),
   });
 }
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
 
   return jsonResponse({
     accepted: true,
-    telemetry: setHardwareTelemetry(result.payload),
+    telemetry: await setCloudHardwareTelemetry(result.payload),
   });
 }
 

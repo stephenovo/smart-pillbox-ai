@@ -617,7 +617,11 @@ struct ConnectPillboxView: View {
     @State private var setupMessage = ""
     @State private var connectionError: String?
     @State private var isConnected = false
+    @State private var isConnecting = false
     @State private var showingInitialisation = false
+    @State private var connectedDeviceID: String?
+    @State private var connectedDeviceName = "Pillbox"
+    @State private var isLiveHardwareConnection = false
 
     private let demoDeviceID = "PILLBOX-IFF-2026"
 
@@ -675,12 +679,13 @@ struct ConnectPillboxView: View {
                 Text(setupMessage)
             }
             .fullScreenCover(isPresented: $showingInitialisation) {
-                let linkedPatient = store.patient(linkedTo: demoDeviceID)
+                let deviceID = connectedDeviceID ?? demoDeviceID
+                let linkedPatient = store.patient(linkedTo: deviceID)
                 PillboxSetupView(
                     patient: linkedPatient,
                     initialPlan: linkedPatient.map { store.setupPlan(for: $0.id) } ?? [],
-                    deviceID: demoDeviceID,
-                    isDemoConnected: true
+                    deviceID: deviceID,
+                    isDemoConnected: !isLiveHardwareConnection
                 ) { _ in
                     showingInitialisation = false
                     dismiss()
@@ -696,15 +701,19 @@ struct ConnectPillboxView: View {
                 .font(.system(size: 48, weight: .medium))
                 .foregroundStyle(Color.careMint)
             VStack(spacing: 4) {
-                Text("Pillbox connected")
+                Text(isLiveHardwareConnection ? connectedDeviceName : "Pillbox connected")
                     .font(.headline)
                     .foregroundStyle(Color.careInk)
-                Text("Opening initialization so you can add the person and medication routine…")
+                Text(
+                    isLiveHardwareConnection
+                        ? "Connected to the live Studio hardware account. Opening setup…"
+                        : "Opening initialization so you can add the person and medication routine…"
+                )
                     .font(.caption)
                     .foregroundStyle(Color.careInkSoft)
                     .multilineTextAlignment(.center)
             }
-            Text(demoDeviceID)
+            Text(connectedDeviceID ?? demoDeviceID)
                 .font(.caption2.weight(.semibold).monospaced())
                 .foregroundStyle(Color.careMintInk)
                 .padding(.horizontal, 10)
@@ -793,7 +802,7 @@ struct ConnectPillboxView: View {
                     .font(.caption)
                     .foregroundStyle(Color.careInkSoft)
 
-                TextField("e.g. IFF 2026", text: $connectionCode)
+                TextField("e.g. 20260808", text: $connectionCode)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .font(.title3.weight(.semibold).monospaced())
@@ -804,7 +813,7 @@ struct ConnectPillboxView: View {
                         connectionError = nil
                     }
 
-                Label("Demo connection code: IFF 2026", systemImage: "info.circle")
+                Label("Live hardware: 20260808 · App demo: IFF 2026", systemImage: "info.circle")
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(Color.careMintInk)
 
@@ -815,11 +824,20 @@ struct ConnectPillboxView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                primaryButton(title: "Continue", symbol: "arrow.right") {
+                primaryButton(
+                    title: isConnecting ? "Connecting…" : "Continue",
+                    symbol: isConnecting ? "antenna.radiowaves.left.and.right" : "arrow.right"
+                ) {
                     connectWithCode()
                 }
-                .disabled(connectionCode.trimmingCharacters(in: .whitespacesAndNewlines).count < 4)
-                .opacity(connectionCode.trimmingCharacters(in: .whitespacesAndNewlines).count < 4 ? 0.45 : 1)
+                .disabled(
+                    connectionCode.trimmingCharacters(in: .whitespacesAndNewlines).count < 4
+                        || isConnecting
+                )
+                .opacity(
+                    connectionCode.trimmingCharacters(in: .whitespacesAndNewlines).count < 4
+                        || isConnecting ? 0.45 : 1
+                )
             }
             .padding(16)
             .careCard()
@@ -898,11 +916,50 @@ struct ConnectPillboxView: View {
             .uppercased()
             .filter { $0.isLetter || $0.isNumber }
 
-        guard normalizedCode == "IFF2026" else {
-            connectionError = "That code wasn't recognised. For this demo, use IFF 2026."
+        if normalizedCode == "IFF2026" {
+            finishConnection(
+                deviceID: demoDeviceID,
+                deviceName: "App demo pillbox",
+                isLiveHardware: false
+            )
             return
         }
 
+        isConnecting = true
+        connectionError = nil
+        Task {
+            do {
+                let client = try CareAPIClient(
+                    serverURL: store.serverURL,
+                    deviceID: ""
+                )
+                let response = try await client.connectPillbox(connectCode: normalizedCode)
+                guard response.connected else {
+                    connectionError = "That Pillbox account is not ready yet."
+                    isConnecting = false
+                    return
+                }
+                isConnecting = false
+                finishConnection(
+                    deviceID: response.account.deviceId,
+                    deviceName: response.account.deviceName,
+                    isLiveHardware: response.account.accountType == "physical_hardware"
+                )
+            } catch {
+                isConnecting = false
+                connectionError = error.localizedDescription
+            }
+        }
+    }
+
+    private func finishConnection(
+        deviceID: String,
+        deviceName: String,
+        isLiveHardware: Bool
+    ) {
+        connectedDeviceID = deviceID
+        connectedDeviceName = deviceName
+        isLiveHardwareConnection = isLiveHardware
         connectionError = nil
         withAnimation(.easeOut(duration: 0.25)) {
             isConnected = true

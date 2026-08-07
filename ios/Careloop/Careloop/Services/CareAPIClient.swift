@@ -45,6 +45,13 @@ struct CareAPIClient {
         return response.events
     }
 
+    func connectPillbox(connectCode: String) async throws -> PillboxConnectionResponse {
+        try await post(
+            path: "/api/pillbox/connect",
+            body: PillboxConnectionRequest(connectCode: connectCode)
+        )
+    }
+
     func fetchDeviceState() async throws -> HardwareDeviceState {
         try await get(
             path: "/api/hardware/state",
@@ -215,6 +222,10 @@ private struct CaregiverInsightRequest: Encodable {
 private struct HardwarePlanUpdateRequest: Encodable {
     let deviceId: String
     let slots: [MedicationSlot]
+}
+
+private struct PillboxConnectionRequest: Encodable {
+    let connectCode: String
 }
 
 private struct CaregiverProfileResponse: Decodable {

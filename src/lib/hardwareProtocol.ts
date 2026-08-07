@@ -13,16 +13,19 @@ const openingEventTypes = new Set<HardwareEventPayload["eventType"]>([
   "wrong_slot_open",
 ]);
 
-function padTwoDigits(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
 export function formatHardwareEventTime(date = new Date()): string {
-  return [
-    date.getFullYear(),
-    padTwoDigits(date.getMonth() + 1),
-    padTwoDigits(date.getDate()),
-  ].join("-") + ` ${padTwoDigits(date.getHours())}:${padTwoDigits(date.getMinutes())}`;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Hong_Kong",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")} ${value("hour")}:${value("minute")}`;
 }
 
 function resolveOpeningTime(

@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import {
-  getHardwareDeviceState,
   getHardwareOpeningEvents,
   getHardwarePlan,
   getHardwarePlanEffectiveAt,
-  setHardwareDeviceState,
 } from "../../../../src/lib/hardwareEventStore";
+import {
+  getCloudHardwareState,
+  setCloudHardwareState,
+} from "../../../../src/lib/hardwareCloudStore";
 import { queueAdherenceLifecycleTick } from "../../../../src/lib/adherenceLifecycle";
 import {
   DEMO_DEVICE_ID,
@@ -36,7 +38,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const deviceId = searchParams.get("deviceId")?.trim() || DEMO_DEVICE_ID;
   const isDeviceHeartbeat = searchParams.get("heartbeat") === "1";
-  const state = getHardwareDeviceState(deviceId, {
+  const state = await getCloudHardwareState(deviceId, {
     markSeen: isDeviceHeartbeat,
     evaluateSchedule: isDeviceHeartbeat,
   });
@@ -78,7 +80,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const state = setHardwareDeviceState(
+  const state = await setCloudHardwareState(
     result.payload.deviceId,
     result.payload.status,
     result.payload.activeSlot ?? null

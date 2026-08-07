@@ -5,6 +5,7 @@ struct NotesView: View {
 
     @State private var showingComposer = false
     @State private var showingConnectPillbox = false
+    @State private var selectedRecordSection: CaregiverRecordSection = .aiInsight
 
     var body: some View {
         NavigationStack {
@@ -16,10 +17,15 @@ struct NotesView: View {
                         }
                         .environmentObject(store)
 
-                        aiInsightCard
-                        medicationRiskSection
-                        clinicNoteCard
-                        careNotesSection
+                        recordSectionSwitcher
+
+                        if selectedRecordSection == .aiInsight {
+                            aiInsightCard
+                            medicationRiskSection
+                            clinicNoteCard
+                        } else {
+                            careNotesSection
+                        }
                     } else {
                         myCareInsightView
                     }
@@ -32,18 +38,6 @@ struct NotesView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.careSurface, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                if store.appMode == .circleCare {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            showingComposer = true
-                        } label: {
-                            Image(systemName: "square.and.pencil")
-                        }
-                        .accessibilityLabel("Add care journal entry")
-                    }
-                }
-            }
             .refreshable {
                 if store.appMode == .circleCare {
                     await store.loadInsightReport(force: true)
@@ -69,6 +63,30 @@ struct NotesView: View {
                 ConnectPillboxView()
             }
         }
+    }
+
+    private var recordSectionSwitcher: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Care record section", selection: $selectedRecordSection) {
+                ForEach(CaregiverRecordSection.allCases) { section in
+                    Text(section.label).tag(section)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Label(
+                selectedRecordSection.description,
+                systemImage: selectedRecordSection.symbol
+            )
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(
+                selectedRecordSection == .aiInsight
+                    ? Color.careCoralInk
+                    : Color.careSkyInk
+            )
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 16)
     }
 
     private var myCareInsightView: some View {
@@ -151,38 +169,42 @@ struct NotesView: View {
 
     private var myCareInsight: String {
         if let status = store.doseStatuses.first(where: { $0.kind == .openedTwice }) {
-            return "The \(status.slot.medication) compartment opened twice. Before taking another dose, check your instructions or ask someone you trust."
+            return "The \(status.slot.medication) compartment recorded \(status.openingCount) openings in its current schedule window."
         }
         if store.doseStatuses.contains(where: { $0.kind == .wrongCompartment }) {
-            return "Your pillbox noticed a different compartment opening. Please check the medicine label before your next dose."
+            return "Your pillbox recorded an opening from a compartment assigned to a different reminder."
         }
         if let status = store.doseStatuses.first(where: { $0.kind == .missed }) {
-            return "Your \(status.slot.medication) has not been recorded yet. Take a look at compartment \(status.slot.slotId) when you are ready."
+            return "No opening was recorded for \(status.slot.medication) by the end of its reminder window."
         }
         if let status = store.doseStatuses.first(where: { $0.kind == .takenLate }) {
-            return "Your \(status.slot.medication) was taken a little late. Linking it to breakfast, lunch or dinner may make the routine easier."
+            return status.delayMinutes.map {
+                "The first \(status.slot.medication) compartment opening was recorded \($0) minutes after the reminder."
+            } ?? "The first \(status.slot.medication) compartment opening was recorded after the reminder."
         }
         if store.takenCount > 0 {
-            return "Your routine looks steady today. \(store.takenCount) dose\(store.takenCount == 1 ? " has" : "s have") been recorded."
+            return "Your pillbox has recorded \(store.takenCount) scheduled compartment opening\(store.takenCount == 1 ? "" : "s") today."
         }
         return "Your medicine plan is ready. Your first update will appear after the pillbox records an opening."
     }
 
     private var aiInsightCard: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color.careCoralInk)
-                    .frame(width: 40, height: 40)
-                    .background(Color.careCoralSoft)
-                    .clipShape(Circle())
+                ZStack {
+                    Circle()
+                        .fill(Color.careCoralSoft)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.careCoralInk)
+                }
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("AI insights")
-                        .font(.headline)
+                    Text("AI Insight")
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(Color.careInk)
-                    Text("Observations from \(store.selectedPatient.firstName)'s pillbox openings, timing and medication routine patterns.")
+                    Text("A concise reading of \(store.selectedPatient.firstName)'s recorded pillbox activity.")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                         .fixedSize(horizontal: false, vertical: true)
@@ -192,51 +214,67 @@ struct NotesView: View {
             }
 
             if store.isGeneratingInsight {
-                HStack(spacing: 11) {
-                    ProgressView()
-                        .tint(.careCoral)
-                    Text("Writing a fresh insight…")
-                        .font(.subheadline.weight(.semibold))
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                            .tint(.careCoral)
+                        Text("Reading recent activity…")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.careInk)
+                    }
+                    Text("DeepSeek is preparing a short, plain-language observation.")
+                        .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(14)
-                .background(Color.careCreamDeep)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            } else if let generatedInsight = store.generatedInsight {
-                VStack(alignment: .leading, spacing: 9) {
-                    Text("ACTIVITY OBSERVATION")
+                .padding(18)
+                .background(insightBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            } else {
+                VStack(alignment: .leading, spacing: 13) {
+                    HStack(spacing: 8) {
+                        Label(
+                            store.generatedInsight == nil ? "Activity snapshot" : "AI-generated",
+                            systemImage: store.generatedInsight == nil ? "waveform.path.ecg" : "sparkles"
+                        )
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Color.careCoralInk)
-                    Text(generatedInsight)
-                        .font(.subheadline)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.careSurface.opacity(0.78))
+                        .clipShape(Capsule())
+
+                        Spacer(minLength: 4)
+
+                        if let provider = insightProviderLabel,
+                           store.generatedInsight != nil {
+                            Label(provider, systemImage: "checkmark.seal.fill")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(Color.careMintInk)
+                        }
+                    }
+
+                    Text("What the pattern shows")
+                        .font(.headline)
                         .foregroundStyle(Color.careInk)
-                        .lineSpacing(4)
+
+                    Text(store.generatedInsight ?? aiInsightFallback)
+                        .font(.body)
+                        .foregroundStyle(Color.careInk)
+                        .lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    if let provider = store.generatedInsightProvider {
-                        Label(provider, systemImage: "checkmark.seal.fill")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Color.careMintInk)
-                    }
+                    Label("Based on the recorded pillbox activity log", systemImage: "clock.arrow.circlepath")
+                        .font(.caption)
+                        .foregroundStyle(Color.careInkFaint)
                 }
-                .padding(14)
-                .background(Color.careCreamDeep)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            } else {
-                VStack(alignment: .leading, spacing: 7) {
-                    Text("ACTIVITY OBSERVATION")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color.careCoralInk)
-                    Text(aiInsightFallback)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.careInk)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
+                .padding(18)
+                .background(insightBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.careCoral.opacity(0.18), lineWidth: 1)
                 }
-                .padding(14)
-                .background(Color.careCreamDeep)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
 
             HStack(alignment: .top, spacing: 11) {
@@ -250,12 +288,15 @@ struct NotesView: View {
                     Text("Observation, not medical advice")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color.careMintInk)
-                    Text("AI describes recorded opening activity and timing. It cannot confirm that medicine was taken, diagnose a condition, or recommend dose or schedule changes.")
-                        .font(.subheadline)
+                    Text("It cannot confirm medicine was taken, diagnose, or recommend dose or schedule changes.")
+                        .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            .padding(12)
+            .background(Color.careMintSoft.opacity(0.65))
+            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
 
             if let message = store.insightErrorMessage {
                 Label(message, systemImage: "exclamationmark.circle")
@@ -285,6 +326,14 @@ struct NotesView: View {
         .padding(16)
         .careCard()
         .padding(.horizontal, 16)
+    }
+
+    private var insightBackground: some ShapeStyle {
+        LinearGradient(
+            colors: [Color.careCoralSoft.opacity(0.72), Color.careSurface],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private var medicationRiskSection: some View {
@@ -340,10 +389,10 @@ struct NotesView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Clinic handoff")
+                    Text("Doctor & clinic summary")
                         .font(.headline)
                         .foregroundStyle(Color.careInk)
-                    Text("A concise summary to bring to the next appointment")
+                    Text("System-generated from the activity log — separate from caregiver notes")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                 }
@@ -365,36 +414,55 @@ struct NotesView: View {
 
     private var careNotesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Care journal")
-                        .font(.headline)
-                        .foregroundStyle(Color.careInk)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Caregiver Notes")
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(Color.careInk)
+                        Label("Human-written", systemImage: "person.fill.checkmark")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color.careSkyInk)
+                    }
+
                     Spacer()
+
                     Button {
                         showingComposer = true
                     } label: {
-                        Label("Add entry", systemImage: "plus")
+                        Label("Add note", systemImage: "plus")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color.careInk)
+                            .foregroundStyle(Color.careOnAction)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.careAction)
+                            .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
                 }
-                Text("Human context for your care circle — calls, visits and family handoffs. These entries do not change the medicine plan.")
+
+                Text("Notes written by family members and caregivers after calls, visits or handoffs. They are never generated or rewritten by AI.")
                     .font(.caption)
                     .foregroundStyle(Color.careInkSoft)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(16)
+            .background(Color.careSkySoft.opacity(0.62))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.careSkyInk.opacity(0.18), lineWidth: 1)
+            }
 
             if store.selectedPatientNotes.isEmpty {
                 VStack(spacing: 8) {
-                    Image(systemName: "note.text")
+                    Image(systemName: "note.text.badge.plus")
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(Color.careSkyInk)
-                    Text("No journal entries yet")
+                    Text("No caregiver notes yet")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.careInk)
-                    Text("Add an entry after a call, visit or family handoff so the next caregiver has the full picture.")
+                    Text("Add a note after a call, visit or family handoff so a doctor can clearly see the human context.")
                         .font(.caption)
                         .foregroundStyle(Color.careInkSoft)
                         .multilineTextAlignment(.center)
@@ -423,6 +491,11 @@ struct NotesView: View {
         return "No pillbox opening activity has been received today. An AI observation will appear after the device reports activity."
     }
 
+    private var insightProviderLabel: String? {
+        guard let provider = store.generatedInsightProvider else { return nil }
+        return provider.localizedCaseInsensitiveContains("deepseek") ? "DeepSeek" : provider
+    }
+
     private func activityObservation(for status: DoseStatus) -> String {
         switch status.kind {
         case .openedTwice:
@@ -446,6 +519,36 @@ struct NotesView: View {
             return "the scheduled reminder is still upcoming."
         case .waitingForDevice:
             return "the device has not reported today's opening history yet."
+        }
+    }
+}
+
+private enum CaregiverRecordSection: String, CaseIterable, Identifiable {
+    case aiInsight
+    case caregiverNotes
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .aiInsight: "AI Insight"
+        case .caregiverNotes: "Caregiver Notes"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .aiInsight:
+            "AI-generated observations and structured activity summaries"
+        case .caregiverNotes:
+            "Notes written directly by family members and caregivers"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .aiInsight: "sparkles"
+        case .caregiverNotes: "person.text.rectangle"
         }
     }
 }
@@ -547,7 +650,7 @@ private struct CareNoteCard: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("Journal · \(patientName)")
+                    Text("Caregiver note · \(patientName)")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.careInk)
                     Spacer()

@@ -20,7 +20,7 @@
     <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
     <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
-    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%2010-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 10" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%2011-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 11" />
   </p>
 </div>
 
@@ -70,7 +70,7 @@ flowchart LR
 | **AI insight** | Rule-based activity analysis plus server-side DeepSeek V4 Flash observations with explicit non-medical-advice boundaries |
 | **Hardware bridge** | ESP32-S3 starter firmware, reminder state, lid-event upload, device heartbeat, and the browser hardware simulator |
 | **Profile and persistence** | `/api/profile`, local profile recovery, medication plan storage, hardware event storage, and native UserDefaults persistence |
-| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, live DeepSeek AI Insights, new-pillbox guidebooks, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, and Build 10 testing |
+| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, live DeepSeek AI Insights separated from human-written caregiver notes, new-pillbox guidebooks, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, and Build 11 testing |
 | **Safety boundary** | The system records compartment or lid openings; it does not claim that a person swallowed a medicine or replace clinical advice |
 
 ## Screens and experiences
@@ -221,7 +221,7 @@ env -u NODE_OPTIONS npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
 The native app defaults to the production API at `https://smartpb.me` and
-device ID `PILLBOX-DEMO-001`. Build 10 automatically migrates the legacy
+device ID `PILLBOX-DEMO-001`. Build 11 automatically migrates the legacy
 `127.0.0.1:3100` default to the production endpoint. Both values remain
 editable in native Settings for local hardware development.
 
@@ -292,7 +292,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-The current native release line is `1.0 (9)`, distributed through TestFlight
+The current native release line is `1.0 (11)`, distributed through TestFlight
 to the internal testing group.
 
 ## Documentation
@@ -310,7 +310,7 @@ to the internal testing group.
 - [x] ESP32-S3 firmware and verified two-slot hardware MVP path
 - [x] Deterministic medication safety states and caregiver insight reports
 - [x] Profile sync with local offline recovery
-- [x] Native iOS TestFlight Build 10 with live DeepSeek AI Insights
+- [x] Native iOS TestFlight Build 11 with distinct AI Insights and caregiver notes
 - [ ] Expand hardware from the MVP loop to a production-ready enclosure
 - [ ] Collect real-device adherence history for model calibration
 - [ ] Add production authentication, database persistence, and observability

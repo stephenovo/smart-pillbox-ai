@@ -151,7 +151,7 @@ struct SettingsView: View {
                     } header: {
                         Text("Smart Pillbox server")
                     } footer: {
-                        Text("The iOS Simulator can use 127.0.0.1. On a physical iPhone, enter your Mac's local network address or a production HTTPS server.")
+                        Text("Smart Pillbox uses smartpb.me for live device data and DeepSeek AI Insights. You can enter a local development server here when testing hardware on the same network.")
                     }
                 } else {
                     Section {
@@ -340,7 +340,7 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var connectionSettingsFields: some View {
-        TextField("http://127.0.0.1:3100", text: $draftServerURL)
+        TextField("https://smartpb.me", text: $draftServerURL)
             .keyboardType(.URL)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()

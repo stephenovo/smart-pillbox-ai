@@ -20,7 +20,7 @@
     <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
     <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
-    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%209-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 9" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%2010-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 10" />
   </p>
 </div>
 
@@ -67,10 +67,10 @@ flowchart LR
 | **Circle Care** | Care circle selection, medication setup, adherence overview, device feed, care messages, profile sync, and detailed insights |
 | **My Care** | Larger self-management layout, My Day, My Medicines, AI Check-in, simplified Settings, and no caregiver-only actions |
 | **Medication safety** | On-time, late, early, missed, duplicate-opening, wrong-compartment, due-soon, and waiting-for-device states |
-| **AI insight** | Rule-based adherence analysis plus optional DeepSeek-generated caregiver summaries and clinic notes |
+| **AI insight** | Rule-based activity analysis plus server-side DeepSeek V4 Flash observations with explicit non-medical-advice boundaries |
 | **Hardware bridge** | ESP32-S3 starter firmware, reminder state, lid-event upload, device heartbeat, and the browser hardware simulator |
 | **Profile and persistence** | `/api/profile`, local profile recovery, medication plan storage, hardware event storage, and native UserDefaults persistence |
-| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, new-pillbox guidebooks, bounded AI activity insights, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, and Build 9 testing |
+| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, live DeepSeek AI Insights, new-pillbox guidebooks, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, and Build 10 testing |
 | **Safety boundary** | The system records compartment or lid openings; it does not claim that a person swallowed a medicine or replace clinical advice |
 
 ## Screens and experiences
@@ -220,9 +220,10 @@ run the web server on port `3100`:
 env -u NODE_OPTIONS npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
-The native app defaults to `http://127.0.0.1:3100` and device ID
-`PILLBOX-DEMO-001`. A physical iPhone must use the Mac's LAN address or a
-production HTTPS endpoint; both values are editable in native Settings.
+The native app defaults to the production API at `https://smartpb.me` and
+device ID `PILLBOX-DEMO-001`. Build 10 automatically migrates the legacy
+`127.0.0.1:3100` default to the production endpoint. Both values remain
+editable in native Settings for local hardware development.
 
 Build from the command line:
 
@@ -265,8 +266,12 @@ and is not a production database.
 
 - Copy environment examples locally when they are present; never commit live
   API keys, passwords, device credentials, or provisioning secrets.
-- The DeepSeek route is optional. The core app keeps working with deterministic
-  local insight text when the model service is unavailable.
+- `DEEPSEEK_API_KEY` is a server-only secret and must never be exposed through
+  `NEXT_PUBLIC_*` or embedded in the iOS app. The deployed route currently uses
+  `DEEPSEEK_MODEL=deepseek-v4-flash`.
+- The core activity report remains deterministic. DeepSeek only turns that
+  structured report into a short observation and never chooses medication,
+  dosage, schedules, or medical advice.
 - The hardware MVP detects lid or compartment openings, not ingestion.
 - Medication names, schedules, dosage decisions, and high-risk classifications
   should be confirmed with a healthcare professional.
@@ -305,7 +310,7 @@ to the internal testing group.
 - [x] ESP32-S3 firmware and verified two-slot hardware MVP path
 - [x] Deterministic medication safety states and caregiver insight reports
 - [x] Profile sync with local offline recovery
-- [x] Native iOS TestFlight Build 9
+- [x] Native iOS TestFlight Build 10 with live DeepSeek AI Insights
 - [ ] Expand hardware from the MVP loop to a production-ready enclosure
 - [ ] Collect real-device adherence history for model calibration
 - [ ] Add production authentication, database persistence, and observability

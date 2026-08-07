@@ -20,8 +20,10 @@ embed the existing Next.js `/mobile` route.
 2. Open `ios/Careloop/Careloop.xcodeproj` in Xcode.
 3. Select an iPhone simulator and run the `Careloop` scheme.
 
-The app defaults to `http://127.0.0.1:3100` and device ID
-`PILLBOX-DEMO-001`. Both values can be changed in the native Settings tab.
+The app defaults to the production API at `https://smartpb.me` and device ID
+`PILLBOX-DEMO-001`. Build 10 migrates the old `127.0.0.1:3100` default to the
+production endpoint so TestFlight users can generate DeepSeek AI Insights
+without changing Settings. Both values remain editable for local development.
 
 ## Run on a physical iPhone
 
@@ -32,7 +34,17 @@ env -u NODE_OPTIONS npm run dev -- --hostname 0.0.0.0 --port 3100
 ```
 
 Then enter `http://<mac-lan-ip>:3100` in the app's Settings tab. The iPhone and
-Mac must be on the same network. Use an HTTPS API endpoint for production.
+Mac must be on the same network. Restore `https://smartpb.me` after local
+testing to use the production DeepSeek API route.
+
+## DeepSeek AI Insights
+
+The iOS app calls `POST https://smartpb.me/api/caregiver-insight`; it never
+receives or stores the DeepSeek credential. Configure `DEEPSEEK_API_KEY` as a
+server-side Cloudflare secret and use `DEEPSEEK_MODEL=deepseek-v4-flash`.
+The model receives a deterministic activity report and may describe recorded
+opening and timing patterns only. It cannot confirm ingestion, diagnose, or
+recommend medication, dose, or schedule changes.
 
 ## Data behavior
 

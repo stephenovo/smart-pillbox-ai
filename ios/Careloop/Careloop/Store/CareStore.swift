@@ -14,7 +14,11 @@ final class CareStore: ObservableObject {
         static let appMode = "smartpillbox.appMode.v1"
     }
 
-    static let defaultServerURL = "http://127.0.0.1:3100"
+    static let defaultServerURL = "https://smartpb.me"
+    private static let legacyLocalServerURLs: Set<String> = [
+        "http://127.0.0.1:3100",
+        "http://localhost:3100",
+    ]
     static let defaultDeviceID = "PILLBOX-DEMO-001"
 
     @Published var selectedPatientID = "margaret"
@@ -94,7 +98,17 @@ final class CareStore: ObservableObject {
     }
 
     init(defaults: UserDefaults = .standard) {
-        serverURL = defaults.string(forKey: DefaultsKey.serverURL) ?? Self.defaultServerURL
+        let savedServerURL = defaults.string(forKey: DefaultsKey.serverURL)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let savedServerURL,
+           !Self.legacyLocalServerURLs.contains(savedServerURL.lowercased()) {
+            serverURL = savedServerURL
+        } else {
+            serverURL = Self.defaultServerURL
+            if savedServerURL != nil {
+                defaults.set(Self.defaultServerURL, forKey: DefaultsKey.serverURL)
+            }
+        }
         deviceID = defaults.string(forKey: DefaultsKey.deviceID) ?? Self.defaultDeviceID
         appMode = defaults.string(forKey: DefaultsKey.appMode)
             .flatMap(CareExperienceMode.init(rawValue:))

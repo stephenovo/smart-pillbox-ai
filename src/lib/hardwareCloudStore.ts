@@ -31,7 +31,12 @@ import type { OpeningEvent } from "../types/pillbox";
 
 const maxStoredEvents = 100;
 const duplicateWindowMs = 1500;
-const connectedWindowMs = 20_000;
+// The ESP32 polls frequently so reminders react quickly, but persisting every poll
+// would exhaust the Workers KV daily write allowance. Keep fast reads while only
+// checkpointing presence and diagnostics at a human-useful cadence.
+const heartbeatPersistIntervalMs = 60_000;
+const connectedWindowMs = 120_000;
+const telemetryPersistIntervalMs = 5 * 60_000;
 const hardwareTimeZone = "Asia/Hong_Kong";
 
 type HardwareKV = {
@@ -329,8 +334,16 @@ export async function getCloudHardwareState(
   let changed = false;
 
   if (options.markSeen) {
-    state = { ...state, lastSeenAt: now.toISOString() };
-    changed = true;
+    const lastSeenMs = state.lastSeenAt
+      ? new Date(state.lastSeenAt).getTime()
+      : Number.NaN;
+    if (
+      !Number.isFinite(lastSeenMs) ||
+      now.getTime() - lastSeenMs >= heartbeatPersistIntervalMs
+    ) {
+      state = { ...state, lastSeenAt: now.toISOString() };
+      changed = true;
+    }
   }
 
   if (options.evaluateSchedule && state.status !== "reminding") {
@@ -412,6 +425,21 @@ export async function setCloudHardwareTelemetry(
     reportedAt: payload.reportedAt ?? now,
     receivedAt: now,
   };
-  await kv.put(storageKey("telemetry", payload.deviceId), JSON.stringify(telemetry));
+  const current = await kv.get<HardwareTelemetry>(
+    storageKey("telemetry", payload.deviceId),
+    "json"
+  );
+  const lastPersistedMs = current?.receivedAt
+    ? new Date(current.receivedAt).getTime()
+    : Number.NaN;
+  if (
+    !Number.isFinite(lastPersistedMs) ||
+    new Date(now).getTime() - lastPersistedMs >= telemetryPersistIntervalMs
+  ) {
+    await kv.put(
+      storageKey("telemetry", payload.deviceId),
+      JSON.stringify(telemetry)
+    );
+  }
   return telemetry;
 }

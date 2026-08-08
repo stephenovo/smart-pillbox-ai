@@ -126,7 +126,7 @@ export default function LandingPage() {
         <nav className="absolute inset-x-0 top-0 z-20 border-b border-white/20 bg-black/10 backdrop-blur-md">
           <div className="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
             <BrandMark />
-            <div className="hidden items-center gap-8 text-sm font-semibold text-white/90 lg:flex">
+            <div className="hidden items-center gap-6 text-sm font-semibold text-white/90 lg:flex">
               <a href="#why" className="transition hover:text-white">
                 Why Smart Pillbox AI
               </a>
@@ -142,6 +142,9 @@ export default function LandingPage() {
               <a href="#simulator" className="transition hover:text-white">
                 Simulator demo
               </a>
+              <Link href="/team" className="transition hover:text-white">
+                Our team
+              </Link>
             </div>
             <Link
               href="/dashboard"
@@ -484,7 +487,12 @@ export default function LandingPage() {
 
       <footer id="team" className="bg-[#fffdfa]">
         <div className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-9 text-xs font-semibold text-[#817a70] sm:px-8 lg:px-12">
-          <span>Our team</span>
+          <Link
+            href="/team"
+            className="inline-flex items-center gap-2 text-[#5f5a52] transition hover:text-[#22201c]"
+          >
+            Our team <ArrowRight aria-hidden="true" size={14} />
+          </Link>
           <a
             href="https://unsplash.com/@agecymru"
             target="_blank"

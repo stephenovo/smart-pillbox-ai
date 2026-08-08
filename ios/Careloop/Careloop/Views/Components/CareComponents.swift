@@ -623,7 +623,7 @@ struct ConnectPillboxView: View {
     @State private var connectedDeviceName = "Pillbox"
     @State private var isLiveHardwareConnection = false
 
-    private let demoDeviceID = "PILLBOX-IFF-2026"
+    private let demoDeviceID = CareStore.iffDemoDeviceID
 
     var body: some View {
         NavigationStack {
@@ -701,13 +701,19 @@ struct ConnectPillboxView: View {
                 .font(.system(size: 48, weight: .medium))
                 .foregroundStyle(Color.careMint)
             VStack(spacing: 4) {
-                Text(isLiveHardwareConnection ? connectedDeviceName : "Pillbox connected")
+                Text(
+                    connectedDeviceID == demoDeviceID
+                        ? "IFF 2026 demo ready"
+                        : isLiveHardwareConnection ? connectedDeviceName : "Pillbox connected"
+                )
                     .font(.headline)
                     .foregroundStyle(Color.careInk)
                 Text(
-                    isLiveHardwareConnection
-                        ? "Connected to the live Studio hardware account. Opening setup…"
-                        : "Opening initialization so you can add the person and medication routine…"
+                    connectedDeviceID == demoDeviceID
+                        ? "Medication, reminder, activity, Notes, and AI Insight data are loaded."
+                        : isLiveHardwareConnection
+                            ? "Connected to the live Studio hardware account. Opening setup…"
+                            : "Opening initialization so you can add the person and medication routine…"
                 )
                     .font(.caption)
                     .foregroundStyle(Color.careInkSoft)
@@ -917,11 +923,7 @@ struct ConnectPillboxView: View {
             .filter { $0.isLetter || $0.isNumber }
 
         if normalizedCode == "IFF2026" {
-            finishConnection(
-                deviceID: demoDeviceID,
-                deviceName: "App demo pillbox",
-                isLiveHardware: false
-            )
+            loadIFFDemo()
             return
         }
 
@@ -968,6 +970,24 @@ struct ConnectPillboxView: View {
         Task {
             try? await Task.sleep(nanoseconds: 700_000_000)
             showingInitialisation = true
+        }
+    }
+
+    private func loadIFFDemo() {
+        isConnecting = true
+        connectionError = nil
+        Task {
+            let patient = store.loadIFFDemoPillbox()
+            connectedDeviceID = patient.deviceID
+            connectedDeviceName = patient.deviceName
+            isLiveHardwareConnection = false
+            setupMessage = "Medication routine, reminders, seven days of activity, Notes, and AI Insight are ready."
+            isConnecting = false
+            withAnimation(.easeOut(duration: 0.25)) {
+                isConnected = true
+            }
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            dismiss()
         }
     }
 

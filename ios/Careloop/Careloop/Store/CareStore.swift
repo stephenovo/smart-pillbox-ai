@@ -20,6 +20,7 @@ final class CareStore: ObservableObject {
         "http://localhost:3100",
     ]
     static let defaultDeviceID = "PILLBOX-DEMO-001"
+    static let iffDemoDeviceID = "PILLBOX-IFF-2026"
 
     @Published var selectedPatientID = "margaret"
     @Published private(set) var events: [HardwareEvent] = []
@@ -189,6 +190,63 @@ final class CareStore: ObservableObject {
 
     func patient(linkedTo deviceID: String) -> CarePatient? {
         patients.first { $0.deviceID == deviceID }
+    }
+
+    @discardableResult
+    func loadIFFDemoPillbox() -> CarePatient {
+        let existingPatient = patients.first(where: { $0.id == "margaret" })
+            ?? CarePatient.careCircle[0]
+        let plan = Self.iffDemoPlan(for: .now)
+        let demoPatient = CarePatient(
+            id: "margaret",
+            name: "Margaret Lin",
+            firstName: "Margaret",
+            initials: "ML",
+            age: 79,
+            city: "Hong Kong",
+            relation: "Mum",
+            livingSituation: "Lives independently",
+            phone: "+85255550118",
+            wellbeing: .watch,
+            wellbeingNote: "Morning openings are steady; the evening routine has a few later openings to review.",
+            snapshot: PatientSnapshot(
+                dosesTaken: 3,
+                dosesTotal: plan.count,
+                lastEventLabel: "Demo pillbox activity loaded",
+                lastEventTime: "Just now"
+            ),
+            deviceName: "IFF 2026 demo pillbox",
+            batteryPercent: 86,
+            weeklyRhythm: [100, 75, 100, 75, 100, 75, 100],
+            deviceID: Self.iffDemoDeviceID,
+            isDemoConnected: true,
+            avatarPresetID: existingPatient.avatarPresetID ?? "family-morning",
+            customAvatarData: existingPatient.customAvatarData
+        )
+
+        if let index = patients.firstIndex(where: { $0.id == demoPatient.id }) {
+            patients[index] = demoPatient
+        } else {
+            patients.insert(demoPatient, at: 0)
+        }
+        medicationPlans[demoPatient.id] = plan
+        selectedPatientID = demoPatient.id
+        deviceID = Self.iffDemoDeviceID
+        seedIFFDemoNotes()
+        applyIFFDemoRuntimeData(for: demoPatient, reseedEvents: true)
+        persistCareProfiles()
+        insightReport = nil
+        generatedInsight = nil
+        generatedInsightProvider = nil
+        insightErrorMessage = nil
+
+        Task {
+            await loadInsightReport(force: true)
+            if insightReport != nil {
+                await generateInsight()
+            }
+        }
+        return demoPatient
     }
 
     func selectPatient(_ patient: CarePatient) {
@@ -587,6 +645,15 @@ final class CareStore: ObservableObject {
             connectionMessage = "Connect a pillbox to receive activity updates."
             return
         }
+        if patient.isDemoConnected && patient.deviceID == Self.iffDemoDeviceID {
+            isRefreshing = true
+            applyIFFDemoRuntimeData(
+                for: patient,
+                reseedEvents: events.first?.deviceId != Self.iffDemoDeviceID
+            )
+            isRefreshing = false
+            return
+        }
         isRefreshing = true
         defer { isRefreshing = false }
 
@@ -745,6 +812,55 @@ final class CareStore: ObservableObject {
         UserDefaults.standard.set(data, forKey: DefaultsKey.notes)
     }
 
+    private func applyIFFDemoRuntimeData(
+        for patient: CarePatient,
+        reseedEvents: Bool
+    ) {
+        let now = Date()
+        let plan = medicationPlans[patient.id] ?? Self.iffDemoPlan(for: now)
+        if reseedEvents {
+            events = Self.iffDemoEvents(now: now, plan: plan)
+        }
+        let nowISO = ISO8601DateFormatter().string(from: now)
+        deviceState = HardwareDeviceState(
+            deviceId: Self.iffDemoDeviceID,
+            status: "reminding",
+            activeSlot: plan.last?.slotId,
+            scheduledAt: nowISO,
+            message: "Demo reminder ready",
+            trigger: "demo",
+            updatedAt: nowISO,
+            lastSeenAt: nowISO,
+            lastEventAt: events.first?.receivedAt,
+            connectionStatus: "connected",
+            serverTime: nowISO
+        )
+        hasLoadedLiveData = true
+        connectionMessage = nil
+        lastUpdated = now
+    }
+
+    private func seedIFFDemoNotes() {
+        let demoNotes: [CareNote] = [
+            CareNote(
+                id: UUID(uuidString: "1FF20260-0000-4000-8000-000000000001")!,
+                patientID: "margaret",
+                text: "Margaret said the morning routine feels easy to follow. This is a demo caregiver note.",
+                createdAt: Date().addingTimeInterval(-3_600)
+            ),
+            CareNote(
+                id: UUID(uuidString: "1FF20260-0000-4000-8000-000000000002")!,
+                patientID: "margaret",
+                text: "The evening compartment was opened later on two recorded days this week. This is a demo caregiver observation.",
+                createdAt: Date().addingTimeInterval(-86_400)
+            ),
+        ]
+        let existingIDs = Set(notes.map(\.id))
+        notes.append(contentsOf: demoNotes.filter { !existingIDs.contains($0.id) })
+        notes.sort { $0.createdAt > $1.createdAt }
+        persistNotes()
+    }
+
     private static func minutes(from time: String) -> Int {
         let components = time.split(separator: ":").compactMap { Int($0) }
         guard components.count == 2 else { return 0 }
@@ -771,6 +887,86 @@ final class CareStore: ObservableObject {
         case 3: "18:00"
         default: "20:00"
         }
+    }
+
+    private static func iffDemoPlan(for now: Date) -> [MedicationSlot] {
+        let calendar = Calendar.current
+        let currentMinutes = calendar.component(.hour, from: now) * 60
+            + calendar.component(.minute, from: now)
+        let first = max(0, currentMinutes - 180)
+        let second = min(1_439, max(first + 20, currentMinutes - 100))
+        let third = min(1_439, max(second + 20, currentMinutes - 40))
+        let fourth = min(1_439, max(third + 30, currentMinutes + 75))
+
+        return [
+            MedicationSlot(slotId: 1, medication: "Morning Blood Pressure Medicine", scheduledTime: demoTime(first), highRisk: false, bufferTimeMinutes: 30),
+            MedicationSlot(slotId: 2, medication: "High-Risk Heart Medicine", scheduledTime: demoTime(second), highRisk: true, bufferTimeMinutes: 30),
+            MedicationSlot(slotId: 3, medication: "Evening Diabetes Medicine", scheduledTime: demoTime(third), highRisk: false, bufferTimeMinutes: 60),
+            MedicationSlot(slotId: 4, medication: "Lunch Supplement", scheduledTime: demoTime(fourth), highRisk: false, bufferTimeMinutes: 60),
+        ]
+    }
+
+    private static func demoTime(_ minutes: Int) -> String {
+        String(format: "%02d:%02d", minutes / 60, minutes % 60)
+    }
+
+    private static func iffDemoEvents(
+        now: Date,
+        plan: [MedicationSlot]
+    ) -> [HardwareEvent] {
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: now)
+        let patterns: [[(slot: Int, delay: Int, type: String)]] = [
+            [(1, 4, "lid_open"), (2, 24, "lid_open"), (3, 3, "lid_open"), (3, 9, "lid_open")],
+            [(1, 2, "lid_open"), (2, 11, "lid_open"), (3, 4, "lid_open"), (4, 36, "lid_open")],
+            [(1, 5, "lid_open"), (2, 18, "lid_open"), (3, 2, "lid_open")],
+            [(1, 1, "lid_open"), (2, 8, "lid_open"), (3, 5, "lid_open"), (4, 22, "lid_open")],
+            [(1, 3, "lid_open"), (2, 16, "lid_open"), (4, -12, "wrong_slot_open"), (4, 28, "lid_open")],
+            [(1, 6, "lid_open"), (2, 29, "lid_open"), (3, 7, "lid_open"), (4, 41, "lid_open")],
+            [(1, 2, "lid_open"), (2, 10, "lid_open"), (3, 4, "lid_open"), (4, 14, "lid_open")],
+        ]
+        let eventFormatter = DateFormatter()
+        eventFormatter.locale = Locale(identifier: "en_US_POSIX")
+        eventFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let isoFormatter = ISO8601DateFormatter()
+        var demoEvents: [HardwareEvent] = []
+
+        for (dayOffset, dayPattern) in patterns.enumerated() {
+            guard let day = calendar.date(
+                byAdding: .day,
+                value: -dayOffset,
+                to: startOfToday
+            ) else { continue }
+
+            for (sequence, sample) in dayPattern.enumerated() {
+                guard let slot = plan.first(where: { $0.slotId == sample.slot }) else {
+                    continue
+                }
+                let scheduleMinutes = minutes(from: slot.scheduledTime)
+                guard let eventDate = calendar.date(
+                    byAdding: .minute,
+                    value: min(1_439, max(0, scheduleMinutes + sample.delay)),
+                    to: day
+                ), dayOffset > 0 || eventDate <= now else {
+                    continue
+                }
+                demoEvents.append(
+                    HardwareEvent(
+                        id: "iff-demo-\(dayOffset)-\(sample.slot)-\(sequence)",
+                        eventTime: eventFormatter.string(from: eventDate),
+                        receivedAt: isoFormatter.string(from: eventDate),
+                        compartment: sample.slot,
+                        medication: slot.medication,
+                        eventType: sample.type,
+                        source: "demo",
+                        deviceId: Self.iffDemoDeviceID,
+                        activeSlotAtEvent: sample.type == "wrong_slot_open" ? 3 : nil
+                    )
+                )
+            }
+        }
+
+        return demoEvents.sorted { $0.eventTime > $1.eventTime }
     }
 
     private static func patient(

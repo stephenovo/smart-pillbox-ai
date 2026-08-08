@@ -20,7 +20,7 @@
     <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
     <img src="https://img.shields.io/badge/iOS-17%2B-111111?logo=apple" alt="iOS 17+" />
-    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%2013-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 13" />
+    <img src="https://img.shields.io/badge/TestFlight-1.0%20Build%2014-0D96F6?logo=testflight&logoColor=white" alt="TestFlight 1.0 Build 14" />
   </p>
 </div>
 
@@ -70,7 +70,7 @@ flowchart LR
 | **AI insight** | Rule-based activity analysis plus server-side DeepSeek V4 Flash observations with explicit non-medical-advice boundaries |
 | **Hardware bridge** | ESP32-S3 starter firmware, reminder state, lid-event upload, device heartbeat, browser simulator, and the live `20260808` hardware account |
 | **Profile and persistence** | `/api/profile`, local profile recovery, medication plan storage, hardware event storage, and native UserDefaults persistence |
-| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, live DeepSeek AI Insights separated from human-written Notes, new-pillbox guidebooks, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, live hardware pairing, and Build 13 testing |
+| **Native iOS** | SwiftUI app for iOS 17+, TestFlight distribution, live DeepSeek AI Insights separated from human-written Notes, new-pillbox guidebooks, pillbox removal, deliberate mode switching, 12 original family portraits, local photo avatars, live hardware pairing, and an instant `IFF 2026` showcase dataset in Build 14 |
 | **Safety boundary** | The system records compartment or lid openings; it does not claim that a person swallowed a medicine or replace clinical advice |
 
 ## Screens and experiences
@@ -230,6 +230,12 @@ enter connect code `20260808`. The app resolves it to device
 `PILLBOX-20260808`; the same account is shown at
 [smartpb.me/studio](https://smartpb.me/studio).
 
+For a self-contained App demonstration, enter `IFF 2026`. The app immediately
+loads Margaret's four-slot routine, a connected reminder state, seven days of
+opening activity, clearly labelled demo Notes, and a report that can generate
+a bounded DeepSeek AI Insight. This dataset stays separate from the live
+`20260808` hardware account.
+
 Build from the command line:
 
 ```bash
@@ -298,7 +304,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-The current native release line is `1.0 (13)`, distributed through TestFlight
+The current native release line is `1.0 (14)`, distributed through TestFlight
 to the internal testing group.
 
 ## Documentation
@@ -316,7 +322,7 @@ to the internal testing group.
 - [x] ESP32-S3 firmware and verified two-slot hardware MVP path
 - [x] Deterministic medication safety states and caregiver insight reports
 - [x] Profile sync with local offline recovery
-- [x] Native iOS TestFlight Build 13 with live hardware pairing and distinct AI Insights and Notes
+- [x] Native iOS TestFlight Build 14 with instant `IFF 2026` showcase data, live hardware pairing, and distinct AI Insights and Notes
 - [x] Cloud-backed `20260808` account shared by the physical device, Studio, and iPhone app
 - [ ] Expand hardware from the MVP loop to a production-ready enclosure
 - [ ] Collect real-device adherence history for model calibration

@@ -21,9 +21,15 @@ embed the existing Next.js `/mobile` route.
 3. Select an iPhone simulator and run the `Careloop` scheme.
 
 The app defaults to the production API at `https://smartpb.me` and device ID
-`PILLBOX-DEMO-001`. Build 13 migrates the old `127.0.0.1:3100` default to the
+`PILLBOX-DEMO-001`. Build 14 migrates the old `127.0.0.1:3100` default to the
 production endpoint so TestFlight users can generate DeepSeek AI Insights
 without changing Settings. Both values remain editable for local development.
+
+For an App-only showcase, enter `IFF 2026` in Pillbox setup. Build 14 restores
+Margaret as a connected demo account and immediately loads four medications,
+a reminder state, seven days of varied opening events, two clearly labelled
+demo Notes, the deterministic AI report, and a generated DeepSeek observation.
+It bypasses manual initialization and never writes to the live hardware account.
 
 ## Live hardware account
 

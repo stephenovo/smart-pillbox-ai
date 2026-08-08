@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BellRing,
   Check,
+  Github,
   MessageCircle,
   MonitorPlay,
   Pill,
@@ -145,6 +146,14 @@ export default function LandingPage() {
               <Link href="/team" className="transition hover:text-white">
                 Our team
               </Link>
+              <a
+                href="https://github.com/stephenovo/smart-pillbox-ai"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 transition hover:text-white"
+              >
+                <Github aria-hidden="true" size={15} /> Our GitHub
+              </a>
             </div>
             <Link
               href="/dashboard"
